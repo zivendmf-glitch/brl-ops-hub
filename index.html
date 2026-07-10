@@ -1535,6 +1535,12 @@ code {
         <button class="nav-btn" data-page="ops-progress" data-roles="manager,viewer" onclick="navigate('ops-progress',this)">
           Operational progress <span class="nav-badge lock">🔒</span>
         </button>
+        <button class="nav-btn" data-page="prod-rates" data-roles="manager,hq,viewer" onclick="navigate('prod-rates',this)">
+          Production rates
+        </button>
+        <button class="nav-btn" data-page="data-health" data-roles="manager,hq" onclick="navigate('data-health',this)">
+          Data health
+        </button>
         <button class="nav-btn" data-page="benchmark" data-roles="manager,hq,viewer" onclick="navigate('benchmark',this)">
           Cross-site benchmark
         </button>
@@ -1576,6 +1582,7 @@ code {
         <button class="site-btn active" data-site="both" onclick="setSite('both',this)">Both sites</button>
         <button class="site-btn" data-site="prabumuli" onclick="setSite('prabumuli',this)">Prabumuli</button>
         <button class="site-btn" data-site="maredan" onclick="setSite('maredan',this)">Maredan</button>
+        <button class="site-btn" data-site="sam2" onclick="setSite('sam2',this)">SAM2</button>
       </div>
       
       <div class="content">
@@ -1804,6 +1811,93 @@ code {
               </div>
             </div>
           </div>
+          <div id="dash-sam2" style="display:none">
+            <div class="kpi-grid">
+              <div class="kpi-card manager-only">
+                <div class="kpi-label">Net P&amp;L YTD</div>
+                <div class="kpi-value success" id="kpi-sam2-pnl-ytd">+ 0.0 <span class="kpi-unit">M</span></div>
+                <div class="kpi-sub" id="kpi-sam2-pnl-ytd-sub">no data yet</div>
+              </div>
+              <div class="kpi-card manager-only">
+                <div class="kpi-label">Net P&amp;L MTD</div>
+                <div class="kpi-value success" id="kpi-sam2-pnl-mtd">+ 0.0 <span class="kpi-unit">M</span></div>
+                <div class="kpi-sub" id="kpi-sam2-pnl-mtd-sub">no data yet</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Active issues</div>
+                <div class="kpi-value danger" id="kpi-sam2-issues">0</div>
+                <div class="kpi-sub" id="kpi-sam2-issues-sub">no issues</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">BD units</div>
+                <div class="kpi-value danger" id="kpi-sam2-bd">0</div>
+                <div class="kpi-sub" id="kpi-sam2-bd-sub">none</div>
+              </div>
+            </div>
+            
+            <div class="section-card">
+              <div class="section-title">
+                <span>SAM2 YTD progress</span>
+                <span class="pill info">opening + daily</span>
+              </div>
+              <table style="width:100%;font-size:12px;border-collapse:collapse">
+                <thead>
+                  <tr>
+                    <th style="text-align:left;padding:6px 0;font-size:10px;color:var(--c-text-tertiary);font-family:var(--font-mono)">WORK TYPE</th>
+                    <th style="text-align:right;padding:6px 0;font-size:10px;color:var(--c-text-tertiary);font-family:var(--font-mono)">OPENING</th>
+                    <th style="text-align:right;padding:6px 0;font-size:10px;color:var(--c-text-tertiary);font-family:var(--font-mono)">MTD</th>
+                    <th style="text-align:right;padding:6px 0;font-size:10px;color:var(--c-text-tertiary);font-family:var(--font-mono)">YTD</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td style="padding:6px 0;font-weight:500">Chipping</td><td style="text-align:right;color:var(--c-text-tertiary)">12,400 pk</td><td style="text-align:right">8,200 pk</td><td style="text-align:right;font-weight:500">20,600 pk</td></tr>
+                  <tr><td style="padding:6px 0;font-weight:500">Lubang Tanam</td><td style="text-align:right;color:var(--c-text-tertiary)">8,200 pk</td><td style="text-align:right">3,420 pk</td><td style="text-align:right;font-weight:500">11,620 pk</td></tr>
+                  <tr><td style="padding:6px 0;font-weight:500">Terasan</td><td style="text-align:right;color:var(--c-text-tertiary)">165 HA</td><td style="text-align:right">32.5 HA</td><td style="text-align:right;font-weight:500">197.5 HA</td></tr>
+                  <tr><td style="padding:6px 0;font-weight:500">Jalan MR 9m</td><td style="text-align:right;color:var(--c-text-tertiary)">15,500 m</td><td style="text-align:right">4,820 m</td><td style="text-align:right;font-weight:500">20,320 m</td></tr>
+                  <tr><td style="padding:6px 0;font-weight:500">Rorak 2×0.8</td><td style="text-align:right;color:var(--c-text-tertiary)">5,400 unit</td><td style="text-align:right">2,150 unit</td><td style="text-align:right;font-weight:500">7,550 unit</td></tr>
+                </tbody>
+              </table>
+            </div>
+            
+            <div class="section-card">
+              <div class="section-title"><span>SAM2 urgent</span></div>
+              <div class="alert-row">
+                <div class="alert-bar danger"></div>
+                <div class="alert-content">
+                  <div class="alert-title">KK 08 — putus trek <span class="pill danger">19 days</span></div>
+                  <div class="alert-desc">Standby since March.</div>
+                </div>
+              </div>
+              <div class="alert-row">
+                <div class="alert-bar danger"></div>
+                <div class="alert-content">
+                  <div class="alert-title">DZP 09 — roller <span class="pill danger">17 days</span></div>
+                  <div class="alert-desc">Tunggu barang.</div>
+                </div>
+              </div>
+              <div class="alert-row">
+                <div class="alert-bar danger"></div>
+                <div class="alert-content">
+                  <div class="alert-title">BBM stock — order today <span class="pill danger">932 L left</span></div>
+                  <div class="alert-desc">Burn 1,580 L/day. Stock-out tomorrow.</div>
+                </div>
+              </div>
+              <div class="alert-row">
+                <div class="alert-bar warning"></div>
+                <div class="alert-content">
+                  <div class="alert-title">Unaccounted BBM flagged <span class="pill warning">2 days</span></div>
+                  <div class="alert-desc">24 Apr: 25 L gap (above 14 L threshold). 25 Apr: 77 L gap (above 17 L threshold). Awaiting Nova explanation.</div>
+                </div>
+              </div>
+              <div class="alert-row">
+                <div class="alert-bar warning"></div>
+                <div class="alert-content">
+                  <div class="alert-title">CK 31 — final drive <span class="pill warning">5 days</span></div>
+                  <div class="alert-desc">Nunggu part.</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         
         <div class="page" id="page-quick-add">
@@ -1912,6 +2006,13 @@ code {
               <div id="upload-result-content"></div>
             </div>
           </div>
+
+          <div class="section-card">
+            <div class="section-title"><span>Client monitoring photo</span><span class="pill info">AI-parsed</span></div>
+            <p style="font-size:12px;color:var(--c-text-secondary);margin:0 0 10px">Upload a photo of the client's MONITORING REPLANTING table. Claude reads the REALISASI SDBI columns and saves a dated snapshot for the Client progress tab.</p>
+            <input type="file" id="cm-photo" accept="image/png,image/jpeg,image/webp" onchange="handleMonitoringPhoto(event)">
+            <div id="cm-result" style="margin-top:10px;font-size:12px"></div>
+          </div>
         </div>
         
                 <div class="page" id="page-pnl">
@@ -1936,6 +2037,14 @@ code {
               </tbody>
             </table>
             <div class="section-note">Revenue &amp; profit targets per month and per year — type the value in millions (e.g. 1900 = Rp 1.9 B). Saves automatically. Targets follow the selected site. Needs the <code>operational_targets</code> table.</div>
+          </div>
+
+          <div class="section-card" id="pnl-tabbar" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <span style="font-weight:600">View:</span>
+            <button class="settings-tab active" id="pnl-tab-unit" onclick="setPnlTab('unit')">Per unit</button>
+            <button class="settings-tab" id="pnl-tab-worktype" onclick="setPnlTab('worktype')">By work type</button>
+            <button class="settings-tab" id="pnl-tab-breakdown" onclick="setPnlTab('breakdown')">Cost breakdown</button>
+            <span class="section-note" id="pnl-tab-note" style="margin:0">Switch how the per-site P&amp;L is broken down. (Pick Prabumuli or Maredan in the Site filter above.)</span>
           </div>
 
           <!-- BOTH SITES -->
@@ -1998,7 +2107,7 @@ code {
               </div>
             </div>
             
-            <div class="section-card">
+            <div class="section-card pnl-sec pnl-sec-unit">
               <div class="section-title"><span>P&amp;L per unit MTD — Prabumuli</span></div>
               <table class="data-table">
                 <thead>
@@ -2010,14 +2119,14 @@ code {
               </table>
               <div class="section-note" id="pnl-p-note">P&amp;L calculated per unit. Prabumuli: subcontractor model — no rental cost, BBM cost only on excess above contract threshold.</div>
             </div>
-            <div class="section-card">
+            <div class="section-card pnl-sec pnl-sec-breakdown" style="display:none">
               <div class="section-title"><span>Cost breakdown per unit — Prabumuli</span><span class="pill info">formulas</span></div>
               <div id="pnl-p-detail" style="display:flex;flex-direction:column;gap:12px">
                 <div style="text-align:center;color:var(--c-text-tertiary);padding:24px">Loading...</div>
               </div>
               <div class="section-note">Each card shows exactly where the revenue and every cost line comes from — verify any number on the table above against these formulas.</div>
             </div>
-            <div class="section-card">
+            <div class="section-card pnl-sec pnl-sec-worktype" style="display:none">
               <div class="section-title"><span>P&amp;L by work type — Prabumuli</span><span class="pill info">multi-unit split by class</span></div>
               <table class="data-table">
                 <thead>
@@ -2052,7 +2161,7 @@ code {
               </div>
             </div>
             
-            <div class="section-card">
+            <div class="section-card pnl-sec pnl-sec-unit">
               <div class="section-title"><span>P&amp;L per unit MTD — Maredan</span></div>
               <table class="data-table">
                 <thead>
@@ -2064,20 +2173,72 @@ code {
               </table>
               <div class="section-note" id="pnl-m-note">Multi-unit work types (Terasan/Jalan) split 50/50 between excavator + dozer. BBM cost: liters × rate (settings). Rental: HM × class rate.</div>
             </div>
-            <div class="section-card">
+            <div class="section-card pnl-sec pnl-sec-breakdown" style="display:none">
               <div class="section-title"><span>Cost breakdown per unit — Maredan</span><span class="pill info">formulas</span></div>
               <div id="pnl-m-detail" style="display:flex;flex-direction:column;gap:12px">
                 <div style="text-align:center;color:var(--c-text-tertiary);padding:24px">Loading...</div>
               </div>
               <div class="section-note">Each card shows exactly where the revenue and every cost line comes from — verify any number on the table above against these formulas.</div>
             </div>
-            <div class="section-card">
+            <div class="section-card pnl-sec pnl-sec-worktype" style="display:none">
               <div class="section-title"><span>P&amp;L by work type — Maredan</span><span class="pill info">multi-unit split by class</span></div>
               <table class="data-table">
                 <thead>
                   <tr><th>Work Type</th><th>Output</th><th>Revenue</th><th>Premi</th><th>BBM</th><th>Rental</th><th>Fixed</th><th>Net</th><th>Margin</th></tr>
                 </thead>
                 <tbody id="pnl-m-worktype">
+                  <tr><td colspan="9" style="text-align:center;color:var(--c-text-tertiary);padding:24px">Loading...</td></tr>
+                </tbody>
+              </table>
+              <div class="section-note">Full P&amp;L. Net = Revenue − Premi − BBM − Rental − Fixed. Daily fixed cost is allocated per work type by revenue weight within each unit-day, so these totals reconcile with the per-unit table. Multi-unit work (Terasan/Jalan) is split 50/50 and shown per unit class.</div>
+            </div>
+          </div>
+          <div id="pnl-sam2" style="display:none">
+            <div class="kpi-grid">
+              <div class="kpi-card">
+                <div class="kpi-label">Revenue MTD</div>
+                <div class="kpi-value" id="pnl-s-revenue">0 <span class="kpi-unit">M</span></div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Cost MTD</div>
+                <div class="kpi-value" id="pnl-s-cost">0 <span class="kpi-unit">M</span></div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Net P&amp;L MTD</div>
+                <div class="kpi-value" id="pnl-s-pnl">+ 0 <span class="kpi-unit">M</span></div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Margin</div>
+                <div class="kpi-value" id="pnl-s-margin">—</div>
+              </div>
+            </div>
+            
+            <div class="section-card pnl-sec pnl-sec-unit">
+              <div class="section-title"><span>P&amp;L per unit MTD — SAM2</span></div>
+              <table class="data-table">
+                <thead>
+                  <tr><th>Unit</th><th>Output</th><th>Revenue</th><th>Premi</th><th>BBM Cost</th><th>Rental</th><th>Fixed Cost</th><th>Net P&amp;L</th><th>Margin</th></tr>
+                </thead>
+                <tbody id="pnl-s-units">
+                  <tr><td colspan="9" style="text-align:center;color:var(--c-text-tertiary);padding:24px">Loading...</td></tr>
+                </tbody>
+              </table>
+              <div class="section-note" id="pnl-s-note">Multi-unit work types (Terasan/Jalan) split 50/50 between excavator + dozer. BBM cost: liters × rate (settings). Rental: HM × class rate.</div>
+            </div>
+            <div class="section-card pnl-sec pnl-sec-breakdown" style="display:none">
+              <div class="section-title"><span>Cost breakdown per unit — SAM2</span><span class="pill info">formulas</span></div>
+              <div id="pnl-s-detail" style="display:flex;flex-direction:column;gap:12px">
+                <div style="text-align:center;color:var(--c-text-tertiary);padding:24px">Loading...</div>
+              </div>
+              <div class="section-note">Each card shows exactly where the revenue and every cost line comes from — verify any number on the table above against these formulas.</div>
+            </div>
+            <div class="section-card pnl-sec pnl-sec-worktype" style="display:none">
+              <div class="section-title"><span>P&amp;L by work type — SAM2</span><span class="pill info">multi-unit split by class</span></div>
+              <table class="data-table">
+                <thead>
+                  <tr><th>Work Type</th><th>Output</th><th>Revenue</th><th>Premi</th><th>BBM</th><th>Rental</th><th>Fixed</th><th>Net</th><th>Margin</th></tr>
+                </thead>
+                <tbody id="pnl-s-worktype">
                   <tr><td colspan="9" style="text-align:center;color:var(--c-text-tertiary);padding:24px">Loading...</td></tr>
                 </tbody>
               </table>
@@ -2243,11 +2404,91 @@ code {
               <div class="section-note">Maredan operators not yet assigned. Showing unit codes as fallback. When you fill operator names in admin Excel, names appear here automatically.</div>
             </div>
           </div>
+          <div id="bap-sam2" style="display:none">
+            <div class="kpi-grid">
+              <div class="kpi-card">
+                <div class="kpi-label">BAP Status</div>
+                <div class="kpi-value warning">Pending</div>
+                <div class="kpi-sub">April 2026</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Reported Output</div>
+                <div class="kpi-value">28k+</div>
+                <div class="kpi-sub">multi-unit pokok/m</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Premi Estimate</div>
+                <div class="kpi-value">52.4 <span class="kpi-unit">M</span></div>
+                <div class="kpi-sub">26 operators</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Operators Tracked</div>
+                <div class="kpi-value">26</div>
+                <div class="kpi-sub">smart fallback active</div>
+              </div>
+            </div>
+            
+            <div class="section-card">
+              <div class="section-title">
+                <span>Variance — April 2026 SAM2</span>
+                <span class="pill info">enter BAP when client sends</span>
+              </div>
+              <table class="data-table editable">
+                <thead>
+                  <tr><th>Work Type</th><th>YTD Admin</th><th>Client BAP</th><th>Variance</th><th>%</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td><strong>Chipping</strong></td><td>20,600 pk</td><td><input type="number" class="bap-input" placeholder="—"></td><td class="bap-var">—</td><td class="bap-pct">—</td><td><span class="pill info">pending</span></td></tr>
+                  <tr><td><strong>Lubang Tanam Mekanis</strong></td><td>11,620 pk</td><td><input type="number" class="bap-input" placeholder="—"></td><td class="bap-var">—</td><td class="bap-pct">—</td><td><span class="pill info">pending</span></td></tr>
+                  <tr><td><strong>Terasan &gt;5.5m</strong></td><td>197.5 HA</td><td><input type="number" class="bap-input" placeholder="—"></td><td class="bap-var">—</td><td class="bap-pct">—</td><td><span class="pill info">pending</span></td></tr>
+                  <tr><td><strong>Jalan MR 9m</strong></td><td>20,320 m</td><td><input type="number" class="bap-input" placeholder="—"></td><td class="bap-var">—</td><td class="bap-pct">—</td><td><span class="pill info">pending</span></td></tr>
+                  <tr><td><strong>Jalan CR 7m</strong></td><td>0 m</td><td><input type="number" class="bap-input" placeholder="—"></td><td class="bap-var">—</td><td class="bap-pct">—</td><td><span class="pill info">pending</span></td></tr>
+                  <tr><td><strong>Rorak 2×0.8</strong></td><td>7,550 unit</td><td><input type="number" class="bap-input" placeholder="—"></td><td class="bap-var">—</td><td class="bap-pct">—</td><td><span class="pill info">pending</span></td></tr>
+                  <tr><td><strong>Parit 1×1×1.5</strong></td><td>0 m</td><td><input type="number" class="bap-input" placeholder="—"></td><td class="bap-var">—</td><td class="bap-pct">—</td><td><span class="pill info">pending</span></td></tr>
+                  <tr><td><strong>Parit 2×2×1</strong></td><td>0 m</td><td><input type="number" class="bap-input" placeholder="—"></td><td class="bap-var">—</td><td class="bap-pct">—</td><td><span class="pill info">pending</span></td></tr>
+                  <tr><td><strong>Parit CET 2×2×2</strong></td><td>0 m</td><td><input type="number" class="bap-input" placeholder="—"></td><td class="bap-var">—</td><td class="bap-pct">—</td><td><span class="pill info">pending</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+            
+            <div class="section-card">
+              <div class="section-title">
+                <span>Per-operator (top 10 by output)</span>
+                <span class="pill warning">smart fallback for unknown names</span>
+              </div>
+              <table class="data-table">
+                <thead>
+                  <tr><th>Unit / Operator</th><th>Work</th><th>Reported</th><th>Adj Premi</th><th>Trust</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td><strong>CK 08 — operator TBD</strong></td><td>Chipping</td><td>720 pk</td><td>1.80M</td><td><span class="trust-score muted">—</span></td></tr>
+                  <tr><td><strong>CK 22 — operator TBD</strong></td><td>Chipping</td><td>675 pk</td><td>1.69M</td><td><span class="trust-score muted">—</span></td></tr>
+                  <tr><td><strong>CK 35 — operator TBD</strong></td><td>Chipping</td><td>650 pk</td><td>1.63M</td><td><span class="trust-score muted">—</span></td></tr>
+                  <tr><td><strong>EO 86 — operator TBD</strong></td><td>Terasan</td><td>4,720 m</td><td>10.4M</td><td><span class="trust-score muted">—</span></td></tr>
+                  <tr><td><strong>EO 77 — operator TBD</strong></td><td>Terasan</td><td>4,242 m</td><td>9.3M</td><td><span class="trust-score muted">—</span></td></tr>
+                </tbody>
+              </table>
+              <div class="section-note">SAM2 operators not yet assigned. Showing unit codes as fallback. When you fill operator names in admin Excel, names appear here automatically.</div>
+            </div>
+          </div>
         </div>
         
         <div class="page" id="page-scorecard">
           <!-- Operator scorecard with smart fallback -->
-          
+
+          <div class="section-card" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <span style="font-weight:600">Period:</span>
+            <select id="sc-period" class="settings-input" style="max-width:240px">
+              <option value="all">All-time (cumulative)</option>
+            </select>
+            <span style="width:1px;height:22px;background:var(--c-border)"></span>
+            <span style="font-weight:600">Site:</span>
+            <button class="settings-tab active" id="sc-site-prab-tab" onclick="setScSite('prabumuli')">Prabumuli</button>
+            <button class="settings-tab" id="sc-site-mar-tab" onclick="setScSite('maredan')">Maredan</button>
+            <button class="settings-tab" id="sc-site-sam2-tab" onclick="setScSite('sam2')">SAM2</button>
+            <span class="section-note" id="sc-period-note" style="margin:0">Pick a month to score just that month, or All-time.</span>
+          </div>
+
           <div class="kpi-grid">
             <div class="kpi-card">
               <div class="kpi-label">Total Operators</div>
@@ -2271,7 +2512,7 @@ code {
             </div>
           </div>
           
-          <div class="section-card">
+          <div class="section-card" id="sc-card-prabumuli">
             <div class="section-title">
               <span>Operator Scorecard — Prabumuli</span>
               <span class="pill info">all entries</span>
@@ -2286,8 +2527,8 @@ code {
             </table>
             <div class="section-note" id="sc-prabumuli-note">Live aggregations from time_sheet entries.</div>
           </div>
-          
-          <div class="section-card">
+
+          <div class="section-card" id="sc-card-maredan" style="display:none">
             <div class="section-title">
               <span>Operator Scorecard — Maredan</span>
               <span class="pill warning">smart fallback active</span>
@@ -2301,6 +2542,21 @@ code {
               </tbody>
             </table>
             <div class="section-note" id="sc-maredan-note">When operators are not yet assigned, units are shown with their work type.</div>
+          </div>
+          <div class="section-card" id="sc-card-sam2" style="display:none">
+            <div class="section-title">
+              <span>Operator Scorecard — SAM2</span>
+              <span class="pill warning">smart fallback active</span>
+            </div>
+            <table class="data-table">
+              <thead>
+                <tr><th>Rank</th><th>Unit / Operator</th><th>Work Type</th><th>L/HM</th><th>Output/HM</th><th>Trust</th></tr>
+              </thead>
+              <tbody id="sc-sam2-table">
+                <tr><td colspan="6" style="text-align:center;color:var(--c-text-tertiary);padding:24px">Loading...</td></tr>
+              </tbody>
+            </table>
+            <div class="section-note" id="sc-sam2-note">When operators are not yet assigned, units are shown with their work type.</div>
           </div>
           
           <div class="section-card">
@@ -2317,6 +2573,13 @@ code {
         </div>
         
         <div class="page" id="page-benchmark">
+          <div class="section-card" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <span style="font-weight:600">Period:</span>
+            <button class="settings-tab" id="bm-tab-all" onclick="setBenchPeriod('all')">All-time</button>
+            <button class="settings-tab active" id="bm-tab-mtd" onclick="setBenchPeriod('mtd')">This month (MTD)</button>
+            <button class="settings-tab" id="bm-tab-ytd" onclick="setBenchPeriod('ytd')">Year to date (YTD)</button>
+            <span class="section-note" id="bm-period-note" style="margin:0">L/HM &amp; output/HM by unit class.</span>
+          </div>
           <div class="kpi-grid">
             <div class="kpi-card">
               <div class="kpi-label">Equipment Compared</div>
@@ -2490,6 +2753,53 @@ code {
               <div class="section-note">Cross-check fuel data here — sum should match LAP. BBM totals from the Excel.</div>
             </div>
           </div>
+          <div id="bbm-sam2" style="display:none">
+            <div class="kpi-grid">
+              <div class="kpi-card">
+                <div class="kpi-label">Stock SAM2</div>
+                <div class="kpi-value" id="bbm-s-stock">0 <span class="kpi-unit">L</span></div>
+                <div class="kpi-sub" id="bbm-s-stock-sub">current saldo</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Daily Burn</div>
+                <div class="kpi-value" id="bbm-s-burn">0 <span class="kpi-unit">L</span></div>
+                <div class="kpi-sub" id="bbm-s-burn-sub">7-day avg</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Days of Stock</div>
+                <div class="kpi-value" id="bbm-s-days">—</div>
+                <div class="kpi-sub" id="bbm-s-days-sub">runway</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Status</div>
+                <div class="kpi-value" id="bbm-s-status">—</div>
+                <div class="kpi-sub" id="bbm-s-status-sub">monitor</div>
+              </div>
+            </div>
+            <div class="section-card">
+              <div class="section-title"><span>Per-vehicle consumption (last 7 days)</span></div>
+              <table class="data-table">
+                <thead>
+                  <tr><th>Vehicle</th><th>Total Used</th><th>Daily Avg</th></tr>
+                </thead>
+                <tbody id="bbm-s-vehicles">
+                  <tr><td colspan="3" style="text-align:center;color:var(--c-text-tertiary);padding:24px">Loading...</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="section-card">
+              <div class="section-title"><span>BBM consumed per unit — MTD</span><span class="pill info">from time_sheet</span></div>
+              <table class="data-table">
+                <thead>
+                  <tr><th>Unit</th><th>Total Liters</th><th>Entries</th><th>Total HM</th><th>L/HM</th><th>Last Used</th></tr>
+                </thead>
+                <tbody id="bbm-s-unit-detail">
+                  <tr><td colspan="6" style="text-align:center;color:var(--c-text-tertiary);padding:24px">Loading...</td></tr>
+                </tbody>
+              </table>
+              <div class="section-note">Cross-check fuel data here — sum should match LAP. BBM totals from the Excel.</div>
+            </div>
+          </div>
         </div>
         
         <div class="page" id="page-bd-alerts">
@@ -2637,6 +2947,82 @@ code {
           </div>
         </div>
         
+                <div class="page" id="page-data-health">
+          <div class="kpi-grid">
+            <div class="kpi-card"><div class="kpi-label">Total Issues</div><div class="kpi-value" id="dh-kpi-total">—</div><div class="kpi-sub">rows needing a look</div></div>
+            <div class="kpi-card"><div class="kpi-label">Orphan Work Types</div><div class="kpi-value danger" id="dh-kpi-orphan">—</div><div class="kpi-sub">no rate → revenue lost</div></div>
+            <div class="kpi-card"><div class="kpi-label">Unit Mismatches</div><div class="kpi-value" id="dh-kpi-unit">—</div><div class="kpi-sub">wrong output unit label</div></div>
+            <div class="kpi-card"><div class="kpi-label">Productivity Outliers</div><div class="kpi-value" id="dh-kpi-outlier">—</div><div class="kpi-sub">far from typical rate</div></div>
+          </div>
+
+          <div class="section-card">
+            <div class="section-title"><span>Orphan work types</span><span class="pill danger">fix first</span></div>
+            <table class="data-table">
+              <thead><tr><th>Site</th><th>Work Type (as typed)</th><th>Entries</th><th>Output</th><th>Why it matters</th></tr></thead>
+              <tbody id="dh-orphan-table"><tr><td colspan="5" style="text-align:center;color:var(--c-text-tertiary);padding:20px">Loading…</td></tr></tbody>
+            </table>
+            <div class="section-note">These work-type names don't match the Work Types table, so they earn no revenue and show as junk rows. Rename in time_sheet to the correct name.</div>
+          </div>
+
+          <div class="section-card">
+            <div class="section-title"><span>Productivity outliers</span><span class="pill warning">check accuracy</span></div>
+            <table class="data-table">
+              <thead><tr><th>Date</th><th>Site</th><th>Unit</th><th>Work Type</th><th>Output</th><th>HM</th><th>Rate</th><th>Typical</th><th>Flag</th></tr></thead>
+              <tbody id="dh-outlier-table"><tr><td colspan="9" style="text-align:center;color:var(--c-text-tertiary);padding:20px">Loading…</td></tr></tbody>
+            </table>
+            <div class="section-note">Entries whose output-per-HM is more than 3× above or below that work type's median (min 5 samples). These are the most likely data-entry errors — verify against the paper timesheet.</div>
+          </div>
+
+          <div class="section-card">
+            <div class="section-title"><span>Other checks</span></div>
+            <table class="data-table">
+              <thead><tr><th>Check</th><th>Count</th><th>Meaning</th></tr></thead>
+              <tbody id="dh-misc-table"><tr><td colspan="3" style="text-align:center;color:var(--c-text-tertiary);padding:20px">Loading…</td></tr></tbody>
+            </table>
+            <div class="section-note">Output-without-HM is usually fine (multi-work HM allocation). Unit mismatches and exact-duplicate rows are worth a glance.</div>
+          </div>
+        </div>
+
+                <div class="page" id="page-prod-rates">
+          <div class="section-card" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <span style="font-weight:600">Period:</span>
+            <button class="settings-tab active" id="pr-tab-mtd" onclick="setProdPeriod('mtd')">This month (MTD)</button>
+            <button class="settings-tab" id="pr-tab-ytd" onclick="setProdPeriod('ytd')">Year to date (YTD)</button>
+            <span style="width:1px;height:22px;background:var(--c-border);margin:0 4px"></span>
+            <span style="font-weight:600">Site:</span>
+            <button class="settings-tab active" id="pr-site-prab-tab" onclick="setProdSite('prabumuli')">Prabumuli</button>
+            <button class="settings-tab" id="pr-site-mar-tab" onclick="setProdSite('maredan')">Maredan</button>
+            <button class="settings-tab" id="pr-site-sam2-tab" onclick="setProdSite('sam2')">SAM2</button>
+            <span class="section-note" id="pr-period-note" style="margin:0">Average output per active day.</span>
+          </div>
+
+          <div class="section-card">
+            <div class="section-title"><span id="pr-wt-title">Production rate — by work type</span><span class="pill info">per work type</span></div>
+            <table class="data-table">
+              <thead>
+                <tr><th>Work Type</th><th>Unit</th><th>Total Output</th><th>Active Days</th><th>Avg / Day</th><th>Avg / Unit-Day</th></tr>
+              </thead>
+              <tbody id="pr-worktype-table">
+                <tr><td colspan="6" style="text-align:center;color:var(--c-text-tertiary);padding:24px">Loading...</td></tr>
+              </tbody>
+            </table>
+            <div class="section-note">Avg / Day = total output ÷ days that work type was active. Avg / Unit-Day = total ÷ (unit × day) combos — per-machine rate. Opening balance excluded.</div>
+          </div>
+
+          <div class="section-card">
+            <div class="section-title"><span id="pr-unit-title">Production rate — by unit</span><span class="pill info">per machine</span></div>
+            <table class="data-table">
+              <thead>
+                <tr><th>Unit</th><th>Work Type</th><th>Total Output</th><th>Active Days</th><th>Avg / Day</th></tr>
+              </thead>
+              <tbody id="pr-unit-table">
+                <tr><td colspan="5" style="text-align:center;color:var(--c-text-tertiary);padding:24px">Loading...</td></tr>
+              </tbody>
+            </table>
+            <div class="section-note">Each row = one machine on one work type. Avg / Day = that unit's total output ÷ days it did that work.</div>
+          </div>
+        </div>
+
                 <div class="page" id="page-actual-pnl">
           <div class="manager-only-banner">🔒 MANAGER ONLY — actual P&amp;L from accounting (Accurate reports).</div>
 
@@ -2714,6 +3100,7 @@ code {
           <div class="section-card" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
             <button class="settings-tab active" id="ops-tab-current" onclick="setOpsTab('current')">Current</button>
             <button class="settings-tab" id="ops-tab-historic" onclick="setOpsTab('historic')">Historic</button>
+            <button class="settings-tab" id="ops-tab-client" onclick="setOpsTab('client')">Client progress</button>
             <span class="section-note" id="ops-tab-note" style="margin:0">Current month progress vs targets. Switch to Historic to browse past months.</span>
           </div>
 
@@ -2729,7 +3116,7 @@ code {
                   <tr><td colspan="6" style="text-align:center;color:var(--c-text-tertiary);padding:24px">Loading...</td></tr>
                 </tbody>
               </table>
-              <div class="section-note">Type a year target per work type — saves automatically. Variance = YTD Actual − Target.</div>
+              <div class="section-note">Type a year target per work type — saves automatically. Variance = YTD Actual − Target. YTD Actual includes pre-launch opening balance (so it matches BAP recon). The month table below counts only platform-tracked output.</div>
             </div>
 
             <div class="section-card">
@@ -2753,6 +3140,34 @@ code {
               <div id="ops-hist-body">
                 <div style="text-align:center;color:var(--c-text-tertiary);padding:24px">Loading...</div>
               </div>
+            </div>
+          </div>
+
+          <!-- CLIENT PROGRESS (from client monitoring snapshots) -->
+          <div id="ops-client" style="display:none">
+            <div class="section-card">
+              <div class="section-title"><span id="ops-client-title">Client monitoring (Realisasi SDBI)</span><span class="pill info">official client figures</span></div>
+              <table class="data-table">
+                <thead><tr><th>Client work item</th><th style="text-align:right">HA</th><th style="text-align:right">Meter / PKK</th><th style="text-align:right">Δ vs previous</th><th style="text-align:right">Per day</th></tr></thead>
+                <tbody id="ops-client-body"><tr><td colspan="5" style="text-align:center;color:var(--c-text-tertiary);padding:24px">Loading…</td></tr></tbody>
+              </table>
+              <div class="section-note">Latest client snapshot vs the one before it (Δ = progress between snapshots; per day = Δ ÷ days between). Snapshots are added on the Upload page (photo of the client monitoring table) or via SQL.</div>
+            </div>
+
+            <div class="section-card">
+              <div class="section-title"><span>Progress history</span><span class="pill info">per snapshot + weekly</span></div>
+              <div style="margin-bottom:10px">
+                <select id="ops-client-item" class="settings-input" style="max-width:260px" onchange="renderOpsClient()"></select>
+              </div>
+              <table class="data-table">
+                <thead><tr><th>Snapshot</th><th style="text-align:right">Qty</th><th style="text-align:right">Δ vs previous</th><th style="text-align:right">Days</th><th style="text-align:right">Per day</th></tr></thead>
+                <tbody id="ops-client-hist"><tr><td colspan="5" style="text-align:center;color:var(--c-text-tertiary);padding:24px">Loading…</td></tr></tbody>
+              </table>
+              <table class="data-table" style="margin-top:14px">
+                <thead><tr><th>Week</th><th style="text-align:right">Δ in week</th><th style="text-align:right">Per day</th></tr></thead>
+                <tbody id="ops-client-weekly"></tbody>
+              </table>
+              <div class="section-note">Pick a work item to see its progress snapshot by snapshot. Weekly rows apportion each snapshot interval to ISO weeks. The more often you upload a monitoring photo, the closer this gets to a true daily view.</div>
             </div>
           </div>
         </div>
@@ -2791,7 +3206,7 @@ code {
           
           <!-- ── RATES ── -->
           <div class="settings-panel" id="settings-rates">
-            <div class="section-card">
+            <div class="section-card" id="rates-card-prabumuli">
               <div class="section-title">
                 <span>Revenue rates — Prabumuli</span>
                 <span class="pill info">edit + save</span>
@@ -2806,7 +3221,7 @@ code {
               </table>
             </div>
             
-            <div class="section-card">
+            <div class="section-card" id="rates-card-maredan">
               <div class="section-title">
                 <span>Revenue rates — Maredan</span>
                 <span class="pill info">edit + save</span>
@@ -2821,8 +3236,39 @@ code {
               </table>
               <div class="section-note">Multi-unit split: revenue divides 50/50 between excavator + dozer for same work. Type values and click anywhere else — auto-saves.</div>
             </div>
+
+            <div class="section-card" id="rates-card-sam2">
+              <div class="section-title">
+                <span>Revenue rates — SAM2</span>
+                <span class="pill info">edit + save</span>
+              </div>
+              <table class="data-table editable-rates">
+                <thead>
+                  <tr><th>Work Type</th><th>Rate (Rp)</th><th>Unit</th><th>Premi (Rp)</th><th>Multi-unit Split</th></tr>
+                </thead>
+                <tbody id="settings-rates-sam2">
+                  <tr><td colspan="5" style="text-align:center;color:var(--c-text-tertiary);padding:24px">Loading...</td></tr>
+                </tbody>
+              </table>
+              <div class="section-note">Type values and click anywhere else — auto-saves.</div>
+            </div>
+
+            <div class="section-card">
+              <div class="section-title"><span>Rate increase history</span><span class="pill info">effective-dated multipliers</span></div>
+              <table class="data-table">
+                <thead><tr><th>Site</th><th>Effective from</th><th>Multiplier</th><th>Meaning</th><th></th></tr></thead>
+                <tbody id="settings-rate-mult"><tr><td colspan="5" style="text-align:center;color:var(--c-text-tertiary);padding:24px">Loading…</td></tr></tbody>
+              </table>
+              <div style="display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap">
+                <select id="rm-site" class="settings-input" style="max-width:120px"><option value="maredan">maredan</option><option value="prabumuli">prabumuli</option><option value="sam2">sam2</option></select>
+                <input type="date" id="rm-date" class="settings-input" style="max-width:150px">
+                <input type="number" id="rm-mult" class="settings-input" style="max-width:110px" step="0.0001" placeholder="e.g. 1.1395">
+                <button class="btn-secondary" onclick="addRateMult()">Add increase</button>
+              </div>
+              <div class="section-note">Revenue = base rate × the multiplier in force on the entry's date. Base rates (table above) never change; a client increase = one new row here (e.g. +13.95% → multiplier 1.1395). Rows apply from their date until a later row supersedes them; dates before all rows bill at base (×1).</div>
+            </div>
           </div>
-          
+
           <!-- ── COSTS ── -->
           <div class="settings-panel" id="settings-costs">
             <div class="section-card">
@@ -2835,10 +3281,25 @@ code {
                   <tr><td><strong>Prabumuli</strong></td><td>Subcontractor</td><td><input type="number" class="settings-input" data-key="prabumuli_bbm_per_liter" placeholder="15000" step="500"></td><td>Current market fuel price (Rp/liter)</td></tr>
                   <tr><td><strong>Prabumuli threshold</strong></td><td>Contract baseline</td><td><input type="number" class="settings-input" data-key="prabumuli_bbm_threshold" placeholder="15000" step="500"></td><td>BRL pays (market − threshold) × liters when market price exceeds this</td></tr>
                   <tr><td><strong>Maredan</strong></td><td>BRL purchases</td><td><input type="number" class="settings-input" id="cost-maredan-bbm" data-key="maredan_bbm_per_liter" placeholder="27000" step="500"></td><td>Direct cost to BRL</td></tr>
+                  <tr><td><strong>SAM2</strong></td><td>BRL purchases</td><td><input type="number" class="settings-input" id="cost-sam2-bbm" data-key="sam2_bbm_per_liter" placeholder="25000" step="500"></td><td>Direct cost to BRL</td></tr>
                 </tbody>
               </table>
+              <div class="section-note">Changing a fuel price is <strong>effective-dated</strong>: you pick the date it starts, and only rows on/after that date use the new price. Past P&amp;L is never re-priced. The field above always shows the latest price.</div>
             </div>
-            
+
+            <div class="section-card">
+              <div class="section-title"><span>Fuel price history</span><span class="pill info">effective-dated</span></div>
+              <table class="data-table">
+                <thead>
+                  <tr><th>Site</th><th>Effective from</th><th>Rp / Liter</th><th></th></tr>
+                </thead>
+                <tbody id="settings-bbm-history">
+                  <tr><td colspan="4" style="text-align:center;color:var(--c-text-tertiary);padding:24px">Loading price history…</td></tr>
+                </tbody>
+              </table>
+              <div class="section-note">Each row is a price period. A row applies until a later-dated row supersedes it. Delete a row to remove a mistaken change. To add/correct a price, edit the rate above and choose the effective date.</div>
+            </div>
+
             <div class="section-card">
               <div class="section-title"><span>Equipment rental rates (per HM)</span><span class="pill info">Maredan only</span></div>
               <table class="data-table">
@@ -2868,6 +3329,11 @@ code {
                     <td><strong>Maredan</strong></td>
                     <td><input type="number" class="settings-input" id="cost-maredan-daily" data-key="maredan_daily_cost" placeholder="184000" step="1000"></td>
                     <td>Uang makan (Rp 84k) + fixed lain-lain (Rp 100k). Equipment rental tracked separately above.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>SAM2</strong></td>
+                    <td><input type="number" class="settings-input" id="cost-sam2-daily" data-key="sam2_daily_cost" placeholder="184000" step="1000"></td>
+                    <td>Direct site — same structure as Maredan. Equipment rental tracked separately above.</td>
                   </tr>
                 </tbody>
               </table>
@@ -3060,6 +3526,168 @@ function ensureSupabase() {
   return sbClient;
 }
 
+// Supabase caps each API response at 1000 rows. Tables that exceed that (time_sheet)
+// must be paged or they silently truncate, corrupting every total on the page.
+// sbFetchAll pages through with .range() and returns the SAME {data,error} shape,
+// so call sites need no other change. Pass a factory so .range() can be appended.
+async function sbFetchAll(makeQuery) {
+  const pageSize = 1000;
+  let from = 0;
+  const all = [];
+  while (true) {
+    const { data, error } = await makeQuery().range(from, from + pageSize - 1);
+    if (error) return { data: all, error };
+    if (data && data.length) all.push(...data);
+    if (!data || data.length < pageSize) break;
+    from += pageSize;
+  }
+  return { data: all, error: null };
+}
+
+// ── Effective-dated BBM rates ──────────────────────────────────────────────
+// Fuel price changes over time. A rate set with effective_from=D applies to all
+// rows dated >= D until a later rate supersedes it — so changing the price only
+// affects that day forward, never the past. Falls back to the single app_settings
+// rate when the bbm_rate_history table is empty/absent (backwards compatible).
+let _bbmRates = null;  // { site: [{from, rate}, ...] } sorted DESC by from
+async function ensureBbmRates(sb) {
+  if (_bbmRates) return _bbmRates;
+  const m = {};
+  try {
+    const { data, error } = await sb.from('bbm_rate_history').select('*');
+    if (!error) {
+      (data || []).forEach(r => {
+        (m[r.site] = m[r.site] || []).push({ from: r.effective_from, rate: parseFloat(r.rate_per_liter) || 0 });
+      });
+      Object.values(m).forEach(list => list.sort((a, b) => (a.from < b.from ? 1 : -1)));  // DESC
+    }
+  } catch (e) { /* table may not exist yet — fall back */ }
+  _bbmRates = m;
+  return _bbmRates;
+}
+// Rp/liter market rate that applied on a given date for a site (else fallback).
+function bbmRateFor(site, dateStr, fallback) {
+  const list = _bbmRates && _bbmRates[site];
+  if (!list || !list.length) return fallback;
+  if (dateStr) { for (const r of list) if (r.from <= dateStr) return r.rate; }
+  return list[list.length - 1].rate;  // date precedes all history → earliest known
+}
+// Rp/liter that BRL actually pays for one row, date-aware (Maredan full, Prabumuli excess).
+function bbmPerLiterFor(e, maredanFb, prabMktFb, prabThreshFb) {
+  // Prabumuli = subcontractor (BRL pays only BBM excess above threshold).
+  // Every other site (Maredan, SAM2) is direct — BRL pays the full per-liter rate.
+  if (e.site === 'prabumuli') return Math.max(0, bbmRateFor('prabumuli', e.date, prabMktFb || 25000) - (prabThreshFb || 15000));
+  return bbmRateFor(e.site, e.date, maredanFb || 27000);
+}
+// Direct sites pay equipment rental + full BBM + daily fixed; only Prabumuli is subcontractor.
+function isDirectSite(s) { return s !== 'prabumuli'; }
+const SITE_LABELS = { both: 'Both sites', prabumuli: 'Prabumuli', maredan: 'Maredan', sam2: 'SAM2' };
+// Daily fixed cost per unit, per site, from app_settings (<site>_daily_cost).
+function dailyFixedFor(site, settingsArr) {
+  const row = (settingsArr || []).find(s => s.key === site + '_daily_cost');
+  const v = row ? parseFloat(row.value) : NaN;
+  if (!isNaN(v)) return v;
+  return site === 'prabumuli' ? 138000 : 184000;
+}
+// ── Effective-dated work-rate multipliers ─────────────────────────────────
+// Client rate increases apply from a date forward (e.g. Maredan +7.9% from
+// 1 May 2026, +13.95% from 20 May 2026). work_types.rate stays the BASE rate;
+// revenue per entry = output × base rate × multiplier(site, entry date).
+// Falls back to 1.0 when the rate_multiplier_history table is empty/absent.
+let _rateMults = null;  // { site: [{from, mult}, ...] } sorted DESC by from
+async function ensureRateMults(sb) {
+  if (_rateMults) return _rateMults;
+  const m = {};
+  try {
+    const { data, error } = await sb.from('rate_multiplier_history').select('*');
+    if (!error) {
+      (data || []).forEach(r => {
+        (m[r.site] = m[r.site] || []).push({ from: r.effective_from, mult: parseFloat(r.multiplier) || 1 });
+      });
+      Object.values(m).forEach(list => list.sort((a, b) => (a.from < b.from ? 1 : -1)));
+    }
+  } catch (e) { /* table may not exist yet — fall back to base rates */ }
+  _rateMults = m;
+  return _rateMults;
+}
+function rateMultiplierFor(site, dateStr) {
+  const list = _rateMults && _rateMults[site];
+  if (!list || !list.length) return 1;
+  if (dateStr) { for (const r of list) if (r.from <= dateStr) return r.mult; }
+  return 1;  // dates before all history use the base rate
+}
+
+// ── Opening-balance "as of" awareness ─────────────────────────────────────
+// An opening balance is a cumulative total AS OF a date. Daily entries dated on
+// or before that date are already inside the opening figure — adding them again
+// double-counts (proven vs client BAP: Maredan daily starts 26 Apr but opening
+// is as-of 25 May). YTD must be opening + daily AFTER the as-of only.
+function openingMaps(openingBalance, site) {
+  const opening = {}, asOf = {};
+  (openingBalance || []).forEach(o => {
+    if (o.site !== site) return;
+    opening[o.work_type] = parseFloat(o.amount || 0);
+    if (o.as_of) asOf[o.work_type] = String(o.as_of).slice(0, 10);
+  });
+  return { opening, asOf };
+}
+function aggregateOutputAfterOpening(entries, site, asOf) {
+  const agg = {};
+  (entries || []).filter(e => e.site === site).forEach(e => {
+    if (!e.work_type) return;
+    const cutoff = asOf ? asOf[e.work_type] : null;
+    if (cutoff && e.date && e.date <= cutoff) return;  // already inside opening
+    agg[e.work_type] = (agg[e.work_type] || 0) + parseFloat(e.output || 0);
+  });
+  return agg;
+}
+
+async function deleteBbmRate(id) {
+  if (!confirm('Delete this fuel price period? P&L for those dates will revert to the previous price.')) return;
+  const sb = ensureSupabase();
+  if (!sb) return;
+  const { error } = await sb.from('bbm_rate_history').delete().eq('id', id);
+  if (error) { alert('Delete failed: ' + error.message); return; }
+  _bbmRates = null;
+  await ensureBbmRates(sb);
+  refreshSettings();
+}
+
+// Add / remove effective-dated rate increases (Settings → Rates panel).
+async function addRateMult() {
+  const sb = ensureSupabase();
+  if (!sb) return;
+  const site = document.getElementById('rm-site')?.value;
+  const eff = document.getElementById('rm-date')?.value;
+  const mult = parseFloat(document.getElementById('rm-mult')?.value);
+  if (!site || !eff || !mult || mult <= 0) { alert('Fill site, effective date, and a multiplier like 1.1395 (= +13.95%).'); return; }
+  if (mult > 3 && !confirm(`Multiplier ×${mult} means rates become ${mult}× base — did you mean 1.${String(mult).replace('.', '')}?`)) return;
+  const { error } = await sb.from('rate_multiplier_history')
+    .upsert({ site, effective_from: eff, multiplier: mult }, { onConflict: 'site,effective_from' });
+  if (error) { alert('Save failed: ' + error.message); return; }
+  _rateMults = null; await ensureRateMults(sb);
+  refreshSettings();
+}
+async function deleteRateMult(id) {
+  if (!confirm('Delete this rate increase? Revenue for those dates will revert to the previous multiplier (or base rate).')) return;
+  const sb = ensureSupabase();
+  if (!sb) return;
+  const { error } = await sb.from('rate_multiplier_history').delete().eq('id', id);
+  if (error) { alert('Delete failed: ' + error.message); return; }
+  _rateMults = null; await ensureRateMults(sb);
+  refreshSettings();
+}
+
+// Preferred display order for the P&L work-type breakdown so each base job sits
+// next to its "Cuci" (cleaning) variant. Anything not listed falls to the end,
+// alphabetically. Match exact work_name values used in work_types.
+const PNL_WT_ORDER = [
+  'Jalan MR 9m', 'Cuci Jalan MR',
+  'Jalan CR 7m', 'Cuci Jalan CR',
+  'Terasan >5.5m Stop Bund', 'Cuci Teras',
+];
+function pnlWtRank(name) { const i = PNL_WT_ORDER.indexOf(name); return i === -1 ? 999 : i; }
+
 // Map plain username → email used in Supabase
 const USERNAME_TO_EMAIL = {
   'manager':  'manager@brl.local',
@@ -3121,6 +3749,8 @@ const PAGE_TITLES = {
   'bbm': 'BBM forecast',
   'bd-alerts': 'BD alerts',
   'ops-progress': 'Operational progress',
+  'prod-rates': 'Production rates',
+  'data-health': 'Data health',
   'actual-pnl': 'P&L actual',
   'settings': 'Settings',
 };
@@ -3249,6 +3879,12 @@ function applyViewerMode() {
 let currentUser = null;
 let currentSite = 'both';
 let _pnlSelectedMonth = null;  // which month the P&L page is showing (YYYY-MM)
+let _scPeriod = 'all';         // operator scorecard period: 'all' or 'YYYY-MM'
+let _prodPeriod = 'mtd';       // production rates page: 'mtd' or 'ytd'
+let _prSite = 'prabumuli';     // production rates page: selected site
+let _scSite = 'prabumuli';     // operator scorecard page: selected site
+let _benchPeriod = 'mtd';      // cross-site benchmark: 'all' | 'mtd' | 'ytd'
+let _pnlTab = 'unit';          // P&L page view: 'unit' | 'worktype' | 'breakdown'
 let _opsTab = 'current';       // Operational Progress: 'current' | 'historic'
 let _opsHistYear = null;       // Historic drill-down: selected year
 let _opsHistMonth = null;      // Historic drill-down: selected month (YYYY-MM)
@@ -3419,7 +4055,16 @@ function navigate(pageId, btn) {
     currentPage = pageId;
     
     document.getElementById('page-title').textContent = PAGE_TITLES[pageId] || pageId;
-    
+
+    // Live date/time in the header (was a hardcoded "Tue 28 Apr 2026" label).
+    const _meta = document.getElementById('page-meta');
+    if (_meta) {
+      const wib = new Date(Date.now() + (new Date().getTimezoneOffset() + 420) * 60000); // UTC+7
+      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const mons = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      _meta.textContent = `${days[wib.getDay()]} ${wib.getDate()} ${mons[wib.getMonth()]} ${wib.getFullYear()} · ${String(wib.getHours()).padStart(2, '0')}:${String(wib.getMinutes()).padStart(2, '0')} WIB`;
+    }
+
     // Show/hide site filter bar
     const filter = document.getElementById('site-filter');
     if (PAGES_WITH_SITE_FILTER.includes(pageId)) {
@@ -3526,9 +4171,12 @@ refreshCurrentPage = function() {
 };
 
 function refreshDashboard() {
-  ['both', 'prabumuli', 'maredan'].forEach(site => {
+  // Sites without a dedicated dashboard panel yet (e.g. SAM2) fall back to the
+  // combined view so the page is never blank.
+  const view = document.getElementById('dash-' + currentSite) ? currentSite : 'both';
+  ['both', 'prabumuli', 'maredan', 'sam2'].forEach(site => {
     const el = document.getElementById('dash-' + site);
-    if (el) el.style.display = (site === currentSite) ? 'block' : 'none';
+    if (el) el.style.display = (site === view) ? 'block' : 'none';
   });
   
   // Apply manager-only hiding
@@ -3546,8 +4194,9 @@ async function loadDashboardData() {
   }
   
   try {
+    await Promise.all([ensureBbmRates(sb), ensureRateMults(sb)]);  // date-aware fuel rates + work-rate multipliers
     // Determine which site(s) to query
-    const sitesToQuery = currentSite === 'both' ? ['prabumuli', 'maredan'] : [currentSite];
+    const sitesToQuery = currentSite === 'both' ? ['prabumuli', 'maredan', 'sam2'] : [currentSite];
     
     // Fetch in parallel:
     // 1. All time_sheet entries (for YTD)
@@ -3556,7 +4205,7 @@ async function loadDashboardData() {
     // 4. All breakdowns (active = end_date is null)
     // 5. All units (for BD count)
     const [tsRes, obRes, wtRes, bdRes, unitsRes, allUnitsRes, settingsRes] = await Promise.all([
-      sb.from('time_sheet').select('*').in('site', sitesToQuery),
+      sbFetchAll(() => sb.from('time_sheet').select('*').in('site', sitesToQuery).order('id')),
       sb.from('opening_balance').select('*').in('site', sitesToQuery),
       sb.from('work_types').select('*').in('site', sitesToQuery),
       sb.from('breakdowns').select('*').is('end_date', null).in('site', sitesToQuery),
@@ -3627,7 +4276,7 @@ async function loadDashboardData() {
       return entries.reduce((sum, e) => {
         const wt = wtLookup[e.site + '|' + e.work_type];
         if (!wt) return sum;
-        return sum + (parseFloat(e.output || 0) * parseFloat(wt.rate || 0));
+        return sum + (parseFloat(e.output || 0) * parseFloat(wt.rate || 0) * rateMultiplierFor(e.site, e.date));
       }, 0);
     }
     
@@ -3636,24 +4285,18 @@ async function loadDashboardData() {
     function calcCost(entries) {
       return entries.reduce((sum, e) => {
         const wt = wtLookup[e.site + '|' + e.work_type];
-        if (!wt) return sum;
-        const premi = parseFloat(e.output || 0) * parseFloat(wt.premi || 0);
+        // Rows with an unknown work type (e.g. '(standby)') earn no revenue and
+        // no premi, but their fuel and rental are REAL costs — never skip them.
+        const premi = wt ? parseFloat(e.output || 0) * parseFloat(wt.premi || 0) : 0;
         const liters = parseFloat(e.bbm_allocated || e.bbm_liters || 0);
         const hm = parseFloat(e.hm_allocated || e.hm_hours || 0);
-        let bbmCost = 0;
-        if (e.site === 'maredan') {
-          bbmCost = liters * bbmRateMaredan;
-        } else if (e.site === 'prabumuli') {
-          // BRL only pays the excess above the contract threshold.
-          const excess = Math.max(0, bbmRatePrabumuli - bbmThresholdPrabumuli);
-          bbmCost = liters * excess;
-        }
-        // Equipment rental per HM (Maredan only — Prabumuli is subcontractor)
+        const bbmCost = liters * bbmPerLiterFor(e, bbmRateMaredan, bbmRatePrabumuli, bbmThresholdPrabumuli);
+        // Equipment rental per HM (direct sites only — Prabumuli is subcontractor)
         let rentalCost = 0;
-        if (e.site === 'maredan' && e.unit_code) {
+        if (isDirectSite(e.site) && e.unit_code) {
           const cls = unitClassLookup[e.unit_code];
           if (cls) {
-            const rate = rentalLookup['maredan|' + cls] || 0;
+            const rate = rentalLookup[e.site + '|' + cls] || 0;
             rentalCost = hm * rate;
           }
         }
@@ -3663,36 +4306,25 @@ async function loadDashboardData() {
     
     // Daily fixed cost (uang makan + fixed lain-lain) per unit per day
     function calcDailyFixed(entries) {
-      // Count unique unit-date combinations per site
-      const maredanCombos = new Set();
-      const prabumuliCombos = new Set();
+      // Count unique unit-date combinations per site × that site's daily rate
+      const combosBySite = {};
       entries.forEach(e => {
-        const key = (e.unit_code || '?') + '|' + e.date;
-        if (e.site === 'maredan') maredanCombos.add(key);
-        else if (e.site === 'prabumuli') prabumuliCombos.add(key);
+        if (!e.site) return;
+        (combosBySite[e.site] = combosBySite[e.site] || new Set()).add((e.unit_code || '?') + '|' + e.date);
       });
-      const dailyMaredan = parseFloat((appSettingsData || []).find(s => s.key === 'maredan_daily_cost')?.value) || 184000;
-      const dailyPrabumuli = parseFloat((appSettingsData || []).find(s => s.key === 'prabumuli_daily_cost')?.value) || 138000;
-      return (maredanCombos.size * dailyMaredan) + (prabumuliCombos.size * dailyPrabumuli);
+      return Object.entries(combosBySite).reduce(
+        (sum, [site, combos]) => sum + combos.size * dailyFixedFor(site, appSettingsData), 0);
     }
     
     const ytdRevenue = calcRevenue(ytdEntries);
     const ytdCost = calcCost(ytdEntries);
     
-    // Include opening_balance revenue + premi cost in YTD totals
-    // Opening balance is the cumulative output done before platform launch (Apr 25)
-    let ytdOpeningRevenue = 0;
-    let ytdOpeningPremi = 0;
-    openingBalance.forEach(o => {
-      // Filter by current site selection
-      if (!sitesToQuery.includes(o.site)) return;
-      const wt = wtLookup[o.site + '|' + o.work_type];
-      if (!wt) return;
-      const amount = parseFloat(o.amount) || 0;
-      ytdOpeningRevenue += amount * (parseFloat(wt.rate) || 0);
-      ytdOpeningPremi += amount * (parseFloat(wt.premi) || 0);
-    });
-    
+    // opening_balance (pre-launch output) is EXCLUDED from YTD totals: its full
+    // cost (BBM, rental, daily fixed) was never captured, so counting only its
+    // revenue + premi would overstate profit. YTD = platform-tracked data only.
+    const ytdOpeningRevenue = 0;
+    const ytdOpeningPremi = 0;
+
     const ytdRevenueWithOpening = ytdRevenue + ytdOpeningRevenue;
     // Add daily fixed cost (uang makan + fixed lain-lain × unit-days) to MTD/YTD costs
     const ytdDailyFixed = calcDailyFixed(ytdEntries);
@@ -3810,7 +4442,7 @@ async function updateUrgentAlerts(breakdowns, timeSheet, workTypes) {
     const days = daysSince(b.start_date);
     if (days >= 14) {
       const siteLabel = b.site.charAt(0).toUpperCase() + b.site.slice(1);
-      const dailyCost = b.site === 'maredan' ? 280000 : 138000;
+      const dailyCost = dailyFixedFor(b.site, typeof appSettingsData !== 'undefined' ? appSettingsData : null);
       const lostCost = days * dailyCost;
       alerts.push({
         severity: 'danger',
@@ -3836,7 +4468,7 @@ async function updateUrgentAlerts(breakdowns, timeSheet, workTypes) {
     try {
       const { data: bbm } = await sb.from('lap_bbm').select('*').order('date', { ascending: false });
       const all = bbm || [];
-      ['prabumuli', 'maredan'].forEach(site => {
+      ['prabumuli', 'maredan', 'sam2'].forEach(site => {
         const latest = all.find(e => e.site === site);
         if (!latest) return;
         const stock = parseFloat(latest.saldo) || 0;
@@ -3938,17 +4570,16 @@ function updateYtdProgressTable(timeSheet, openingBalance, workTypes, mtdEntries
   }
   
   const mtdPrabumuli = aggregateOutput(mtdEntries, 'prabumuli');
-  const ytdPrabumuli = aggregateOutput(ytdEntries, 'prabumuli');
   const mtdMaredan = aggregateOutput(mtdEntries, 'maredan');
-  const ytdMaredan = aggregateOutput(ytdEntries, 'maredan');
-  
-  // Get opening balances per work type
-  const openingPrabumuli = {};
-  const openingMaredan = {};
-  openingBalance.forEach(o => {
-    if (o.site === 'prabumuli') openingPrabumuli[o.work_type] = parseFloat(o.amount || 0);
-    if (o.site === 'maredan') openingMaredan[o.work_type] = parseFloat(o.amount || 0);
-  });
+
+  // Opening balances are cumulative "as of" a date — YTD adds only daily
+  // entries AFTER that date (earlier ones are already inside the opening).
+  const obP = openingMaps(openingBalance, 'prabumuli');
+  const obM = openingMaps(openingBalance, 'maredan');
+  const openingPrabumuli = obP.opening;
+  const openingMaredan = obM.opening;
+  const ytdPrabumuli = aggregateOutputAfterOpening(ytdEntries, 'prabumuli', obP.asOf);
+  const ytdMaredan = aggregateOutputAfterOpening(ytdEntries, 'maredan', obM.asOf);
   
   // Build unit lookup from work_types
   const unitLookup = {};
@@ -3996,7 +4627,30 @@ function updateYtdProgressTable(timeSheet, openingBalance, workTypes, mtdEntries
       </tr>`;
     });
   }
-  
+
+  // SAM2 section
+  const sam2Works = workTypes.filter(w => w.site === 'sam2');
+  if (sam2Works.length > 0) {
+    const obS = openingMaps(openingBalance, 'sam2');
+    const mtdSam2 = aggregateOutput(mtdEntries, 'sam2');
+    const ytdSam2 = aggregateOutputAfterOpening(ytdEntries, 'sam2', obS.asOf);
+    let sHtml = '';
+    sam2Works.forEach(w => {
+      const opening = obS.opening[w.work_name] || 0;
+      const mtd = mtdSam2[w.work_name] || 0;
+      const ytd = (ytdSam2[w.work_name] || 0) + opening;
+      if (opening === 0 && mtd === 0 && ytd === 0) return;
+      const u = w.unit;
+      sHtml += `<tr>
+        <td style="padding:6px 0;font-weight:500">${w.work_name}</td>
+        <td style="text-align:right;color:var(--c-text-tertiary)">${formatNum(opening)} ${u}</td>
+        <td style="text-align:right">${formatNum(mtd)} ${u}</td>
+        <td style="text-align:right;font-weight:500">${formatNum(ytd)} ${u}</td>
+      </tr>`;
+    });
+    if (sHtml) html += `<tr><td colspan="4" style="padding:8px 0 4px;font-size:10px;color:var(--c-text-tertiary);font-family:var(--font-mono);text-transform:uppercase">SAM2</td></tr>` + sHtml;
+  }
+
   if (!html) {
     html = `<tr><td colspan="4" style="padding:12px;text-align:center;color:var(--c-text-tertiary)">No data yet — start entering daily time sheets</td></tr>`;
   }
@@ -4279,15 +4933,15 @@ async function handleFileUpload(event) {
       for (let col = 0; col < 12; col++) {
         const cell = ts[XLSX.utils.encode_cell({r: 4, c: col})];
         if (cell && cell.v && String(cell.v).toUpperCase().includes('LOKASI')) {
-          // Site name is in next non-empty cell
-          for (let nc = col + 1; nc < 12; nc++) {
+          // Site name may be in the SAME cell ("LOKASI: SAM2") or the next one
+          const pickSiteName = t => {
+            const s = String(t).toLowerCase();
+            return s.includes('prabumuli') ? 'prabumuli' : s.includes('maredan') ? 'maredan' : s.includes('sam2') ? 'sam2' : null;
+          };
+          site = pickSiteName(cell.v);
+          for (let nc = col + 1; !site && nc < 12; nc++) {
             const next = ts[XLSX.utils.encode_cell({r: 4, c: nc})];
-            if (next && next.v) {
-              const sname = String(next.v).toLowerCase();
-              if (sname.includes('prabumuli')) site = 'prabumuli';
-              else if (sname.includes('maredan')) site = 'maredan';
-              break;
-            }
+            if (next && next.v) { site = pickSiteName(next.v); break; }
           }
           break;
         }
@@ -4295,14 +4949,16 @@ async function handleFileUpload(event) {
     }
     // Fallback: detect from filename
     if (!site) {
-      if (file.name.toLowerCase().includes('prabumuli')) site = 'prabumuli';
-      else if (file.name.toLowerCase().includes('maredan')) site = 'maredan';
+      const fn = file.name.toLowerCase();
+      if (fn.includes('prabumuli')) site = 'prabumuli';
+      else if (fn.includes('maredan')) site = 'maredan';
+      else if (fn.includes('sam2')) site = 'sam2';
     }
     
     if (!site) {
       contentEl.innerHTML = `
         <div style="padding:14px;background:var(--c-danger-bg);color:var(--c-danger);border-radius:var(--radius-md);font-size:12px">
-          ✗ Could not detect site (Prabumuli or Maredan). Please ensure file follows the BRL template format with LOKASI: marker on the TIME SHEET sheet.
+          ✗ Could not detect site (Prabumuli, Maredan, or SAM2). Please ensure file follows the BRL template format with LOKASI: marker on the TIME SHEET sheet — or include the site name in the filename. If this message mentions only two sites, your browser is running an old version: press Cmd+Shift+R.
         </div>
       `;
       return;
@@ -4401,20 +5057,38 @@ function parseTimeSheet(wb, site) {
       else continue;  // unparseable date
     } else continue;
     
-    if (!workCell?.v || !outCell?.v) {
-      errors.push(`Row ${row+1}: missing work type or output, skipped`);
-      continue;
+    // Keep a row if it has ANY real data: output, OR fuel, OR machine-hours.
+    // Standby / breakdown / "belum diukur" rows have 0 output but real BBM+HM —
+    // that fuel is a genuine COST and must be captured (dropping it overstates
+    // profit). Only skip rows that are truly empty (no output, no bbm, no hm).
+    const hasOutput = outCell?.v != null && outCell.v !== '';
+    const hasBbm = bbmCell?.v != null && bbmCell.v !== '';
+    const hasHm = hmCell?.v != null && hmCell.v !== '';
+    if (!hasOutput && !hasBbm && !hasHm) {
+      continue;  // genuinely blank row
     }
-    
+
+    // work_type is NOT NULL in the DB, so rows with no work type (pure fuel /
+    // standby) get the sentinel "(standby)" — it earns no revenue (no rate
+    // match) but its BBM/HM still flow into cost.
+    // Known misnamed work types in the admins' templates are normalised on
+    // import so they never orphan again (orphans earn Rp 0 and skew reports).
+    const WORK_TYPE_ALIASES = {
+      'Cuci Parit 1x1': 'Cuci Parit 1x0.75x1',
+      'Terasan >5.5m CRStop Bund': 'Terasan >5.5m Stop Bund',
+    };
+    let workType = workCell?.v ? String(workCell.v).trim() : '(standby)';
+    if (WORK_TYPE_ALIASES[workType]) workType = WORK_TYPE_ALIASES[workType];
+
     entries.push({
       date: dateStr,
       site: site,
       unit_code: String(unitCell.v).trim(),
-      work_type: String(workCell.v).trim(),
+      work_type: workType,
       operator: opCell?.v ? String(opCell.v).trim() : null,
-      bbm_liters: bbmCell?.v != null && bbmCell.v !== '' ? parseFloat(bbmCell.v) : null,
-      hm_hours: hmCell?.v != null && hmCell.v !== '' ? parseFloat(hmCell.v) : null,
-      output: parseFloat(outCell.v),
+      bbm_liters: hasBbm ? parseFloat(bbmCell.v) : null,
+      hm_hours: hasHm ? parseFloat(hmCell.v) : null,
+      output: hasOutput ? parseFloat(outCell.v) : 0,
       output_unit: unitOutCell?.v ? String(unitOutCell.v).trim() : null,
       notes: noteCell?.v ? String(noteCell.v).trim() : null,
     });
@@ -4426,7 +5100,29 @@ function parseTimeSheet(wb, site) {
 function parseOpeningBalance(wb, site) {
   const ws = wb.Sheets['OPENING BALANCE'];
   if (!ws) return { entries: [], errors: [] };
-  
+
+  // Read the "OPENING BALANCE AS OF:" date — the cumulative cutoff. Daily
+  // entries on/before it are already inside the opening amounts, so YTD math
+  // depends on this being the sheet's real date, not the upload date.
+  let asOf = null;
+  for (let row = 5; row < 40; row++) {
+    const label = ws[XLSX.utils.encode_cell({ r: row, c: 0 })];
+    if (!label?.v || !String(label.v).toUpperCase().includes('AS OF')) continue;
+    const dCell = ws[XLSX.utils.encode_cell({ r: row, c: 2 })];
+    const v = dCell?.v;
+    if (v instanceof Date) asOf = dateToYMD(v);
+    else if (typeof v === 'number') {           // Excel serial date
+      const d = XLSX.SSF.parse_date_code(v);
+      if (d) asOf = `${d.y}-${String(d.m).padStart(2, '0')}-${String(d.d).padStart(2, '0')}`;
+    } else if (v != null) {                     // "DD/MM/YYYY" or ISO text
+      const s = String(v).trim();
+      const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+      if (m) asOf = `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
+      else if (/^\d{4}-\d{2}-\d{2}/.test(s)) asOf = s.slice(0, 10);
+    }
+    break;
+  }
+
   const entries = [];
   // Data starts row 6 (0-indexed: 5)
   // Cols: 0=NO, 1=JENIS PEKERJAAN, 2=AMOUNT, 3=SATUAN, 4=CATATAN
@@ -4434,16 +5130,18 @@ function parseOpeningBalance(wb, site) {
     const workCell = ws[XLSX.utils.encode_cell({r: row, c: 1})];
     const amtCell = ws[XLSX.utils.encode_cell({r: row, c: 2})];
     const unitCell = ws[XLSX.utils.encode_cell({r: row, c: 3})];
-    
+
     if (!workCell?.v) continue;
+    const work = String(workCell.v).trim();
+    if (work.toUpperCase().includes('AS OF')) continue;  // the date row, not a work type
     const amt = amtCell?.v != null ? parseFloat(amtCell.v) : 0;
-    
+
     entries.push({
       site: site,
-      work_type: String(workCell.v).trim(),
+      work_type: work,
       amount: isNaN(amt) ? 0 : amt,
       unit: unitCell?.v ? String(unitCell.v).trim() : null,
-      as_of: new Date().toISOString().slice(0, 10),
+      as_of: asOf || new Date().toISOString().slice(0, 10),
     });
   }
   return { entries, errors: [] };
@@ -4602,37 +5300,41 @@ function parseBreakdowns(wb, site) {
     .filter(r => r.sectionDate && r.sectionDate === maxDate)
     .map(r => r.row);
 
-  // For each row in the latest section, treat it as an active BD only if
-  // AGING (column 6) is a positive number.
+  // Every row in the LATEST date section that names a unit = an active BD.
+  // We do NOT use aging or status keywords to decide active-vs-resolved, because
+  // the two sites' admins fill the sheet differently:
+  //   • Maredan (Nova): fills AGING numbers + status (NORMAL/WARNING/…)
+  //   • Prabumuli (Pak Ucok): fills unit + description + action ("PROGRES"),
+  //     leaves AGING and STATUS blank
   //
-  // Aging is the source of truth for "is this BD still active":
-  //   - aging has a number (e.g. 4) → BD has been ongoing 4 days → ACTIVE
-  //   - aging is blank / 0          → unit is back working → SKIP
-  //
-  // We deliberately DON'T rely on the STATUS text (KERJA / STANBY /
-  // SELESAI) because site admins may not type it consistently.
+  // RESOLUTION IS BY ABSENCE: when a unit is fixed, the admin deletes its row
+  // from the sheet. On the next upload that unit is no longer present, and the
+  // soft-delete step (in the upload handler) closes the matching DB record
+  // (end_date = today). So "removed from the sheet = resolved" — no keyword or
+  // aging needed. AGING is used only to compute a nicer start_date when present.
   for (const row of latestSection) {
     const unitCell = ws[XLSX.utils.encode_cell({r: row, c: 2})];
+    if (!unitCell?.v) continue;
     const descCell = ws[XLSX.utils.encode_cell({r: row, c: 4})];
+    const actionCell = ws[XLSX.utils.encode_cell({r: row, c: 5})];
+    const status = ws[XLSX.utils.encode_cell({r: row, c: 7})]?.v;
 
+    // Aging (optional) → used only to derive start_date.
     const agingCell = ws[XLSX.utils.encode_cell({r: row, c: 6})];
     let agingDays = 0;
     if (agingCell?.v != null && agingCell.v !== '') {
       agingDays = parseInt(agingCell.v) || 0;
     }
-    if (agingDays <= 0) continue;
 
-    // start_date = today − agingDays.
-    // Use today's LOCAL calendar date as UTC-midnight so the subtraction
-    // produces a clean date with no fractional-day rounding issues at any
-    // time of day. The resulting Date is UTC midnight, which dateToYMD
-    // detects and formats using UTC components — robust across timezones.
-    const _todayUTCmidnight = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
-    const start = new Date(_todayUTCmidnight - agingDays * 86400000);
-    const startDate = dateToYMD(start);
-
-    // status kept for display only (not used for active/resolved filtering)
-    const status = ws[XLSX.utils.encode_cell({r: row, c: 7})]?.v;
+    // start_date: from aging if present; else the row's section date; else today.
+    let startDate;
+    if (agingDays > 0) {
+      const _todayUTCmidnight = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+      startDate = dateToYMD(new Date(_todayUTCmidnight - agingDays * 86400000));
+    } else {
+      const sd = rowsWithDates.find(r => r.row === row)?.sectionDate;
+      startDate = sd || dateToYMD(today);
+    }
 
     rawEntries.push({
       start_date: startDate,
@@ -4641,7 +5343,7 @@ function parseBreakdowns(wb, site) {
       unit_code: String(unitCell.v).trim(),
       unit_type: ws[XLSX.utils.encode_cell({r: row, c: 3})]?.v ? String(ws[XLSX.utils.encode_cell({r: row, c: 3})].v).trim() : null,
       description: descCell?.v ? String(descCell.v).trim() : null,
-      action: ws[XLSX.utils.encode_cell({r: row, c: 5})]?.v ? String(ws[XLSX.utils.encode_cell({r: row, c: 5})].v).trim() : null,
+      action: actionCell?.v ? String(actionCell.v).trim() : null,
       status: status ? String(status).trim().toLowerCase() : 'standby',
       _agingDays: agingDays,  // temp field for dedup
     });
@@ -4969,6 +5671,28 @@ function showUploadPreview(result, fileName) {
   // Date range
   const dates = result.timeSheet.entries.map(e => e.date).filter(Boolean).sort();
   const dateRange = dates.length > 0 ? `${dates[0]} → ${dates[dates.length-1]}` : 'N/A';
+
+  // Swapped-date detector: a period sheet spans ~1 month. If dates spread much
+  // wider, Excel almost certainly auto-converted typed dates as MM/DD (US) —
+  // e.g. "3/7/2026" (3 July) silently became 7 March. Flag the stragglers.
+  let dateWarning = '';
+  if (dates.length >= 5) {
+    const months = {};
+    dates.forEach(d => { const m = d.slice(0, 7); months[m] = (months[m] || 0) + 1; });
+    const domMonth = Object.entries(months).sort((a, b) => b[1] - a[1])[0][0];
+    const oddDates = [...new Set(dates.filter(d => {
+      const diff = Math.abs(new Date(d) - new Date(domMonth + '-15')) / 86400000;
+      return diff > 45;
+    }))];
+    if (oddDates.length) {
+      dateWarning = `<div style="margin:10px 0;padding:12px;background:var(--c-danger-bg);color:var(--c-danger);border-radius:var(--radius-md);font-size:12px">
+        ⚠️ <strong>Suspicious dates found — do NOT save yet.</strong> Most rows are in ${domMonth}, but these dates are far outside:
+        <strong>${oddDates.slice(0, 8).map(escapeHtml).join(', ')}${oddDates.length > 8 ? '…' : ''}</strong><br>
+        This usually means Excel auto-converted typed dates as month/day (US style) — e.g. "3/7/2026" (3 July) became 7 March.
+        Fix the TANGGAL cells in the Excel (type 03-Jul-2026 style, or format the column as Date), then re-upload.
+      </div>`;
+    }
+  }
   
   // Output summary by work type
   const outputSummary = {};
@@ -5016,7 +5740,9 @@ function showUploadPreview(result, fileName) {
           <div style="font-size:9px;color:var(--c-text-tertiary)">BAP RECON</div>
         </div>
       </div>
-      
+
+      ${dateWarning}
+
       ${outputRows ? `
       <div style="margin-bottom:14px">
         <div style="font-size:10px;color:var(--c-text-tertiary);text-transform:uppercase;font-family:var(--font-mono);margin-bottom:6px">Output by work type (top 8)</div>
@@ -5066,6 +5792,50 @@ async function confirmUpload() {
     // 1. TIME SHEET — bulk insert (delete existing for same dates+site first to avoid dupes)
     if (result.timeSheet.entries.length > 0) {
       const dates = [...new Set(result.timeSheet.entries.map(e => e.date))];
+
+      // ── Stale-draft guard ──────────────────────────────────────────────
+      // Re-uploading the same growing file is the intended workflow: dates in
+      // the file replace what's in the DB, other dates are untouched. The one
+      // hazard is uploading an OLDER draft after a newer one — it would silently
+      // revert corrections. So if this file CHANGES dates that already hold
+      // data, show what changes and ask before writing anything.
+      try {
+        const { data: existing } = await sbFetchAll(() => sb.from('time_sheet')
+          .select('date, output, bbm_liters')
+          .eq('site', result.site).in('date', dates).order('id'));
+        if (existing && existing.length) {
+          const tally = rows => {
+            const m = {};
+            rows.forEach(r => {
+              const s = m[r.date] = m[r.date] || { n: 0, out: 0, bbm: 0 };
+              s.n++; s.out += parseFloat(r.output || 0); s.bbm += parseFloat(r.bbm_liters || 0);
+            });
+            return m;
+          };
+          const oldT = tally(existing), newT = tally(result.timeSheet.entries);
+          const changed = Object.keys(oldT).filter(d => {
+            const a = oldT[d], b = newT[d] || { n: 0, out: 0, bbm: 0 };
+            return a.n !== b.n || Math.abs(a.out - b.out) > 0.01 || Math.abs(a.bbm - b.bbm) > 0.01;
+          }).sort();
+          if (changed.length) {
+            const lines = changed.slice(0, 8).map(d => {
+              const a = oldT[d], b = newT[d] || { n: 0, out: 0, bbm: 0 };
+              return `${d}:  ${a.n} rows / output ${Math.round(a.out).toLocaleString()} / BBM ${Math.round(a.bbm).toLocaleString()} L  →  ${b.n} rows / ${Math.round(b.out).toLocaleString()} / ${Math.round(b.bbm).toLocaleString()} L`;
+            }).join('\n');
+            const ok = confirm(
+              `⚠️ This file CHANGES ${changed.length} date(s) that already have data in the system:\n\n${lines}${changed.length > 8 ? `\n…and ${changed.length - 8} more date(s)` : ''}\n\n` +
+              `• If this file is the NEWEST version (with corrections), press OK.\n` +
+              `• If it might be an OLDER draft, press Cancel — uploading it would overwrite newer data.`
+            );
+            if (!ok) {
+              window._pendingUpload = null;
+              contentEl.innerHTML = `<div style="padding:14px;background:var(--c-info-bg);color:var(--c-info);border-radius:var(--radius-md);font-size:12px">Upload cancelled — nothing was saved (older-draft protection).</div>`;
+              return;
+            }
+          }
+        }
+      } catch (gErr) { /* guard is best-effort — never block a legitimate upload */ }
+
       // Delete existing entries for these dates (full overwrite per date)
       const { error: delErr } = await sb
         .from('time_sheet')
@@ -5301,6 +6071,10 @@ refreshCurrentPage = function() {
     refreshBenchmark();
   } else if (currentPage === 'ops-progress') {
     refreshOpsProgress();
+  } else if (currentPage === 'prod-rates') {
+    refreshProdRates();
+  } else if (currentPage === 'data-health') {
+    refreshDataHealth();
   } else if (currentPage === 'actual-pnl') {
     refreshActualPnl();
   } else if (currentPage === 'upload') {
@@ -5317,7 +6091,7 @@ refreshCurrentPage = function() {
 };
 
 async function refreshPnl() {
-  ['both', 'prabumuli', 'maredan'].forEach(site => {
+  ['both', 'prabumuli', 'maredan', 'sam2'].forEach(site => {
     const el = document.getElementById('pnl-' + site);
     if (el) el.style.display = (site === currentSite) ? 'block' : 'none';
   });
@@ -5328,10 +6102,11 @@ async function refreshPnl() {
 async function loadPnlData() {
   const sb = ensureSupabase();
   if (!sb) return;
-  
+
   try {
+    await Promise.all([ensureBbmRates(sb), ensureRateMults(sb)]);  // date-aware fuel rates + work-rate multipliers
     const [tsRes, wtRes, bdRes, obRes, unitsRes, rentalRes, settingsRes] = await Promise.all([
-      sb.from('time_sheet').select('*'),
+      sbFetchAll(() => sb.from('time_sheet').select('*').order('id')),
       sb.from('work_types').select('*'),
       sb.from('breakdowns').select('*').is('end_date', null),
       sb.from('opening_balance').select('*'),
@@ -5371,17 +6146,11 @@ async function loadPnlData() {
     // Helper functions for P&L calculation per entry
     function entryRevenue(e) {
       const wt = wtLookup[e.site + '|' + e.work_type];
-      return wt ? (parseFloat(e.output) || 0) * parseFloat(wt.rate || 0) : 0;
+      return wt ? (parseFloat(e.output) || 0) * parseFloat(wt.rate || 0) * rateMultiplierFor(e.site, e.date) : 0;
     }
     function entryBbmCost(e) {
       const liters = parseFloat(e.bbm_allocated || e.bbm_liters || 0);
-      if (e.site === 'maredan') return liters * bbmRateMaredan;
-      if (e.site === 'prabumuli') {
-        // Subcontractor model: BRL only pays the excess above the contract threshold.
-        const excess = Math.max(0, bbmRatePrabumuli - bbmThresholdPrabumuli);
-        return liters * excess;
-      }
-      return 0;
+      return liters * bbmPerLiterFor(e, bbmRateMaredan, bbmRatePrabumuli, bbmThresholdPrabumuli);
     }
     function entryPremi(e) {
       const wt = wtLookup[e.site + '|' + e.work_type];
@@ -5389,10 +6158,10 @@ async function loadPnlData() {
     }
     function entryRental(e) {
       // Per HM × class rate (Maredan only — Prabumuli is subcontractor)
-      if (e.site !== 'maredan') return 0;
+      if (!isDirectSite(e.site)) return 0;
       const cls = unitClassLookup[e.unit_code];
       if (!cls) return 0;
-      const rate = rentalLookup['maredan|' + cls] || 0;
+      const rate = rentalLookup[e.site + '|' + cls] || 0;
       return (parseFloat(e.hm_allocated || e.hm_hours || 0)) * rate;
     }
     
@@ -5443,17 +6212,19 @@ async function loadPnlData() {
       // Daily fixed cost: count unique unit-day combos
       const unitDays = new Set();
       filtered.forEach(e => unitDays.add((e.unit_code || '?') + '|' + e.date));
-      const dailyRate = site === 'maredan' ? dailyFixedMaredan : dailyFixedPrabumuli;
+      const dailyRate = dailyFixedFor(site, appSettings);
       const dailyFixed = unitDays.size * dailyRate;
-      
+
       const cost = bbmCost + premi + rental + dailyFixed;
       return { revenue, cost, pnl: revenue - cost, bbmCost, premi, rental, dailyFixed };
     }
-    
+
     const ytdP = aggSite(ytdEntries, 'prabumuli');
     const ytdM = aggSite(ytdEntries, 'maredan');
+    const ytdS = aggSite(ytdEntries, 'sam2');
     const mtdP = aggSite(mtdEntries, 'prabumuli');
     const mtdM = aggSite(mtdEntries, 'maredan');
+    const mtdS = aggSite(mtdEntries, 'sam2');
     
     // NOTE: opening_balance (pre-launch output) is intentionally EXCLUDED from
     // YTD P&L. Its full cost (BBM, rental, daily fixed) was never captured, so
@@ -5461,14 +6232,14 @@ async function loadPnlData() {
     // ONLY platform-tracked data, giving a true actual P&L.
 
     const ytdTotal = {
-      revenue: ytdP.revenue + ytdM.revenue,
-      cost: ytdP.cost + ytdM.cost,
-      pnl: ytdP.pnl + ytdM.pnl,
+      revenue: ytdP.revenue + ytdM.revenue + ytdS.revenue,
+      cost: ytdP.cost + ytdM.cost + ytdS.cost,
+      pnl: ytdP.pnl + ytdM.pnl + ytdS.pnl,
     };
     const mtdTotal = {
-      revenue: mtdP.revenue + mtdM.revenue,
-      cost: mtdP.cost + mtdM.cost,
-      pnl: mtdP.pnl + mtdM.pnl,
+      revenue: mtdP.revenue + mtdM.revenue + mtdS.revenue,
+      cost: mtdP.cost + mtdM.cost + mtdS.cost,
+      pnl: mtdP.pnl + mtdM.pnl + mtdS.pnl,
     };
 
     // ─── Targets vs Actual (reuses operational_targets table) ───
@@ -5478,11 +6249,11 @@ async function loadPnlData() {
       const tg = await sb.from('operational_targets').select('*');
       (tg.data || []).forEach(t => { _pnlTargets[`${t.site}|${t.period_key}|${t.work_type}`] = parseFloat(t.target_output) || 0; });
     } catch (_) { /* table may not exist yet */ }
-    const pickSite = (p, m, t) => currentSite === 'prabumuli' ? p : currentSite === 'maredan' ? m : t;
+    const pickSite = (p, m, s, t) => currentSite === 'prabumuli' ? p : currentSite === 'maredan' ? m : currentSite === 'sam2' ? s : t;
     updatePnlTargets(
       month, year, _pnlTargets,
-      pickSite(mtdP, mtdM, mtdTotal).revenue, pickSite(mtdP, mtdM, mtdTotal).pnl,
-      pickSite(ytdP, ytdM, ytdTotal).revenue, pickSite(ytdP, ytdM, ytdTotal).pnl
+      pickSite(mtdP, mtdM, mtdS, mtdTotal).revenue, pickSite(mtdP, mtdM, mtdS, mtdTotal).pnl,
+      pickSite(ytdP, ytdM, ytdS, ytdTotal).revenue, pickSite(ytdP, ytdM, ytdS, ytdTotal).pnl
     );
 
     // Helpers
@@ -5519,7 +6290,7 @@ async function loadPnlData() {
     const compTable = document.getElementById('pnl-both-comparison');
     if (compTable) {
       const rows = [];
-      [['Prabumuli', mtdP], ['Maredan', mtdM]].forEach(([name, agg]) => {
+      [['Prabumuli', mtdP], ['Maredan', mtdM], ['SAM2', mtdS]].forEach(([name, agg]) => {
         if (agg.revenue === 0 && agg.cost === 0) {
           rows.push(`<tr><td>${name}</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>`);
         } else {
@@ -5550,6 +6321,7 @@ async function loadPnlData() {
     // ─── Per-site KPIs ───
     updatePnlSiteKpi('p', mtdP);
     updatePnlSiteKpi('m', mtdM);
+    updatePnlSiteKpi('s', mtdS);
     
     // ─── Per-unit P&L tables ───
     // Active-BD standby fixed cost only makes sense for the CURRENT month —
@@ -5559,11 +6331,16 @@ async function loadPnlData() {
     const bdForView = isCurrentMonth ? breakdowns : [];
     updatePnlUnitTable('pnl-p-units', mtdEntries.filter(e => e.site === 'prabumuli'), 'prabumuli', wtLookup, bdForView, unitClassLookup, rentalLookup, bbmRateMaredan, dailyFixedPrabumuli, dailyFixedMaredan, bbmRatePrabumuli, bbmThresholdPrabumuli);
     updatePnlUnitTable('pnl-m-units', mtdEntries.filter(e => e.site === 'maredan'), 'maredan', wtLookup, bdForView, unitClassLookup, rentalLookup, bbmRateMaredan, dailyFixedPrabumuli, dailyFixedMaredan, bbmRatePrabumuli, bbmThresholdPrabumuli);
+    updatePnlUnitTable('pnl-s-units', mtdEntries.filter(e => e.site === 'sam2'), 'sam2', wtLookup, bdForView, unitClassLookup, rentalLookup, bbmRateMaredan, dailyFixedPrabumuli, dailyFixedMaredan, bbmRatePrabumuli, bbmThresholdPrabumuli);
 
     // P&L by work type (multi-unit work split by unit class)
     updatePnlWorkType('pnl-p-worktype', mtdEntries.filter(e => e.site === 'prabumuli'), 'prabumuli', wtLookup, unitClassLookup, rentalLookup, bbmRateMaredan, bbmRatePrabumuli, bbmThresholdPrabumuli, dailyFixedPrabumuli);
     updatePnlWorkType('pnl-m-worktype', mtdEntries.filter(e => e.site === 'maredan'), 'maredan', wtLookup, unitClassLookup, rentalLookup, bbmRateMaredan, bbmRatePrabumuli, bbmThresholdPrabumuli, dailyFixedMaredan);
-    
+    updatePnlWorkType('pnl-s-worktype', mtdEntries.filter(e => e.site === 'sam2'), 'sam2', wtLookup, unitClassLookup, rentalLookup, bbmRateMaredan, bbmRatePrabumuli, bbmThresholdPrabumuli, dailyFixedFor('sam2', appSettings));
+
+    // Re-apply the active view tab after re-rendering the cards
+    setPnlTab(_pnlTab);
+
   } catch (e) {
     console.error('loadPnlData error:', e);
   }
@@ -5620,7 +6397,8 @@ function updatePnlUnitTable(tableId, entries, site, wtLookup, breakdowns, unitCl
     // unit (excavator + dozer) gets half the rate and half the premi credit,
     // since the job requires both. If only one unit's row exists, the other
     // half is implicitly unattributed at the unit level.
-    const fullRate  = parseFloat(wt.rate)  || 0;
+    // Base contract rate × the date-effective multiplier (client rate increases)
+    const fullRate  = (parseFloat(wt.rate) || 0) * rateMultiplierFor(site, e.date);
     const fullPremi = parseFloat(wt.premi) || 0;
     const splitFactor = wt.is_multi_unit ? 0.5 : 1;
     const effRate  = fullRate  * splitFactor;
@@ -5642,18 +6420,14 @@ function updatePnlUnitTable(tableId, entries, site, wtLookup, breakdowns, unitCl
     u.byWork[e.work_type].output += out;
     u.byWork[e.work_type].rev   += out * effRate;
     u.byWork[e.work_type].premi += out * effPremi;
-    if (site === 'maredan') {
-      u.bbmCost += (parseFloat(e.bbm_allocated || e.bbm_liters || 0)) * (bbmRateMaredan || 27000);
+    u.bbmCost += (parseFloat(e.bbm_allocated || e.bbm_liters || 0)) * bbmPerLiterFor(e, bbmRateMaredan, bbmRatePrabumuli, bbmThresholdPrabumuli);
+    if (isDirectSite(site)) {
       // Equipment rental: HM × class rate
       const cls = unitClassLookup ? unitClassLookup[e.unit_code] : null;
       if (cls && rentalLookup) {
-        const rate = rentalLookup['maredan|' + cls] || 0;
+        const rate = rentalLookup[site + '|' + cls] || 0;
         u.rental += hm * rate;
       }
-    } else if (site === 'prabumuli') {
-      // Subcontractor: BRL only pays the excess above the contract threshold
-      const excess = Math.max(0, (bbmRatePrabumuli || 15000) - (bbmThresholdPrabumuli || 15000));
-      u.bbmCost += (parseFloat(e.bbm_allocated || e.bbm_liters || 0)) * excess;
     }
     u.premi += out * effPremi;  // also split for multi-unit jobs
     u.daysWorked.add(e.date);
@@ -5685,7 +6459,7 @@ function updatePnlUnitTable(tableId, entries, site, wtLookup, breakdowns, unitCl
   
   // Daily fixed cost (uang makan + lain-lain) per unit per day worked
   // For BD units with no work: still charged for days they're on standby (in current month)
-  const dailyRate = site === 'maredan' ? (dailyFixedMaredan || 184000) : (dailyFixedPrabumuli || 138000);
+  const dailyRate = site === 'maredan' ? (dailyFixedMaredan || 184000) : site === 'prabumuli' ? (dailyFixedPrabumuli || 138000) : dailyFixedFor(site, null);
   const dayOfMonth = today.getDate();
   
   Object.values(unitAgg).forEach(u => {
@@ -5779,7 +6553,7 @@ function updatePnlUnitTable(tableId, entries, site, wtLookup, breakdowns, unitCl
   tbody.innerHTML = rows.join('');
 
   // ─── Cost breakdown cards (formulas behind every number above) ───
-  const detailEl = document.getElementById(site === 'maredan' ? 'pnl-m-detail' : 'pnl-p-detail');
+  const detailEl = document.getElementById(site === 'maredan' ? 'pnl-m-detail' : site === 'sam2' ? 'pnl-s-detail' : 'pnl-p-detail');
   if (detailEl) {
     const fmt = n => (n || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
     const fmtM = n => n ? (n / 1_000_000).toFixed(2) + 'M' : '0';
@@ -5811,8 +6585,10 @@ function updatePnlUnitTable(tableId, entries, site, wtLookup, breakdowns, unitCl
 
       // BBM formula
       let bbmLine;
-      if (site === 'maredan') {
-        bbmLine = `${fmt(u.totalLiters || 0)} L × Rp${fmt(bbmRateMaredan)}/L = <strong>Rp ${fmt(u.bbmCost)}</strong>`;
+      if (isDirectSite(site)) {
+        // Rate can vary by date — show the effective (blended) Rp/L actually paid.
+        const avgRate = (u.totalLiters > 0) ? Math.round(u.bbmCost / u.totalLiters) : bbmRateFor(site, null, bbmRateMaredan);
+        bbmLine = `${fmt(u.totalLiters || 0)} L × Rp${fmt(avgRate)}/L = <strong>Rp ${fmt(u.bbmCost)}</strong>`;
       } else {
         const excess = Math.max(0, (bbmRatePrabumuli || 15000) - (bbmThresholdPrabumuli || 15000));
         bbmLine = excess > 0
@@ -5822,9 +6598,9 @@ function updatePnlUnitTable(tableId, entries, site, wtLookup, breakdowns, unitCl
 
       // Rental formula
       let rentalLine;
-      if (site === 'maredan') {
+      if (isDirectSite(site)) {
         const cls = unitClassLookup ? unitClassLookup[u.unit_code] : null;
-        const rate = (cls && rentalLookup) ? (rentalLookup['maredan|' + cls] || 0) : 0;
+        const rate = (cls && rentalLookup) ? (rentalLookup[site + '|' + cls] || 0) : 0;
         rentalLine = cls
           ? `${fmt(u.totalHM)} HM × Rp${fmt(rate)}/HM (class: ${cls}) = <strong>Rp ${fmt(u.rental)}</strong>`
           : `⚠ Unit has no <code>unit_class</code> set in DB — rental cost not calculated`;
@@ -5833,7 +6609,7 @@ function updatePnlUnitTable(tableId, entries, site, wtLookup, breakdowns, unitCl
       }
 
       // Fixed cost formula
-      const dailyRate = site === 'maredan' ? (dailyFixedMaredan || 184000) : (dailyFixedPrabumuli || 138000);
+      const dailyRate = site === 'maredan' ? (dailyFixedMaredan || 184000) : site === 'prabumuli' ? (dailyFixedPrabumuli || 138000) : dailyFixedFor(site, null);
       const fixedDays = (u.isBd && u.daysWorked.size === 0) ? Math.min(u.bdDays || 0, new Date().getDate()) : u.daysWorked.size;
       const fixedLabel = (u.isBd && u.daysWorked.size === 0) ? 'BD days' : 'days worked';
       const fixedLine = `${fixedDays} ${fixedLabel} × Rp${fmt(dailyRate)}/day = <strong>Rp ${fmt(u.fixedCost)}</strong>`;
@@ -5899,7 +6675,7 @@ function updatePnlWorkType(tableId, entries, site, wtLookup, unitClassLookup, re
     const out = parseFloat(e.output) || 0;
     return {
       e, wt, isMulti, split, out,
-      effRev: wt ? out * (parseFloat(wt.rate) || 0) * split : 0,
+      effRev: wt ? out * (parseFloat(wt.rate) || 0) * rateMultiplierFor(site, e.date) * split : 0,
     };
   }).filter(x => x.wt);
 
@@ -5931,16 +6707,11 @@ function updatePnlWorkType(tableId, entries, site, wtLookup, unitClassLookup, re
     g.revenue += effRev;
     g.premi   += out * (parseFloat(wt.premi) || 0) * split;
 
-    // BBM cost
-    if (site === 'maredan') {
-      g.bbm += liters * (bbmRateMaredan || 27000);
-    } else if (site === 'prabumuli') {
-      const excess = Math.max(0, (bbmRatePrabumuli || 15000) - (bbmThresholdPrabumuli || 15000));
-      g.bbm += liters * excess;
-    }
-    // Rental (Maredan only)
-    if (site === 'maredan' && cls && rentalLookup) {
-      const rate = rentalLookup['maredan|' + cls] || 0;
+    // BBM cost (date-aware rate)
+    g.bbm += liters * bbmPerLiterFor(e, bbmRateMaredan, bbmRatePrabumuli, bbmThresholdPrabumuli);
+    // Rental (direct sites only — Prabumuli is subcontractor)
+    if (isDirectSite(site) && cls && rentalLookup) {
+      const rate = rentalLookup[site + '|' + cls] || 0;
       g.rental += hm * rate;
     }
 
@@ -5958,8 +6729,10 @@ function updatePnlWorkType(tableId, entries, site, wtLookup, unitClassLookup, re
     return;
   }
 
-  // Sort: work type alphabetically, then class within multi-unit groups
+  // Sort: preferred order first (base job beside its Cuci variant), then alphabetical
   groups.sort((a, b) => {
+    const ra = pnlWtRank(a.workType), rb = pnlWtRank(b.workType);
+    if (ra !== rb) return ra - rb;
     if (a.workType !== b.workType) return a.workType.localeCompare(b.workType);
     return (a.cls || '').localeCompare(b.cls || '');
   });
@@ -6013,17 +6786,145 @@ function updatePnlWorkType(tableId, entries, site, wtLookup, unitClassLookup, re
 
 function setOpsTab(tab) {
   _opsTab = tab;
-  document.getElementById('ops-tab-current')?.classList.toggle('active', tab === 'current');
-  document.getElementById('ops-tab-historic')?.classList.toggle('active', tab === 'historic');
-  const cur = document.getElementById('ops-current');
-  const his = document.getElementById('ops-historic');
-  if (cur) cur.style.display = tab === 'current' ? 'block' : 'none';
-  if (his) his.style.display = tab === 'historic' ? 'block' : 'none';
+  ['current', 'historic', 'client'].forEach(t => {
+    document.getElementById('ops-tab-' + t)?.classList.toggle('active', tab === t);
+    const el = document.getElementById('ops-' + t);
+    if (el) el.style.display = tab === t ? 'block' : 'none';
+  });
   const note = document.getElementById('ops-tab-note');
   if (note) note.textContent = tab === 'current'
     ? 'Current month progress vs targets. Switch to Historic to browse past months.'
-    : 'Browse past performance: pick a year, then a month, to see full detail.';
+    : tab === 'historic' ? 'Browse past performance: pick a year, then a month, to see full detail.'
+    : 'Official client monitoring snapshots (Realisasi SDBI) and progress between them.';
   if (tab === 'historic') renderOpsHistoric();
+  if (tab === 'client') renderOpsClient();
+}
+
+// Client monitoring snapshots — latest vs previous, with per-day rate.
+async function renderOpsClient() {
+  const body = document.getElementById('ops-client-body');
+  if (!body) return;
+  const sb = ensureSupabase();
+  if (!sb) return;
+  try {
+    const { data, error } = await sb.from('client_monitoring').select('*').order('as_of', { ascending: false });
+    if (error) throw error;
+    const rows = data || [];
+    if (!rows.length) {
+      body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--c-text-tertiary);padding:24px">No client snapshots yet — add one on the Upload page.</td></tr>';
+      return;
+    }
+    const dates = [...new Set(rows.map(r => r.as_of))];  // desc
+    const latest = dates[0], prev = dates[1] || null;
+    const days = prev ? Math.max(1, Math.round((new Date(latest) - new Date(prev)) / 86400000)) : null;
+    document.getElementById('ops-client-title').textContent =
+      `Client monitoring (Realisasi SDBI) — ${latest}` + (prev ? ` vs ${prev} (${days} days)` : '');
+    const byWork = {};
+    rows.forEach(r => {
+      const w = byWork[r.work_name] = byWork[r.work_name] || {};
+      if (r.as_of === latest) w.cur = r;
+      else if (r.as_of === prev) w.prev = r;
+    });
+    const fmt = n => (n == null || isNaN(n)) ? '—' : Number(n).toLocaleString();
+    body.innerHTML = Object.entries(byWork).filter(([, w]) => w.cur).map(([name, w]) => {
+      const d = (w.prev != null && w.cur != null) ? (parseFloat(w.cur.qty) - parseFloat(w.prev.qty)) : null;
+      const rate = (d != null && days) ? d / days : null;
+      const dCls = d > 0 ? 'text-success' : 'text-danger';
+      return `<tr><td style="font-weight:500">${escapeHtml(name)}</td>
+        <td style="text-align:right">${fmt(w.cur.ha)}</td>
+        <td style="text-align:right">${fmt(w.cur.qty)}</td>
+        <td style="text-align:right" class="${d ? dCls : ''}">${d == null ? '—' : (d >= 0 ? '+' : '') + fmt(Math.round(d))}</td>
+        <td style="text-align:right">${rate == null ? '—' : fmt(Math.round(rate))}</td></tr>`;
+    }).join('');
+
+    // ── Progress history: per-snapshot timeline + weekly rollup for one item ──
+    const sel = document.getElementById('ops-client-item');
+    if (sel) {
+      const names = [...new Set(rows.map(r => r.work_name))].sort();
+      if (!window._opsClientItem || !names.includes(window._opsClientItem)) {
+        window._opsClientItem = names.includes('Terobos teras') ? 'Terobos teras' : names[0];
+      }
+      if (sel.options.length !== names.length) {
+        sel.innerHTML = names.map(n => `<option value="${escapeHtml(n)}"${n === window._opsClientItem ? ' selected' : ''}>${escapeHtml(n)}</option>`).join('');
+      } else if (sel.value && names.includes(sel.value)) {
+        window._opsClientItem = sel.value;
+      }
+      const item = window._opsClientItem;
+      const series = rows.filter(r => r.work_name === item)
+        .sort((a, b) => (a.as_of < b.as_of ? -1 : 1));   // ascending
+      const histEl = document.getElementById('ops-client-hist');
+      const weekEl = document.getElementById('ops-client-weekly');
+      if (histEl) {
+        const weekAgg = {};   // isoWeek → delta apportioned by days
+        const hist = series.map((r, i) => {
+          const prev = i > 0 ? series[i - 1] : null;
+          const d = prev ? parseFloat(r.qty) - parseFloat(prev.qty) : null;
+          const days = prev ? Math.max(1, Math.round((new Date(r.as_of) - new Date(prev.as_of)) / 86400000)) : null;
+          const rate = (d != null && days) ? d / days : null;
+          // Apportion this interval's delta evenly across its days into ISO weeks
+          if (prev && days) {
+            for (let k = 1; k <= days; k++) {
+              const day = new Date(new Date(prev.as_of).getTime() + k * 86400000).toISOString().slice(0, 10);
+              const wk = isoWeekKey(day);
+              weekAgg[wk] = weekAgg[wk] || { d: 0, n: 0 };
+              weekAgg[wk].d += d / days; weekAgg[wk].n++;
+            }
+          }
+          return `<tr><td style="font-family:var(--font-mono)">${escapeHtml(String(r.as_of))}</td>
+            <td style="text-align:right">${fmt(r.qty)}</td>
+            <td style="text-align:right" class="${d > 0 ? 'text-success' : ''}">${d == null ? '—' : (d >= 0 ? '+' : '') + fmt(Math.round(d))}</td>
+            <td style="text-align:right">${days == null ? '—' : days}</td>
+            <td style="text-align:right">${rate == null ? '—' : fmt(Math.round(rate))}</td></tr>`;
+        }).reverse().join('');
+        histEl.innerHTML = hist || '<tr><td colspan="5" style="text-align:center;color:var(--c-text-tertiary);padding:24px">No snapshots for this item yet.</td></tr>';
+        if (weekEl) {
+          weekEl.innerHTML = Object.entries(weekAgg).sort((a, b) => (a[0] < b[0] ? 1 : -1)).map(([wk, w]) =>
+            `<tr><td style="font-family:var(--font-mono)">${wk}</td>
+             <td style="text-align:right">+${fmt(Math.round(w.d))}</td>
+             <td style="text-align:right">${fmt(Math.round(w.d / w.n))}</td></tr>`).join('')
+            || '<tr><td colspan="3" style="text-align:center;color:var(--c-text-tertiary);padding:16px">Need at least two snapshots.</td></tr>';
+        }
+      }
+    }
+  } catch (e) {
+    body.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--c-text-tertiary);padding:24px">Table <code>client_monitoring</code> not found yet — run the setup SQL. (${escapeHtml(e.message || '')})</td></tr>`;
+  }
+}
+
+// Photo of the client's monitoring table → Claude vision → client_monitoring rows.
+async function handleMonitoringPhoto(ev) {
+  const file = ev.target.files && ev.target.files[0];
+  const out = document.getElementById('cm-result');
+  if (!file || !out) return;
+  const sb = ensureSupabase();
+  if (!sb) return;
+  out.innerHTML = '⏳ Reading the photo with Claude…';
+  try {
+    const b64 = await new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(String(r.result).split(',')[1]);
+      r.onerror = rej;
+      r.readAsDataURL(file);
+    });
+    const { data, error } = await sb.functions.invoke('parse-monitoring', {
+      body: { image: { media_type: file.type, data: b64 } },
+    });
+    if (error) throw error;
+    if (!data?.as_of || !Array.isArray(data.rows) || !data.rows.length) throw new Error(data?.error || 'Could not read the table from the photo');
+    const recs = data.rows.map(r => ({
+      site: 'maredan', as_of: data.as_of,
+      work_name: String(r.work_name || '').trim(),
+      ha: parseFloat(r.ha) || 0, qty: parseFloat(r.qty) || 0,
+    })).filter(r => r.work_name);
+    const { error: upErr } = await sb.from('client_monitoring')
+      .upsert(recs, { onConflict: 'site,as_of,work_name' });
+    if (upErr) throw upErr;
+    out.innerHTML = `✅ Saved snapshot <strong>${escapeHtml(data.as_of)}</strong> — ${recs.length} work items:<br>` +
+      recs.map(r => `${escapeHtml(r.work_name)}: ${Number(r.qty).toLocaleString()}`).join(' · ');
+    ev.target.value = '';
+  } catch (e) {
+    out.innerHTML = `❌ ${escapeHtml(e.message || 'Failed')} — is the <code>parse-monitoring</code> edge function deployed and the <code>client_monitoring</code> table created?`;
+  }
 }
 
 // ISO-week key like "2026-W22" for a YYYY-MM-DD date string.
@@ -6037,23 +6938,25 @@ function isoWeekKey(dateStr) {
 }
 
 async function refreshOpsProgress() {
-  ['current', 'historic'].forEach(t => {
+  ['current', 'historic', 'client'].forEach(t => {
     const el = document.getElementById('ops-' + t);
     if (el) el.style.display = (t === _opsTab) ? 'block' : 'none';
+    document.getElementById('ops-tab-' + t)?.classList.toggle('active', _opsTab === t);
   });
-  document.getElementById('ops-tab-current')?.classList.toggle('active', _opsTab === 'current');
-  document.getElementById('ops-tab-historic')?.classList.toggle('active', _opsTab === 'historic');
+  if (_opsTab === 'client') { renderOpsClient(); return; }
 
   const sb = ensureSupabase();
   if (!sb) return;
   try {
-    const [tsRes, wtRes, unitsRes, rentalRes, settingsRes, tgtRes] = await Promise.all([
-      sb.from('time_sheet').select('*'),
+    await Promise.all([ensureBbmRates(sb), ensureRateMults(sb)]);  // date-aware fuel rates + work-rate multipliers
+    const [tsRes, wtRes, unitsRes, rentalRes, settingsRes, tgtRes, obRes] = await Promise.all([
+      sbFetchAll(() => sb.from('time_sheet').select('*').order('id')),
       sb.from('work_types').select('*'),
       sb.from('units').select('unit_code, unit_class, site'),
       sb.from('equipment_rental').select('*'),
       sb.from('app_settings').select('*'),
       sb.from('operational_targets').select('*'),
+      sb.from('opening_balance').select('*'),
     ]);
 
     const wtLookup = {};
@@ -6069,7 +6972,7 @@ async function refreshOpsProgress() {
     const targets = {};
     (tgtRes.data || []).forEach(t => { targets[`${t.site}|${t.period_key}|${t.work_type}`] = parseFloat(t.target_output) || 0; });
 
-    _opsCache = { timeSheet: tsRes.data || [], wtLookup, unitClassLookup, rentalLookup, settings, targets };
+    _opsCache = { timeSheet: tsRes.data || [], wtLookup, unitClassLookup, rentalLookup, settings, targets, openingBalance: obRes.data || [] };
 
     if (_opsTab === 'current') renderOpsCurrent();
     else renderOpsHistoric();
@@ -6102,12 +7005,16 @@ function opsWorkTypes(timeSheet, sitePred) {
     if (!e.work_type) return;
     set[e.work_type] = e.output_unit || '';
   });
-  return Object.entries(set).map(([wt, unit]) => ({ wt, unit })).sort((a, b) => a.wt.localeCompare(b.wt));
+  return Object.entries(set).map(([wt, unit]) => ({ wt, unit })).sort((a, b) => {
+    const ra = pnlWtRank(a.wt), rb = pnlWtRank(b.wt);
+    if (ra !== rb) return ra - rb;
+    return a.wt.localeCompare(b.wt);
+  });
 }
 
 function renderOpsCurrent() {
   if (!_opsCache) return;
-  const { timeSheet, targets } = _opsCache;
+  const { timeSheet, targets, openingBalance } = _opsCache;
   const canEdit = currentUser?.role === 'manager';
   const sitePred = e => currentSite === 'both' ? true : e.site === currentSite;
 
@@ -6121,13 +7028,42 @@ function renderOpsCurrent() {
 
   const wts = opsWorkTypes(timeSheet, sitePred);
 
+  // Opening balance = pre-launch output per work type (site-filtered). This is
+  // real work that was physically done, so it counts toward YTD OUTPUT (unlike
+  // P&L, where we exclude it because its cost was never captured). It is NOT
+  // tied to any tracked month, so it only affects the YTD column.
+  const obByWork = {};
+  const obAsOf = {};   // site|work_type → as-of date (daily entries ≤ this are inside the opening)
+  (openingBalance || []).forEach(o => {
+    if (o.work_type && o.as_of) obAsOf[o.site + '|' + o.work_type] = String(o.as_of).slice(0, 10);
+    if (currentSite !== 'both' && o.site !== currentSite) return;
+    if (!o.work_type) return;
+    obByWork[o.work_type] = (obByWork[o.work_type] || 0) + (parseFloat(o.amount) || 0);
+  });
+  // Make sure work types that exist only in opening_balance still appear.
+  Object.keys(obByWork).forEach(wt => {
+    if (!wts.find(w => w.wt === wt)) {
+      const w = _opsCache.wtLookup[(currentSite === 'both' ? 'prabumuli' : currentSite) + '|' + wt]
+             || _opsCache.wtLookup['maredan|' + wt];
+      wts.push({ wt, unit: w ? (w.unit || '') : '' });
+    }
+  });
+
   // Sum output helper for a predicate
   const sumOut = (pred) => {
     const m = {};
     timeSheet.forEach(e => { if (sitePred(e) && pred(e) && e.work_type) m[e.work_type] = (m[e.work_type] || 0) + (parseFloat(e.output) || 0); });
     return m;
   };
-  const ytdActual = sumOut(e => e.date && e.date.startsWith(year));
+  // YTD daily = entries this year AND after the work type's opening as-of
+  // (entries on/before the as-of are already counted inside the opening figure).
+  const ytdActual = sumOut(e => {
+    if (!e.date || !e.date.startsWith(year)) return false;
+    const cutoff = obAsOf[e.site + '|' + e.work_type];
+    return !(cutoff && e.date <= cutoff);
+  });
+  // Fold opening balance into YTD output (matches BAP recon's YTD figure).
+  Object.entries(obByWork).forEach(([wt, amt]) => { ytdActual[wt] = (ytdActual[wt] || 0) + amt; });
   const mtdActual = sumOut(e => e.date && e.date.startsWith(month));
 
   const varCell = (actual, target) => {
@@ -6226,21 +7162,19 @@ function opsFinancials(entries, site) {
     const out = parseFloat(e.output) || 0;
     const hm = parseFloat(e.hm_allocated || e.hm_hours || 0);
     const lit = parseFloat(e.bbm_allocated || e.bbm_liters || 0);
-    revenue += out * (parseFloat(wt.rate) || 0) * split;
+    revenue += out * (parseFloat(wt.rate) || 0) * rateMultiplierFor(e.site, e.date) * split;
     premi   += out * (parseFloat(wt.premi) || 0) * split;
     liters  += lit;
-    if (e.site === 'maredan') {
-      bbm += lit * bbmM;
+    bbm += lit * bbmPerLiterFor(e, bbmM, settings['prabumuli_bbm_per_liter'], settings['prabumuli_bbm_threshold']);
+    if (isDirectSite(e.site)) {
       const cls = unitClassLookup[e.unit_code];
-      if (cls) rental += hm * (rentalLookup['maredan|' + cls] || 0);
-    } else if (e.site === 'prabumuli') {
-      bbm += lit * bbmPexcess;
+      if (cls) rental += hm * (rentalLookup[e.site + '|' + cls] || 0);
     }
     unitDays.add((e.unit_code || '?') + '|' + e.date);
     const k = e.work_type;
     if (!byWork[k]) byWork[k] = { output: 0, unit: e.output_unit || (wt.unit || ''), revenue: 0 };
     byWork[k].output += out;
-    byWork[k].revenue += out * (parseFloat(wt.rate) || 0) * split;
+    byWork[k].revenue += out * (parseFloat(wt.rate) || 0) * rateMultiplierFor(e.site, e.date) * split;
   });
   // Fixed cost: count unit-days × daily rate (mixed sites → rate per entry's site)
   let fixed = 0;
@@ -6372,6 +7306,19 @@ function updatePnlTargets(month, year, targets, actMtdRev, actMtdPnl, actYtdRev,
   ].join('');
 }
 
+// P&L page: switch which per-site breakdown is shown (Per unit / By work type /
+// Cost breakdown). Cards carry classes pnl-sec-unit / -worktype / -breakdown;
+// we show only the active type. Site visibility is handled separately by the
+// site filter, so cards in a hidden site div stay hidden regardless.
+function setPnlTab(tab) {
+  _pnlTab = tab;
+  ['unit', 'worktype', 'breakdown'].forEach(t =>
+    document.getElementById('pnl-tab-' + t)?.classList.toggle('active', t === tab));
+  document.querySelectorAll('.pnl-sec').forEach(el => {
+    el.style.display = el.classList.contains('pnl-sec-' + tab) ? '' : 'none';
+  });
+}
+
 async function savePnlTarget(periodKey, metricKey, valueRp) {
   const sb = ensureSupabase();
   if (!sb) return;
@@ -6501,14 +7448,12 @@ function computeRangePnl(timeSheet, L, start, end, site) {
     const wt = L.wtLookup[e.site + '|' + e.work_type]; if (!wt) return;
     const split = wt.is_multi_unit ? 0.5 : 1;
     const out = parseFloat(e.output) || 0, hm = parseFloat(e.hm_allocated || e.hm_hours || 0), lit = parseFloat(e.bbm_allocated || e.bbm_liters || 0);
-    revenue += out * (parseFloat(wt.rate) || 0) * split;
+    revenue += out * (parseFloat(wt.rate) || 0) * rateMultiplierFor(e.site, e.date) * split;
     premi += out * (parseFloat(wt.premi) || 0) * split;
-    if (e.site === 'maredan') {
-      bbm += lit * bbmM;
+    bbm += lit * bbmPerLiterFor(e, bbmM, L.settings['prabumuli_bbm_per_liter'], L.settings['prabumuli_bbm_threshold']);
+    if (isDirectSite(e.site)) {
       const cls = L.unitClassLookup[e.unit_code];
-      if (cls) rental += hm * (L.rentalLookup['maredan|' + cls] || 0);
-    } else if (e.site === 'prabumuli') {
-      bbm += lit * bbmPexcess;
+      if (cls) rental += hm * (L.rentalLookup[e.site + '|' + cls] || 0);
     }
   });
   let fixed = 0; const seen = {};
@@ -6523,9 +7468,10 @@ async function refreshActualPnl() {
   const recEl = document.getElementById('actual-records');
   const varEl = document.getElementById('actual-variance');
   try {
+    await Promise.all([ensureBbmRates(sb), ensureRateMults(sb)]);  // date-aware fuel rates + work-rate multipliers
     const [acRes, tsRes, wtRes, unitsRes, rentalRes, setRes] = await Promise.all([
       sb.from('actual_pnl').select('*').order('period_start', { ascending: false }),
-      sb.from('time_sheet').select('*'),
+      sbFetchAll(() => sb.from('time_sheet').select('*').order('id')),
       sb.from('work_types').select('*'),
       sb.from('units').select('unit_code, unit_class, site'),
       sb.from('equipment_rental').select('*'),
@@ -6636,6 +7582,243 @@ async function refreshActualPnl() {
     const msg = `<tr><td colspan="7" style="text-align:center;color:var(--c-danger,#e5484d);padding:24px">Error — has the <code>actual_pnl</code> table been created? (${escapeHtml(e.message || '')})</td></tr>`;
     if (recEl) recEl.innerHTML = msg;
     if (varEl) varEl.innerHTML = '';
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════
+// PRODUCTION RATES — avg output/day per work type, per site, MTD or YTD
+// ════════════════════════════════════════════════════════════════════
+function setProdPeriod(p) {
+  _prodPeriod = p;
+  document.getElementById('pr-tab-mtd')?.classList.toggle('active', p === 'mtd');
+  document.getElementById('pr-tab-ytd')?.classList.toggle('active', p === 'ytd');
+  refreshProdRates();
+}
+function setProdSite(s) {
+  _prSite = s;
+  document.getElementById('pr-site-prab-tab')?.classList.toggle('active', s === 'prabumuli');
+  document.getElementById('pr-site-mar-tab')?.classList.toggle('active', s === 'maredan');
+  document.getElementById('pr-site-sam2-tab')?.classList.toggle('active', s === 'sam2');
+  refreshProdRates();
+}
+
+async function refreshProdRates() {
+  const sb = ensureSupabase();
+  if (!sb) return;
+  // Reflect active tabs
+  document.getElementById('pr-site-prab-tab')?.classList.toggle('active', _prSite === 'prabumuli');
+  document.getElementById('pr-site-mar-tab')?.classList.toggle('active', _prSite === 'maredan');
+  try {
+    const [tsRes, wtRes] = await Promise.all([
+      sbFetchAll(() => sb.from('time_sheet').select('*').order('id')),
+      sb.from('work_types').select('*'),
+    ]);
+    const ts = tsRes.data || [];
+    const wtLookup = {};
+    (wtRes.data || []).forEach(w => { wtLookup[w.site + '|' + w.work_name] = w; });
+
+    const now = new Date();
+    const month = now.toISOString().slice(0, 7);
+    const year = String(now.getFullYear());
+    const MN = ['', 'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'];
+    const inPeriod = e => _prodPeriod === 'mtd'
+      ? (e.date && e.date.startsWith(month))
+      : (e.date && e.date.startsWith(year));
+    const periodLabel = _prodPeriod === 'mtd' ? `${MN[now.getMonth() + 1]} ${year}` : `${year} YTD`;
+    const siteLabel = _prSite.charAt(0).toUpperCase() + _prSite.slice(1);
+    document.getElementById('pr-wt-title').textContent = `${siteLabel} — by work type (${periodLabel})`;
+    document.getElementById('pr-unit-title').textContent = `${siteLabel} — by unit (${periodLabel})`;
+    const note = document.getElementById('pr-period-note');
+    if (note) note.textContent = `${siteLabel} · average output per active day · ${periodLabel}.`;
+
+    const site = _prSite;
+    const unitOf = wt_name => { const wt = wtLookup[site + '|' + wt_name]; return (wt && wt.unit) || ''; };
+
+    // ── By work type ──
+    const agg = {};
+    ts.forEach(e => {
+      if (e.site !== site || !inPeriod(e) || !e.work_type) return;
+      if (!agg[e.work_type]) agg[e.work_type] = { unit: unitOf(e.work_type) || e.output_unit || '', total: 0, days: new Set(), unitDays: new Set() };
+      const a = agg[e.work_type];
+      a.total += parseFloat(e.output) || 0;
+      if (e.date) { a.days.add(e.date); a.unitDays.add((e.unit_code || '?') + '|' + e.date); }
+    });
+    const wtRows = Object.entries(agg).filter(([, a]) => a.total > 0)
+      .sort((x, y) => (y[1].total / Math.max(1, y[1].days.size)) - (x[1].total / Math.max(1, x[1].days.size)));
+    document.getElementById('pr-worktype-table').innerHTML = wtRows.length === 0
+      ? `<tr><td colspan="6" style="text-align:center;color:var(--c-text-tertiary);padding:24px">No output in this period</td></tr>`
+      : wtRows.map(([wt, a]) => {
+          const d = a.days.size, ud = a.unitDays.size;
+          return `<tr>
+            <td><strong>${escapeHtml(wt)}</strong></td>
+            <td>${escapeHtml(a.unit)}</td>
+            <td>${formatNum(a.total)} ${escapeHtml(a.unit)}</td>
+            <td>${d}</td>
+            <td><strong>${formatNum(d > 0 ? a.total / d : 0)} ${escapeHtml(a.unit)}/day</strong></td>
+            <td>${formatNum(ud > 0 ? a.total / ud : 0)} ${escapeHtml(a.unit)}/unit-day</td>
+          </tr>`;
+        }).join('');
+
+    // ── By unit (per machine × work type) ──
+    const uagg = {};
+    ts.forEach(e => {
+      if (e.site !== site || !inPeriod(e) || !e.work_type || !e.unit_code) return;
+      const key = e.unit_code + '||' + e.work_type;
+      if (!uagg[key]) uagg[key] = { unit_code: e.unit_code, work: e.work_type, ounit: unitOf(e.work_type) || e.output_unit || '', total: 0, days: new Set() };
+      const a = uagg[key];
+      a.total += parseFloat(e.output) || 0;
+      if (e.date) a.days.add(e.date);
+    });
+    const uRows = Object.values(uagg).filter(a => a.total > 0)
+      .sort((x, y) => unitCompare(x.unit_code, y.unit_code) || (y.total - x.total));
+    document.getElementById('pr-unit-table').innerHTML = uRows.length === 0
+      ? `<tr><td colspan="5" style="text-align:center;color:var(--c-text-tertiary);padding:24px">No output in this period</td></tr>`
+      : uRows.map(a => {
+          const d = a.days.size;
+          return `<tr>
+            <td><strong>${escapeHtml(a.unit_code)}</strong></td>
+            <td>${escapeHtml(a.work)}</td>
+            <td>${formatNum(a.total)} ${escapeHtml(a.ounit)}</td>
+            <td>${d}</td>
+            <td><strong>${formatNum(d > 0 ? a.total / d : 0)} ${escapeHtml(a.ounit)}/day</strong></td>
+          </tr>`;
+        }).join('');
+  } catch (e) {
+    console.error('refreshProdRates error:', e);
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════
+// DATA HEALTH — surface objective data-quality issues in time_sheet
+// ════════════════════════════════════════════════════════════════════
+async function refreshDataHealth() {
+  const sb = ensureSupabase();
+  if (!sb) return;
+  try {
+    const [tsRes, wtRes, unitsRes] = await Promise.all([
+      sbFetchAll(() => sb.from('time_sheet').select('*').order('id')),
+      sb.from('work_types').select('*'),
+      sb.from('units').select('site, unit_code, unit_class'),
+    ]);
+    const ts = tsRes.data || [];
+    const clsOf = {};
+    (unitsRes.data || []).forEach(u => { clsOf[u.site + '|' + u.unit_code] = u.unit_class || '?'; });
+    const wtSet = new Set();
+    const wtUnit = {};
+    (wtRes.data || []).forEach(w => { wtSet.add(w.site + '|' + w.work_name); wtUnit[w.site + '|' + w.work_name] = w.unit; });
+
+    // 1) Orphan work types (name not in work_types → no rate → revenue lost)
+    const orphans = {};
+    ts.forEach(e => {
+      if (!e.work_type) return;
+      if (e.work_type === '(standby)') return;  // sentinel for fuel-only rows — not a typo
+      const k = e.site + '|' + e.work_type;
+      if (!wtSet.has(k)) {
+        if (!orphans[k]) orphans[k] = { site: e.site, wt: e.work_type, count: 0, output: 0 };
+        orphans[k].count++; orphans[k].output += parseFloat(e.output) || 0;
+      }
+    });
+    const orphanList = Object.values(orphans).sort((a, b) => b.output - a.output);
+
+    // 2) Unit-label mismatches (output_unit ≠ work_types.unit)
+    const mism = {};
+    ts.forEach(e => {
+      const k = e.site + '|' + e.work_type;
+      if (wtSet.has(k) && e.output_unit && wtUnit[k] && e.output_unit !== wtUnit[k]) {
+        const mk = k + '|' + e.output_unit;
+        if (!mism[mk]) mism[mk] = { site: e.site, wt: e.work_type, got: e.output_unit, expected: wtUnit[k], count: 0 };
+        mism[mk].count++;
+      }
+    });
+    const mismList = Object.values(mism);
+    const mismCount = mismList.reduce((s, m) => s + m.count, 0);
+
+    // 3) Missing HM / missing output, and exact-duplicate rows
+    let outNoHm = 0, hmNoOut = 0;
+    const dupSeen = {}; let dupCount = 0;
+    ts.forEach(e => {
+      const hm = parseFloat(e.hm_allocated || e.hm_hours || 0), out = parseFloat(e.output || 0);
+      if (out > 0 && hm === 0) outNoHm++;
+      if (out === 0 && hm > 0) hmNoOut++;
+      const dk = [e.site, e.date, e.unit_code, e.work_type, e.operator, e.output, e.hm_hours, e.bbm_liters].join('|');
+      if (dupSeen[dk]) dupCount++; else dupSeen[dk] = true;
+    });
+
+    // 4) Productivity outliers — output/HM more than 3× off the median of the
+    // SAME site × work type × unit CLASS. Classes must not be pooled: on shared
+    // jobs (Terasan/Cuci/Jalan) a dozer's m/HM is ~6× an excavator's, so a
+    // mixed median flags half the fleet "too high" and half "too low".
+    // Standby rows (no output) and short sessions (<2 HM) are excluded as noise.
+    const byWt = {};
+    ts.forEach(e => {
+      const k = e.site + '|' + e.work_type;
+      if (!wtSet.has(k)) return;
+      const hm = parseFloat(e.hm_allocated || e.hm_hours || 0), out = parseFloat(e.output || 0);
+      if (hm < 2 || out <= 0) return;
+      const gk = k + '|' + (clsOf[e.site + '|' + e.unit_code] || '?');
+      (byWt[gk] = byWt[gk] || []).push({ e, ratio: out / hm });
+    });
+    const outliers = [];
+    Object.values(byWt).forEach(arr => {
+      if (arr.length < 5) return;
+      const sorted = arr.map(x => x.ratio).sort((a, b) => a - b);
+      const median = sorted[Math.floor(sorted.length / 2)];
+      arr.forEach(x => {
+        if (median > 0 && (x.ratio > median * 3 || x.ratio < median / 3)) {
+          outliers.push({ e: x.e, ratio: x.ratio, median });
+        }
+      });
+    });
+    outliers.sort((a, b) => Math.abs(Math.log(b.ratio / b.median)) - Math.abs(Math.log(a.ratio / a.median)));
+
+    // ── KPIs ──
+    const totalIssues = orphanList.reduce((s, o) => s + o.count, 0) + mismCount + outliers.length;
+    document.getElementById('dh-kpi-total').textContent = totalIssues;
+    document.getElementById('dh-kpi-orphan').textContent = orphanList.length;
+    document.getElementById('dh-kpi-unit').textContent = mismCount;
+    document.getElementById('dh-kpi-outlier').textContent = outliers.length;
+
+    // ── Orphan table ──
+    document.getElementById('dh-orphan-table').innerHTML = orphanList.length === 0
+      ? `<tr><td colspan="5" style="text-align:center;color:var(--c-text-success);padding:20px">✓ No orphan work types — every entry matches a real work type.</td></tr>`
+      : orphanList.map(o => `<tr>
+          <td>${escapeHtml(o.site)}</td>
+          <td><strong style="color:var(--c-danger,#e5484d)">${escapeHtml(o.wt)}</strong></td>
+          <td>${o.count}</td>
+          <td>${formatNum(o.output)}</td>
+          <td>Not in Work Types → Rp 0 revenue + skews reports</td>
+        </tr>`).join('');
+
+    // ── Outlier table ──
+    document.getElementById('dh-outlier-table').innerHTML = outliers.length === 0
+      ? `<tr><td colspan="9" style="text-align:center;color:var(--c-text-success);padding:20px">✓ No extreme productivity outliers.</td></tr>`
+      : outliers.slice(0, 50).map(o => {
+          const e = o.e, hm = parseFloat(e.hm_allocated || e.hm_hours || 0);
+          const high = o.ratio > o.median;
+          return `<tr>
+            <td>${e.date || '—'}</td>
+            <td>${escapeHtml(e.site || '')}</td>
+            <td>${escapeHtml(e.unit_code || '—')}</td>
+            <td>${escapeHtml(e.work_type || '')}</td>
+            <td>${formatNum(parseFloat(e.output) || 0)}</td>
+            <td>${formatNum(hm)}</td>
+            <td><strong>${o.ratio.toFixed(2)}/HM</strong></td>
+            <td>${o.median.toFixed(2)}/HM</td>
+            <td class="${high ? 'text-warning' : 'text-danger'}">${high ? '▲ too high' : '▼ too low'}</td>
+          </tr>`;
+        }).join('');
+
+    // ── Misc table ──
+    document.getElementById('dh-misc-table').innerHTML = `
+      <tr><td>Output entered, no HM</td><td>${outNoHm}</td><td>Usually OK — HM allocated to the day's main work type</td></tr>
+      <tr><td>HM entered, no output</td><td>${hmNoOut}</td><td>Standby / idle, or a forgotten output number</td></tr>
+      <tr><td>Unit-label mismatches</td><td>${mismCount}</td><td>${mismList.map(m => `${escapeHtml(m.wt)}: "${escapeHtml(m.got)}"→"${escapeHtml(m.expected)}"`).join('; ') || '—'}</td></tr>
+      <tr><td>Exact-duplicate rows</td><td>${dupCount}</td><td>${dupCount > 0 ? 'Same site/date/unit/work/output — possible double upload' : 'None'}</td></tr>`;
+  } catch (e) {
+    console.error('refreshDataHealth error:', e);
+    const t = document.getElementById('dh-orphan-table');
+    if (t) t.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--c-danger);padding:20px">Error: ${escapeHtml(e.message || '')}</td></tr>`;
   }
 }
 
@@ -6940,13 +8123,15 @@ async function refreshSettings() {
   
   try {
     // Load all data in parallel
-    const [profilesRes, ratesRes, unitsRes, opsRes, settingsRes, rentalRes] = await Promise.all([
+    const [profilesRes, ratesRes, unitsRes, opsRes, settingsRes, rentalRes, bbmHistRes, multHistRes] = await Promise.all([
       sb.from('profiles').select('*'),
       sb.from('work_types').select('*').order('site, work_name'),
       sb.from('units').select('*').order('site, unit_code'),
       sb.from('operators').select('*').order('site, full_name'),
       sb.from('app_settings').select('*'),
       sb.from('equipment_rental').select('*').order('site, unit_class'),
+      sb.from('bbm_rate_history').select('*').order('site').order('effective_from', { ascending: false }),
+      sb.from('rate_multiplier_history').select('*').order('site').order('effective_from', { ascending: false }),
     ]);
     
     // ─── USERS ───
@@ -6999,13 +8184,22 @@ async function refreshSettings() {
       if (mrates.length === 0) {
         mratesTable.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--c-text-tertiary);padding:24px">No work types</td></tr>';
       } else {
+        await ensureRateMults(sb);
+        const today = new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10);
+        const multNow = rateMultiplierFor('maredan', today);
         mratesTable.innerHTML = mrates.map(w => {
-          const splitPill = w.is_multi_unit 
-            ? '<span class="pill info">50/50 split</span>' 
+          const splitPill = w.is_multi_unit
+            ? '<span class="pill info">50/50 split</span>'
             : 'single';
+          // The input holds the BASE contract rate; billing applies the
+          // date-effective multiplier on top — show today's effective rate.
+          const effNow = (parseFloat(w.rate) || 0) * multNow;
+          const effHint = multNow !== 1 && w.rate
+            ? `<div style="font-size:10px;color:var(--c-text-tertiary);margin-top:2px">billed now: Rp ${Math.round(effNow).toLocaleString()} (×${multNow})</div>`
+            : '';
           return `<tr>
             <td><strong>${escapeHtml(w.work_name)}</strong></td>
-            <td><input type="number" class="settings-input rate-input" data-id="${w.id}" data-field="rate" value="${w.rate || ''}" placeholder="—" step="100"></td>
+            <td><input type="number" class="settings-input rate-input" data-id="${w.id}" data-field="rate" value="${w.rate || ''}" placeholder="—" step="100">${effHint}</td>
             <td>${escapeHtml(w.unit || '—')}</td>
             <td><input type="number" class="settings-input rate-input" data-id="${w.id}" data-field="premi" value="${w.premi || ''}" placeholder="—" step="100"></td>
             <td>${splitPill}</td>
@@ -7013,7 +8207,63 @@ async function refreshSettings() {
         }).join('');
       }
     }
-    
+
+    // ─── RATES — SAM2 ───
+    const sratesTable = document.getElementById('settings-rates-sam2');
+    if (sratesTable) {
+      const srates = (ratesRes.data || []).filter(w => w.site === 'sam2');
+      if (srates.length === 0) {
+        sratesTable.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--c-text-tertiary);padding:24px">No work types — add via SQL or upload</td></tr>';
+      } else {
+        await ensureRateMults(sb);
+        const todayS = new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10);
+        const multNowS = rateMultiplierFor('sam2', todayS);
+        sratesTable.innerHTML = srates.map(w => {
+          const splitPill = w.is_multi_unit ? '<span class="pill info">50/50 split</span>' : 'single';
+          const effNow = (parseFloat(w.rate) || 0) * multNowS;
+          const effHint = multNowS !== 1 && w.rate
+            ? `<div style="font-size:10px;color:var(--c-text-tertiary);margin-top:2px">billed now: Rp ${Math.round(effNow).toLocaleString()} (×${multNowS})</div>`
+            : '';
+          return `<tr>
+            <td><strong>${escapeHtml(w.work_name)}</strong></td>
+            <td><input type="number" class="settings-input rate-input" data-id="${w.id}" data-field="rate" value="${w.rate || ''}" placeholder="—" step="100">${effHint}</td>
+            <td>${escapeHtml(w.unit || '—')}</td>
+            <td><input type="number" class="settings-input rate-input" data-id="${w.id}" data-field="premi" value="${w.premi || ''}" placeholder="—" step="100"></td>
+            <td>${splitPill}</td>
+          </tr>`;
+        }).join('');
+      }
+    }
+
+    // Rates cards follow the global Site filter (Both sites = show all)
+    ['prabumuli', 'maredan', 'sam2'].forEach(s => {
+      const card = document.getElementById('rates-card-' + s);
+      if (card) card.style.display = (currentSite === 'both' || currentSite === s) ? 'block' : 'none';
+    });
+
+    // ─── RATE INCREASE HISTORY (effective-dated multipliers) ───
+    const rmTable = document.getElementById('settings-rate-mult');
+    if (rmTable) {
+      const hist = multHistRes?.data || [];
+      const canEditRm = currentUser?.role === 'manager';
+      if (multHistRes?.error) {
+        rmTable.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--c-text-tertiary);padding:24px">Table <code>rate_multiplier_history</code> not found — run the setup SQL.</td></tr>`;
+      } else if (!hist.length) {
+        rmTable.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--c-text-tertiary);padding:24px">No rate increases yet — all revenue bills at base rate (×1). Add one below.</td></tr>';
+      } else {
+        rmTable.innerHTML = hist.map(h => {
+          const pct = ((parseFloat(h.multiplier) - 1) * 100).toFixed(2).replace(/\.?0+$/, '');
+          return `<tr>
+            <td><strong>${escapeHtml(h.site)}</strong></td>
+            <td style="font-family:var(--font-mono)">${escapeHtml(String(h.effective_from))}</td>
+            <td style="font-family:var(--font-mono)">×${Number(h.multiplier)}</td>
+            <td>${pct >= 0 ? '+' : ''}${pct}% vs base rate</td>
+            <td style="text-align:right">${canEditRm ? `<button class="btn-link" style="color:var(--c-danger,#e5484d)" onclick="deleteRateMult(${h.id})">Delete</button>` : ''}</td>
+          </tr>`;
+        }).join('');
+      }
+    }
+
     // ─── EQUIPMENT RENTAL RATES ───
     const rentalTable = document.getElementById('settings-rental-table');
     if (rentalTable) {
@@ -7030,9 +8280,28 @@ async function refreshSettings() {
           'sk70': 'Excavator SK70', 'john_deere': 'John Deere', 'dozer': 'Dozer',
         };
         rentalTable.innerHTML = rentals.map(r => `<tr>
-          <td><strong>${labels[r.unit_class] || r.unit_class}</strong></td>
+          <td><strong>${labels[r.unit_class] || r.unit_class}</strong> <span class="pill info">${escapeHtml(r.site)}</span></td>
           <td><input type="number" class="settings-input rental-input" data-id="${r.id}" value="${r.rate_per_hm || ''}" placeholder="—" step="5000"></td>
           <td><span style="color:var(--c-text-tertiary);font-family:var(--font-mono);font-size:11px">${examples[r.unit_class] || '—'}</span></td>
+        </tr>`).join('');
+      }
+    }
+
+    // ─── FUEL PRICE HISTORY (effective-dated) ───
+    const bbmHistTable = document.getElementById('settings-bbm-history');
+    if (bbmHistTable) {
+      const hist = bbmHistRes.data || [];
+      const canEdit = currentUser?.role === 'manager';
+      if (bbmHistRes.error) {
+        bbmHistTable.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--c-text-tertiary);padding:24px">Table <code>bbm_rate_history</code> not found yet — run the setup SQL to enable dated fuel prices.</td></tr>`;
+      } else if (hist.length === 0) {
+        bbmHistTable.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--c-text-tertiary);padding:24px">No price periods yet. Edit a fuel price above to create one.</td></tr>';
+      } else {
+        bbmHistTable.innerHTML = hist.map(h => `<tr>
+          <td><strong>${escapeHtml(h.site)}</strong></td>
+          <td style="font-family:var(--font-mono)">${escapeHtml(h.effective_from)}</td>
+          <td style="font-family:var(--font-mono)">Rp ${Number(h.rate_per_liter).toLocaleString()}</td>
+          <td style="text-align:right">${canEdit ? `<button class="btn-link" style="color:var(--c-danger,#e5484d)" title="Delete this price period" onclick="deleteBbmRate(${h.id})">Delete</button>` : ''}</td>
         </tr>`).join('');
       }
     }
@@ -7094,7 +8363,7 @@ async function refreshSettings() {
       prabumuli_bbm_per_liter: 15000,
       prabumuli_bbm_threshold: 15000,
       prabumuli_daily_cost: 138000,
-      maredan_daily_cost: 280000,
+      maredan_daily_cost: 184000,
       bd_critical_days: 7,
       bd_overhaul_days: 14,
       bbm_critical_days: 2,
@@ -7138,6 +8407,20 @@ document.addEventListener('change', async function(e) {
         console.error('Setting save error:', error);
         alert('Failed to save setting: ' + error.message);
       } else {
+        // Fuel rate changes are effective-dated: record a history row so the new
+        // price only applies from a chosen date forward (default today), never
+        // retroactively. app_settings keeps the latest value as the fallback.
+        if (key.endsWith('_bbm_per_liter')) {
+          const site = key.replace('_bbm_per_liter', '');
+          const today = new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10);
+          let eff = prompt(`New ${site} fuel rate Rp${value.toLocaleString()}/L.\nEffective from which date? Rows on/after this date use the new rate; earlier rows keep the old rate.`, today);
+          eff = (eff || today).trim();
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(eff)) eff = today;
+          const { error: hErr } = await sb.from('bbm_rate_history')
+            .upsert({ site, rate_per_liter: value, effective_from: eff }, { onConflict: 'site,effective_from' });
+          if (hErr) { console.error('rate history:', hErr); alert('Saved the rate, but could not record its effective date — has the bbm_rate_history table been created?\n' + hErr.message); }
+          else { _bbmRates = null; await ensureBbmRates(sb); if (typeof refreshSettings === 'function') refreshSettings(); }
+        }
         // Visual feedback
         e.target.classList.add('saved');
         setTimeout(() => e.target.classList.remove('saved'), 1000);
@@ -7198,7 +8481,7 @@ document.addEventListener('change', async function(e) {
 });
 
 async function refreshBap() {
-  ['both', 'prabumuli', 'maredan'].forEach(site => {
+  ['both', 'prabumuli', 'maredan', 'sam2'].forEach(site => {
     const el = document.getElementById('bap-' + site);
     if (el) el.style.display = (site === currentSite) ? 'block' : 'none';
   });
@@ -7218,7 +8501,7 @@ async function loadBapData(site) {
   try {
     // Fetch all data needed for this site
     const [tsRes, obRes, wtRes, bapRes] = await Promise.all([
-      sb.from('time_sheet').select('*').eq('site', site),
+      sbFetchAll(() => sb.from('time_sheet').select('*').eq('site', site).order('id')),
       sb.from('opening_balance').select('*').eq('site', site),
       sb.from('work_types').select('*').eq('site', site),
       sb.from('bap_recon').select('*').eq('site', site).eq('period', period),
@@ -7234,12 +8517,18 @@ async function loadBapData(site) {
     const workTypes = wtRes.data || [];
     const bapRecon = bapRes.data || [];
     
-    // Build YTD per work type (opening + all entries)
+    // Build YTD per work type: opening + entries AFTER the opening's as-of date
+    // (entries on/before it are already inside the opening figure — adding them
+    // again double-counts and inflates the variance vs the client BAP).
     const ytdByWork = {};
+    const bapAsOf = {};
     openingBalance.forEach(o => {
       ytdByWork[o.work_type] = (ytdByWork[o.work_type] || 0) + (parseFloat(o.amount) || 0);
+      if (o.as_of) bapAsOf[o.work_type] = String(o.as_of).slice(0, 10);
     });
     timeSheet.forEach(e => {
+      const cutoff = bapAsOf[e.work_type];
+      if (cutoff && e.date && e.date <= cutoff) return;
       ytdByWork[e.work_type] = (ytdByWork[e.work_type] || 0) + (parseFloat(e.output) || 0);
     });
     
@@ -7362,9 +8651,13 @@ async function loadBapData(site) {
       }
     });
     
-    // Calculate site-wide variance for trust scores
+    // Calculate site-wide variance for trust scores.
+    // Only count REAL work-type rows — exclude legacy junk rows keyed by operator
+    // name (whose tiny share-fraction client_bap produced impossible variances).
     let avgVariancePct = null;
-    const filledBaps = bapRecon.filter(b => b.client_bap !== null && b.client_bap !== undefined);
+    const validWork = new Set(workTypes.map(w => w.work_name));
+    const filledBaps = bapRecon.filter(b =>
+      b.client_bap !== null && b.client_bap !== undefined && validWork.has(b.work_type));
     if (filledBaps.length > 0) {
       const variances = filledBaps.map(b => Math.abs(b.variance_pct || 0) * 100);
       avgVariancePct = variances.reduce((a, b) => a + b, 0) / variances.length;
@@ -7486,7 +8779,7 @@ async function saveBapValue(workType, site, value) {
 }
 
 async function refreshBbm() {
-  ['both', 'prabumuli', 'maredan'].forEach(site => {
+  ['both', 'prabumuli', 'maredan', 'sam2'].forEach(site => {
     const el = document.getElementById('bbm-' + site);
     if (el) el.style.display = (site === currentSite) ? 'block' : 'none';
   });
@@ -7502,7 +8795,7 @@ async function loadBbmData() {
     // Fetch lap_bbm + time_sheet in parallel
     const [bbmRes, tsRes] = await Promise.all([
       sb.from('lap_bbm').select('*').order('date', { ascending: false }),
-      sb.from('time_sheet').select('*'),
+      sbFetchAll(() => sb.from('time_sheet').select('*').order('id')),
     ]);
     if (bbmRes.error) {
       console.error('lap_bbm load error:', bbmRes.error);
@@ -7514,6 +8807,7 @@ async function loadBbmData() {
     // ─── Per-unit MTD consumption breakdown (cross-check vs LAP. BBM) ───
     updateBbmUnitDetail('bbm-p-unit-detail', timeSheet, 'prabumuli');
     updateBbmUnitDetail('bbm-m-unit-detail', timeSheet, 'maredan');
+    updateBbmUnitDetail('bbm-s-unit-detail', timeSheet, 'sam2');
     
     // Get latest entry per site for current stock
     const latestPrab = all.find(e => e.site === 'prabumuli');
@@ -7532,13 +8826,20 @@ async function loadBbmData() {
       ? recentM.reduce((s, e) => s + (parseFloat(e.total_keluar) || 0), 0) / recentM.length 
       : 0;
     
+    const latestSam = all.find(e => e.site === 'sam2');
+    const recentS = recent.filter(e => e.site === 'sam2');
+    const avgBurnS = recentS.length > 0
+      ? recentS.reduce((s, e) => s + (parseFloat(e.total_keluar) || 0), 0) / recentS.length
+      : 0;
     const stockP = latestPrab ? parseFloat(latestPrab.saldo) || 0 : 0;
     const stockM = latestMar ? parseFloat(latestMar.saldo) || 0 : 0;
-    const totalStock = stockP + stockM;
-    const totalBurn = avgBurnP + avgBurnM;
-    
+    const stockS = latestSam ? parseFloat(latestSam.saldo) || 0 : 0;
+    const totalStock = stockP + stockM + stockS;
+    const totalBurn = avgBurnP + avgBurnM + avgBurnS;
+
     const daysP = avgBurnP > 0 ? stockP / avgBurnP : null;
     const daysM = avgBurnM > 0 ? stockM / avgBurnM : null;
+    const daysS = avgBurnS > 0 ? stockS / avgBurnS : null;
     const daysCombined = totalBurn > 0 ? totalStock / totalBurn : null;
     
     // ─── BOTH SITES KPIs ───
@@ -7669,10 +8970,12 @@ async function loadBbmData() {
     // ─── Per-site KPIs ───
     updateBbmSiteKpi('p', stockP, avgBurnP, daysP);
     updateBbmSiteKpi('m', stockM, avgBurnM, daysM);
+    updateBbmSiteKpi('s', stockS, avgBurnS, daysS);
     
     // ─── Vehicle consumption tables ───
     updateVehicleTable('bbm-p-vehicles', recentP);
     updateVehicleTable('bbm-m-vehicles', recentM);
+    updateVehicleTable('bbm-s-vehicles', recentS);
     
   } catch (e) {
     console.error('loadBbmData error:', e);
@@ -7822,18 +9125,39 @@ function updateVehicleTable(tableId, recentEntries) {
 // CROSS-SITE BENCHMARK — equipment comparison
 // ────────────────────────────────────────────────────────────────────
 
+function setBenchPeriod(p) {
+  _benchPeriod = p;
+  ['all', 'mtd', 'ytd'].forEach(x => document.getElementById('bm-tab-' + x)?.classList.toggle('active', x === p));
+  refreshBenchmark();
+}
+
 async function refreshBenchmark() {
   const sb = ensureSupabase();
   if (!sb) return;
-  
+  ['all', 'mtd', 'ytd'].forEach(x => document.getElementById('bm-tab-' + x)?.classList.toggle('active', x === _benchPeriod));
+
   try {
     const [tsRes, unitsRes] = await Promise.all([
-      sb.from('time_sheet').select('*'),
+      sbFetchAll(() => sb.from('time_sheet').select('*').order('id')),
       sb.from('units').select('*'),
     ]);
-    
-    const timeSheet = tsRes.data || [];
+
     const units = unitsRes.data || [];
+    // Period filter — lets you isolate this month so a recent error doesn't hide
+    // behind months of good data.
+    const _now = new Date();
+    const _m = _now.toISOString().slice(0, 7);
+    const _y = String(_now.getFullYear());
+    const timeSheet = (tsRes.data || []).filter(e => {
+      if (_benchPeriod === 'mtd') return e.date && e.date.startsWith(_m);
+      if (_benchPeriod === 'ytd') return e.date && e.date.startsWith(_y);
+      return true;
+    });
+    const MN = ['', 'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'];
+    const note = document.getElementById('bm-period-note');
+    if (note) note.textContent = (_benchPeriod === 'mtd' ? `${MN[_now.getMonth() + 1]} ${_y}` :
+      _benchPeriod === 'ytd' ? `${_y} YTD` : 'All-time') + ' · L/HM & output/HM by unit class.';
     
     // Build unit_type lookup
     const unitTypeMap = {};
@@ -7964,7 +9288,7 @@ async function refreshBdAlerts() {
   const sb = ensureSupabase();
   if (!sb) return;
   
-  const sitesToQuery = currentSite === 'both' ? ['prabumuli', 'maredan'] : [currentSite];
+  const sitesToQuery = currentSite === 'both' ? ['prabumuli', 'maredan', 'sam2'] : [currentSite];
   
   try {
     // Fetch active breakdowns (end_date is null)
@@ -8004,9 +9328,9 @@ async function refreshBdAlerts() {
     
     document.getElementById('bd-kpi-overhaul').textContent = tiers.overhaul.length;
     
-    // Cost MTD: sum of (days × daily fixed cost) for each BD
-    // Prabumuli: Rp 138k/day, Maredan: Rp 280k/day
-    const dailyCost = { prabumuli: 138000, maredan: 280000 };
+    // Cost MTD: sum of (days × daily fixed cost) for each BD — rates from settings
+    const { data: bdSet } = await sb.from('app_settings').select('*');
+    const dailyCost = { prabumuli: dailyFixedFor('prabumuli', bdSet), maredan: dailyFixedFor('maredan', bdSet), sam2: dailyFixedFor('sam2', bdSet) };
     const totalCost = bdsWithAging.reduce((sum, b) => 
       sum + (b.aging_days * (dailyCost[b.site] || 0)), 0);
     document.getElementById('bd-kpi-cost').innerHTML = 
@@ -8228,17 +9552,15 @@ function escapeHtml(s) {
 // is the "real" intended calendar date.
 function dateToYMD(d) {
   if (!(d instanceof Date)) return null;
-  // UTC midnight (SheetJS default for cellDates:true) → use UTC components.
-  if (d.getUTCHours() === 0 && d.getUTCMinutes() === 0 && d.getUTCSeconds() === 0) {
-    const y = d.getUTCFullYear();
-    const m = String(d.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(d.getUTCDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
-  }
-  // Local midnight → use local components.
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
+  // Excel dates are midnight-anchored, but SheetJS can hand them to us as UTC
+  // midnight, local midnight, OR local-midnight-minus-LMT-drift (Jakarta's
+  // pre-1900 offset is +7:07, so dates can land at 23:52:48 the previous day
+  // and shift the whole upload by one day). Rounding to the nearest noon-UTC
+  // day is correct for every variant within ±12h of the intended date.
+  const n = new Date(d.getTime() + 12 * 3600 * 1000);
+  const y = n.getUTCFullYear();
+  const m = String(n.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(n.getUTCDate()).padStart(2, '0');
   return `${y}-${m}-${day}`;
 }
 
@@ -8439,34 +9761,82 @@ function updateReliabilityMetrics(closedBds, activeBds, sitesToQuery) {
 // OPERATOR SCORECARD — aggregated stats from time_sheet
 // ────────────────────────────────────────────────────────────────────
 
+function setScSite(s) {
+  _scSite = s;
+  document.getElementById('sc-site-prab-tab')?.classList.toggle('active', s === 'prabumuli');
+  document.getElementById('sc-site-mar-tab')?.classList.toggle('active', s === 'maredan');
+  document.getElementById('sc-site-sam2-tab')?.classList.toggle('active', s === 'sam2');
+  ['prabumuli', 'maredan', 'sam2'].forEach(x => {
+    const el = document.getElementById('sc-card-' + x);
+    if (el) el.style.display = s === x ? 'block' : 'none';
+  });
+}
+
 async function refreshScorecard() {
   const sb = ensureSupabase();
   if (!sb) return;
-  
+
+  // Reflect the selected site tab (show only that site's card)
+  setScSite(_scSite);
+
   try {
     // Fetch all data
     const [tsRes, opRes, wtRes, bapRes] = await Promise.all([
-      sb.from('time_sheet').select('*'),
+      sbFetchAll(() => sb.from('time_sheet').select('*').order('id')),
       sb.from('operators').select('*'),
       sb.from('work_types').select('*'),
       sb.from('bap_recon').select('*'),
     ]);
     
-    const timeSheet = tsRes.data || [];
+    const timeSheetAll = tsRes.data || [];
     const operators = opRes.data || [];
     const workTypes = wtRes.data || [];
     const bapRecon = bapRes.data || [];
-    
+
+    // ─── Period selector ───
+    // Populate from the months present in the data (newest first) + "All-time".
+    const months = [...new Set(timeSheetAll.filter(e => e.date).map(e => e.date.slice(0, 7)))].sort().reverse();
+    if (_scPeriod !== 'all' && !months.includes(_scPeriod)) _scPeriod = 'all';
+    const periodSel = document.getElementById('sc-period');
+    if (periodSel) {
+      const MN = ['', 'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'];
+      const realMonth = new Date().toISOString().slice(0, 7);
+      const opts = ['<option value="all"' + (_scPeriod === 'all' ? ' selected' : '') + '>All-time (cumulative)</option>']
+        .concat(months.map(m => {
+          const lbl = `${MN[parseInt(m.slice(5), 10)]} ${m.slice(0, 4)}${m === realMonth ? ' (ongoing)' : ''}`;
+          return `<option value="${m}"${m === _scPeriod ? ' selected' : ''}>${lbl}</option>`;
+        }));
+      periodSel.innerHTML = opts.join('');
+      periodSel.onchange = () => { _scPeriod = periodSel.value; refreshScorecard(); };
+      const note = document.getElementById('sc-period-note');
+      if (note) note.textContent = _scPeriod === 'all'
+        ? 'Cumulative across every month of data. Pick a month to score just that month.'
+        : `Scoring ${MN[parseInt(_scPeriod.slice(5), 10)]} ${_scPeriod.slice(0, 4)} only.`;
+    }
+
+    // Apply the period filter to the rows the scorecard aggregates.
+    const timeSheet = _scPeriod === 'all'
+      ? timeSheetAll
+      : timeSheetAll.filter(e => e.date && e.date.startsWith(_scPeriod));
+
     // Build work_type lookup
     const wtLookup = {};
     workTypes.forEach(w => {
       wtLookup[w.site + '|' + w.work_name] = w;
     });
     
-    // Calculate site-wide variance for trust scores (per site)
-    const siteVariance = { prabumuli: null, maredan: null };
-    ['prabumuli', 'maredan'].forEach(s => {
-      const siteBaps = bapRecon.filter(b => b.site === s && b.client_bap !== null && b.client_bap !== undefined);
+    // Calculate site-wide variance for trust scores (per site).
+    // IMPORTANT: only use REAL work-type rows. bap_recon historically picked up
+    // junk rows keyed by operator name with tiny share-fraction client_bap
+    // values, which produced impossible 1000%+ variances and floored trust to 0.
+    const siteVariance = { prabumuli: null, maredan: null, sam2: null };
+    ['prabumuli', 'maredan', 'sam2'].forEach(s => {
+      const siteBaps = bapRecon.filter(b =>
+        b.site === s &&
+        b.client_bap !== null && b.client_bap !== undefined &&
+        wtLookup[s + '|' + b.work_type]   // must be a real work type for this site
+      );
       if (siteBaps.length > 0) {
         const variances = siteBaps.map(b => Math.abs(parseFloat(b.variance_pct) || 0) * 100);
         siteVariance[s] = variances.reduce((a, b) => a + b, 0) / variances.length;
@@ -8478,6 +9848,7 @@ async function refreshScorecard() {
     
     // Aggregate by unit (Maredan: smart fallback by unit since operators TBD)
     const maredanAgg = aggregateByUnit(timeSheet.filter(e => e.site === 'maredan'), 'maredan', wtLookup);
+    const sam2Agg = aggregateByUnit(timeSheet.filter(e => e.site === 'sam2'), 'sam2', wtLookup);
     
     // ─── KPIs ───
     const totalOpsP = operators.filter(o => o.site === 'prabumuli').length;
@@ -8517,9 +9888,11 @@ async function refreshScorecard() {
     
     // ─── Prabumuli scorecard table ───
     const prabTable = document.getElementById('sc-prabumuli-table');
+    // Sort by total HM (a valid cross-unit "how active" measure), not by the
+    // meaningless mixed-unit output sum.
     const prabSorted = Object.entries(prabumuliAgg)
-      .sort((a, b) => b[1].totalOutput - a[1].totalOutput);
-    
+      .sort((a, b) => b[1].totalHm - a[1].totalHm);
+
     if (prabSorted.length === 0) {
       prabTable.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--c-text-tertiary);padding:24px">No entries yet for Prabumuli</td></tr>';
     } else {
@@ -8530,21 +9903,29 @@ async function refreshScorecard() {
                        : rank === 3 ? '<span class="rank-medal bronze">3</span>'
                        : rank;
         const lhm = data.totalHm > 0 ? (data.totalBbm / data.totalHm).toFixed(1) : '—';
-        const lhmClass = data.totalHm > 0 
+        const lhmClass = data.totalHm > 0
           ? (data.totalBbm / data.totalHm > 25 ? 'text-danger' : data.totalBbm / data.totalHm > 22 ? 'text-warning' : 'text-success')
           : '';
-        const ohm = data.totalHm > 0 ? (data.totalOutput / data.totalHm).toFixed(2) : '—';
+        // Output/HM only makes sense within one output unit. Use the operator's
+        // DOMINANT work-type unit (the one with the most machine hours) and show
+        // the unit explicitly, e.g. "0.39 HA/HM". Total output is shown per unit.
+        const units = Object.entries(data.byUnit || {}).filter(([, v]) => v.output > 0 || v.hm > 0);
+        let dom = null;
+        units.forEach(([u, v]) => { if (!dom || v.hm > dom[1].hm) dom = [u, v]; });
+        const ohm = (dom && dom[1].hm > 0) ? `${(dom[1].output / dom[1].hm).toFixed(2)} ${escapeHtml(dom[0])}/HM` : '—';
+        const totalStr = units.slice().sort((a, b) => b[1].hm - a[1].hm).slice(0, 2)
+          .map(([u, v]) => `${formatNum(v.output)} ${escapeHtml(u)}`).join(' · ') || '—';
         const trustHtml = data.trustScore !== undefined
           ? trustBadge(data.trustScore)
           : '<span class="trust-score muted">— pending BAP</span>';
-        
+
         return `<tr>
           <td>${rankCell}</td>
           <td><strong>${escapeHtml(name)}</strong></td>
           <td>${escapeHtml(data.unit || '—')}</td>
           <td class="${lhmClass}">${lhm}</td>
           <td>${ohm}</td>
-          <td>${data.totalOutput.toFixed(2)}</td>
+          <td>${totalStr}</td>
           <td>${trustHtml}</td>
         </tr>`;
       }).join('');
@@ -8588,7 +9969,44 @@ async function refreshScorecard() {
         </tr>`;
       }).join('');
     }
-    
+
+    // ─── SAM2 scorecard table (by unit) ───
+    const samTable = document.getElementById('sc-sam2-table');
+    if (samTable) {
+      const samSorted = Object.entries(sam2Agg).sort((a, b) => b[1].totalOutput - a[1].totalOutput);
+      if (samSorted.length === 0) {
+        samTable.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--c-text-tertiary);padding:24px">No entries yet for SAM2</td></tr>';
+      } else {
+        samTable.innerHTML = samSorted.map(([unit, data], idx) => {
+          const rank = idx + 1;
+          const rankCell = rank === 1 ? '<span class="rank-medal gold">1</span>'
+                         : rank === 2 ? '<span class="rank-medal silver">2</span>'
+                         : rank === 3 ? '<span class="rank-medal bronze">3</span>'
+                         : rank;
+          const lhm = data.totalHm > 0 ? (data.totalBbm / data.totalHm).toFixed(1) : '—';
+          const lhmClass = data.totalHm > 0
+            ? (data.totalBbm / data.totalHm > 25 ? 'text-danger' : data.totalBbm / data.totalHm > 22 ? 'text-warning' : 'text-success')
+            : '';
+          const ohm = data.totalHm > 0 ? (data.totalOutput / data.totalHm).toFixed(1) : '—';
+          const opLabel = data.operators.length > 0 && data.operators[0] !== '(operator TBD)'
+            ? data.operators.join(', ')
+            : '<span class="placeholder-text">— operator TBD</span>';
+          return `<tr>
+            <td>${rankCell}</td>
+            <td><strong>${escapeHtml(unit)}</strong> ${opLabel}</td>
+            <td>${escapeHtml(data.workType || '—')}</td>
+            <td class="${lhmClass}">${lhm}</td>
+            <td>${ohm} ${data.unit ? data.unit + '/HM' : ''}</td>
+            <td><span class="trust-score muted">—</span></td>
+          </tr>`;
+        }).join('');
+      }
+      const samNote = document.getElementById('sc-sam2-note');
+      if (samNote) samNote.textContent = siteVariance.sam2 === null
+        ? 'Trust scores pending — enter Client BAP in BAP recon page to calculate.'
+        : `Site-wide variance: ${siteVariance.sam2.toFixed(1)}%. Trust scores reflect this.`;
+    }
+
     // ─── Trust Score Distribution ───
     const tierTable = document.getElementById('sc-tier-table');
     if (allTrustScores.length === 0) {
@@ -8626,24 +10044,37 @@ async function refreshScorecard() {
   }
 }
 
-// Helper: aggregate time_sheet entries by operator
+// Helper: aggregate time_sheet entries by operator.
+// Output is tracked PER output-unit (HA / Meter / Lubang …) because an operator
+// may do work types with different units — summing them into one number is
+// meaningless (e.g. hectares + meters). totalHm/totalBbm stay combined because
+// L/HM (fuel efficiency) is unit-agnostic and valid across all work.
 function aggregateByOperator(entries, site, wtLookup) {
   const agg = {};
   entries.forEach(e => {
     if (!e.operator || e.operator === '(operator TBD)') return;
     if (!agg[e.operator]) {
-      agg[e.operator] = { 
-        unit: e.unit_code, 
-        totalBbm: 0, 
-        totalHm: 0, 
-        totalOutput: 0,
+      agg[e.operator] = {
+        unit: e.unit_code,
+        totalBbm: 0,
+        totalHm: 0,
+        totalOutput: 0,   // kept for backward-compat; NOT used for output/HM
+        byUnit: {},       // { 'HA': {output, hm}, 'Meter': {output, hm}, … }
       };
     }
-    agg[e.operator].totalBbm += parseFloat(e.bbm_allocated || e.bbm_liters || 0);
-    agg[e.operator].totalHm += parseFloat(e.hm_allocated || e.hm_hours || 0);
-    agg[e.operator].totalOutput += parseFloat(e.output || 0);
-    // Update unit if same operator works multiple
-    if (e.unit_code) agg[e.operator].unit = e.unit_code;
+    const a = agg[e.operator];
+    const hm = parseFloat(e.hm_allocated || e.hm_hours || 0);
+    const out = parseFloat(e.output || 0);
+    a.totalBbm += parseFloat(e.bbm_allocated || e.bbm_liters || 0);
+    a.totalHm += hm;
+    a.totalOutput += out;
+    if (e.unit_code) a.unit = e.unit_code;
+    // Per output-unit breakdown
+    const wt = wtLookup[site + '|' + e.work_type];
+    const ounit = (wt && wt.unit) ? wt.unit : (e.output_unit || '?');
+    if (!a.byUnit[ounit]) a.byUnit[ounit] = { output: 0, hm: 0 };
+    a.byUnit[ounit].output += out;
+    a.byUnit[ounit].hm += hm;
   });
   return agg;
 }
