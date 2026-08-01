@@ -3709,14 +3709,9 @@ function mapSupabaseRole(profile) {
   return 'viewer';
 }
 
-// User database (will move to Supabase in production)
-const USERS = {
-  'manager':   { password: 'brl2026',              role: 'manager',  name: 'Ziven',            forceSite: null },
-  'hq.admin':  { password: 'brlreplanting',        role: 'hq',       name: 'HQ Admin',         forceSite: null },
-  'ade':       { password: 'prabumulihreplanting', role: 'site_p',   name: 'Ade Anwari',       forceSite: 'prabumuli' },
-  'nova':      { password: 'maredanreplanting',    role: 'site_m',   name: 'Nova Nurkezia M.', forceSite: 'maredan' },
-  'viewer':    { password: 'viewer2026',           role: 'viewer',   name: 'Viewer',           forceSite: null },
-};
+// Auth lives in Supabase (username → email map + signInWithPassword above).
+// The legacy client-side USERS table was removed — it shipped plaintext
+// passwords in the page source. Never reintroduce credentials here.
 
 const ROLE_LABELS = {
   manager: 'Manager · all access',
@@ -3950,8 +3945,12 @@ async function handleLogin() {
       password: '',  // not stored client-side
       role: platformRole,
       name: profile.full_name,
-      forceSite: profile.site === 'prabumuli' ? 'prabumuli' :
-                 profile.site === 'maredan' ? 'maredan' : null,
+      forceSite: ['prabumuli', 'maredan', 'sam2'].includes(profile.site) ? profile.site : null,
+      // Site admins may cover extra sites (profiles.extra_sites) — e.g. Ade
+      // handles Prabumuli AND SAM2 with one login. Uploads + site filter honour this.
+      allowedSites: ['prabumuli', 'maredan', 'sam2'].includes(profile.site)
+        ? [profile.site, ...(profile.extra_sites || [])]
+        : null,
       profile: profile,  // keep full profile for reference
     };
     
@@ -4121,10 +4120,13 @@ function updateSiteFilter() {
   const buttons = document.querySelectorAll('.site-btn');
   
   if (currentUser?.forceSite) {
-    // Site admin — lock to their site
+    // Site admin — lock to their site(s). extra_sites lets one admin cover
+    // several sites (they can switch between them; "Both sites" stays locked).
+    const allowed = currentUser.allowedSites || [currentUser.forceSite];
+    if (!allowed.includes(currentSite)) currentSite = currentUser.forceSite;
     buttons.forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.site === currentUser.forceSite);
-      btn.classList.toggle('locked', btn.dataset.site !== currentUser.forceSite);
+      btn.classList.toggle('active', btn.dataset.site === currentSite);
+      btn.classList.toggle('locked', !allowed.includes(btn.dataset.site));
     });
   } else {
     // Manager/HQ/Viewer — full access
