@@ -5853,7 +5853,32 @@ async function confirmUpload() {
       else summary.ts = data.length;
     }
     
-    // 2. OPENING BALANCE — upsert
+    // 2. OPENING BALANCE — upsert, guarded. Openings are calibrated reference
+    // data (validated against the client BAP); template opening sheets have
+    // silently overwritten them twice. If the file would CHANGE existing
+    // values, show the diff and ask — declining keeps current values while the
+    // rest of the upload continues.
+    if (result.openingBalance.entries.length > 0) {
+      try {
+        const { data: exOb } = await sb.from('opening_balance').select('*').eq('site', result.site);
+        const cur = {};
+        (exOb || []).forEach(o => { cur[o.work_type] = parseFloat(o.amount || 0); });
+        const changes = result.openingBalance.entries
+          .filter(e => cur[e.work_type] !== undefined && Math.abs(cur[e.work_type] - (parseFloat(e.amount) || 0)) > 0.01)
+          .map(e => `${e.work_type}: ${cur[e.work_type].toLocaleString()} → ${Number(e.amount).toLocaleString()}`);
+        if (changes.length) {
+          const ok = confirm(
+            `⚠️ This file CHANGES ${changes.length} OPENING BALANCE value(s):\n\n${changes.slice(0, 12).join('\n')}${changes.length > 12 ? '\n…' : ''}\n\n` +
+            `Opening balances are calibrated against the client BAP and normally NEVER change.\n` +
+            `Cancel = keep current values (rest of upload continues). OK = overwrite.`
+          );
+          if (!ok) {
+            summary.errors.push('Opening balance kept unchanged (overwrite declined).');
+            result.openingBalance.entries = [];
+          }
+        }
+      } catch (gErr) { /* guard is best-effort */ }
+    }
     if (result.openingBalance.entries.length > 0) {
       const { data, error } = await sb
         .from('opening_balance')
