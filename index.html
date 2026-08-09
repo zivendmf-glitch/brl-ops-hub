@@ -3019,7 +3019,7 @@ code {
                 <tr><td colspan="8" style="text-align:center;color:var(--c-text-tertiary);padding:24px">Loading...</td></tr>
               </tbody>
             </table>
-            <div class="section-note">Per machine, so it stays meaningful when operators swap units. Output/HM is shown per work type — a machine's hours on one job never divide another job's output. L/HM is flagged against the site's own median for that class, not a fixed threshold. Standby rows are excluded.</div>
+            <div class="section-note">Per machine, so it stays meaningful when operators swap units. Output/HM is shown per work type — a machine's hours on one job never divide another job's output. <strong>L/HM counts only hours on days that had fuel recorded</strong>, since fuel is often issued a day or two behind the hours; where some hours aren't yet covered, the shortfall is noted under the figure and the rate is provisional. Flagged against the site's own median for that class, not a fixed threshold. Standby rows excluded.</div>
           </div>
 
           <div class="section-card">
@@ -7945,12 +7945,17 @@ async function refreshProdRates() {
       if (e.work_type === '(standby)') return;          // idle fuel would distort the rate
       const a = eagg[e.unit_code] = eagg[e.unit_code] || {
         cls: (unitClassLookup && unitClassLookup[e.unit_code]) || '—',
-        hm: 0, liters: 0, days: new Set(), ops: new Set(), byWork: {},
+        hm: 0, fuelledHm: 0, liters: 0, days: new Set(), ops: new Set(), byWork: {},
       };
       const hm = parseFloat(e.hm_allocated || e.hm_hours || 0);
       const out = parseFloat(e.output) || 0;
+      const lit = parseFloat(e.bbm_allocated || e.bbm_liters || 0);
       a.hm += hm;
-      a.liters += parseFloat(e.bbm_allocated || e.bbm_liters || 0);
+      a.liters += lit;
+      // Fuel is often not yet issued/recorded for the newest days, while the
+      // hours are. Dividing litres by ALL hours then understates consumption,
+      // so L/HM uses only hours on days that actually carried fuel.
+      if (lit > 0) a.fuelledHm += hm;
       if (e.date) a.days.add(e.date);
       if (e.operator && e.operator !== '(operator TBD)') a.ops.add(e.operator);
       if (e.work_type) {
@@ -7962,9 +7967,11 @@ async function refreshProdRates() {
     });
     // Compare each machine against the MEDIAN of its own class this period —
     // a dozer and an SK130 have no business sharing a fuel threshold.
+    const lhmOf = a => (a.fuelledHm > 0 ? a.liters / a.fuelledHm : 0);
     const clsLhm = {};
     Object.values(eagg).forEach(a => {
-      if (a.hm > 0 && a.liters > 0) (clsLhm[a.cls] = clsLhm[a.cls] || []).push(a.liters / a.hm);
+      const v = lhmOf(a);
+      if (v > 0) (clsLhm[a.cls] = clsLhm[a.cls] || []).push(v);
     });
     const clsMedian = {};
     Object.entries(clsLhm).forEach(([c, arr]) => {
@@ -7976,7 +7983,13 @@ async function refreshProdRates() {
     document.getElementById('pr-eff-table').innerHTML = eRows.length === 0
       ? `<tr><td colspan="8" style="text-align:center;color:var(--c-text-tertiary);padding:24px">No machine hours in this period</td></tr>`
       : eRows.map(([code, a]) => {
-          const lhm = a.hm > 0 ? a.liters / a.hm : 0;
+          const lhm = lhmOf(a);
+          // Flag when a chunk of the hours has no fuel logged yet — the rate is
+          // real but provisional until those days are filled in.
+          const gap = a.hm - a.fuelledHm;
+          const cover = (gap > 0.01)
+            ? `<div style="font-size:10px;color:var(--c-warning,#b26a00);margin-top:2px">${formatNum(a.fuelledHm)} of ${formatNum(a.hm)} HM fuelled</div>`
+            : '';
           const med = clsMedian[a.cls];
           let cls = '';
           if (med && lhm > 0) {
@@ -7997,7 +8010,7 @@ async function refreshProdRates() {
             <td><strong>${escapeHtml(code)}</strong></td>
             <td><span style="font-family:var(--font-mono);font-size:11px;color:var(--c-text-tertiary)">${escapeHtml(a.cls)}</span></td>
             <td>${perWork}</td>
-            <td class="${cls}"><strong>${lhm > 0 ? lhm.toFixed(1) : '—'}</strong></td>
+            <td class="${cls}"><strong>${lhm > 0 ? lhm.toFixed(1) : '—'}</strong>${cover}</td>
             <td>${formatNum(a.hm)}</td>
             <td>${formatNum(a.liters)}</td>
             <td>${a.days.size}</td>
