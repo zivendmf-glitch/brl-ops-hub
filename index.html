@@ -3206,6 +3206,11 @@ code {
           
           <!-- ── RATES ── -->
           <div class="settings-panel" id="settings-rates">
+            <div class="settings-tabs" style="margin-bottom:14px">
+              <button class="settings-tab active" id="rates-tab-prabumuli" onclick="setRatesSite('prabumuli')">Prabumuli</button>
+              <button class="settings-tab" id="rates-tab-maredan" onclick="setRatesSite('maredan')">Maredan</button>
+              <button class="settings-tab" id="rates-tab-sam2" onclick="setRatesSite('sam2')">SAM2</button>
+            </div>
             <div class="section-card" id="rates-card-prabumuli">
               <div class="section-title">
                 <span>Revenue rates — Prabumuli</span>
@@ -3251,6 +3256,21 @@ code {
                 </tbody>
               </table>
               <div class="section-note">Type values and click anywhere else — auto-saves.</div>
+            </div>
+
+            <div class="section-card" id="premi-class-card">
+              <div class="section-title"><span id="premi-class-title">Premi by unit class</span><span class="pill info">overrides</span></div>
+              <table class="data-table">
+                <thead><tr><th>Work Type</th><th>Unit Class</th><th>Premi (Rp)</th><th></th></tr></thead>
+                <tbody id="settings-premi-class"><tr><td colspan="4" style="text-align:center;color:var(--c-text-tertiary);padding:24px">Loading…</td></tr></tbody>
+              </table>
+              <div style="display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap">
+                <select id="pc-work" class="settings-input" style="max-width:220px"></select>
+                <select id="pc-class" class="settings-input" style="max-width:150px"></select>
+                <input type="number" id="pc-premi" class="settings-input" style="max-width:140px" step="100" placeholder="premi Rp">
+                <button class="btn-secondary" onclick="savePremiOverride()">Add / update</button>
+              </div>
+              <div class="section-note">Use this when the same job pays a different premi depending on the machine — e.g. LC Darat paid one way for a dozer, another for an SK200 (EO) or SK130 (KC). A class listed here overrides the work type's default premi above; any class not listed keeps that default.</div>
             </div>
 
             <div class="section-card">
@@ -3301,16 +3321,16 @@ code {
             </div>
 
             <div class="section-card">
-              <div class="section-title"><span>Equipment rental rates (per HM)</span><span class="pill info">Maredan only</span></div>
+              <div class="section-title"><span>Equipment rental rates (per HM)</span><span class="pill info">per site × class</span></div>
               <table class="data-table">
                 <thead>
-                  <tr><th>Unit Class</th><th>Rate / HM (Rp)</th><th>Examples</th></tr>
+                  <tr><th>Unit Class</th><th>Rate / HM (Rp)</th><th>Charged from</th><th>Examples</th></tr>
                 </thead>
                 <tbody id="settings-rental-table">
                   <tr><td colspan="3" style="text-align:center;color:var(--c-text-tertiary);padding:24px">Loading rental rates...</td></tr>
                 </tbody>
               </table>
-              <div class="section-note">Equipment rental cost = HM × rate per class. Calculated per work entry. Auto-saves on edit. Prabumuli not shown — subcontractor model means BRL pays no rental.</div>
+              <div class="section-note">Equipment rental cost = HM × rate per class, charged only from each row's effective date onward. Auto-saves on edit. Prabumuli rows start 1 Jul 2026, when BRL took over rental from the subcontractor — earlier months stay at Rp 0.</div>
             </div>
             
             <div class="section-card">
@@ -3581,6 +3601,116 @@ function bbmPerLiterFor(e, maredanFb, prabMktFb, prabThreshFb) {
 }
 // Direct sites pay equipment rental + full BBM + daily fixed; only Prabumuli is subcontractor.
 function isDirectSite(s) { return s !== 'prabumuli'; }
+// Premi can differ by MACHINE CLASS for the same job — e.g. Prabumuli LC Darat
+// pays a dozer, an SK200 (EO) and an SK130 (KC) differently. work_type_premi
+// holds those per-class overrides; work_types.premi stays the fallback for any
+// class without an override.
+let _premiOverrides = null;   // site|work_name|unit_class → premi
+let _unitClassMap = null;     // site|unit_code → unit_class
+async function ensurePremiOverrides(sb) {
+  if (_premiOverrides && _unitClassMap) return;
+  _premiOverrides = {}; _unitClassMap = {};
+  try {
+    const [ov, un] = await Promise.all([
+      sb.from('work_type_premi').select('*'),
+      sb.from('units').select('site, unit_code, unit_class'),
+    ]);
+    (ov.data || []).forEach(r => {
+      _premiOverrides[r.site + '|' + r.work_name + '|' + r.unit_class] = parseFloat(r.premi) || 0;
+    });
+    (un.data || []).forEach(u => {
+      if (u.unit_class) _unitClassMap[u.site + '|' + u.unit_code] = u.unit_class;
+    });
+  } catch (e) { /* table may not exist yet — fall back to work_types.premi */ }
+}
+// Premi per output unit for one entry: per-class override if set, else the
+// work type's default premi.
+function premiRateFor(site, workName, unitCode, fallback) {
+  const cls = _unitClassMap && _unitClassMap[site + '|' + unitCode];
+  if (cls && _premiOverrides) {
+    const v = _premiOverrides[site + '|' + workName + '|' + cls];
+    if (v !== undefined) return v;
+  }
+  return parseFloat(fallback) || 0;
+}
+
+// Settings → Rates shows one site at a time (rate + premi are per site).
+let _ratesSite = 'prabumuli';
+function renderPremiClass() {
+  const body = document.getElementById('settings-premi-class');
+  if (!body) return;
+  const site = _ratesSite;
+  const titleEl = document.getElementById('premi-class-title');
+  if (titleEl) titleEl.textContent = 'Premi by unit class — ' + (SITE_LABELS[site] || site);
+  if (window._premiOvData === null) {
+    body.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--c-text-tertiary);padding:24px">Table <code>work_type_premi</code> not found — run the setup SQL.</td></tr>';
+    return;
+  }
+  const rows = (window._premiOvData || []).filter(r => r.site === site);
+  const canEdit = currentUser?.role === 'manager';
+  const CLS = { sk130: 'Excavator SK130', sk200: 'Excavator SK200', sk70: 'Excavator SK70', john_deere: 'John Deere', dozer: 'Dozer' };
+  body.innerHTML = rows.length
+    ? rows.map(r => `<tr>
+        <td><strong>${escapeHtml(r.work_name)}</strong></td>
+        <td>${escapeHtml(CLS[r.unit_class] || r.unit_class)}</td>
+        <td style="font-family:var(--font-mono)">Rp ${Number(r.premi).toLocaleString()}</td>
+        <td style="text-align:right">${canEdit ? `<button class="btn-link" style="color:var(--c-danger,#e5484d)" onclick="deletePremiOverride(${r.id})">Delete</button>` : ''}</td>
+      </tr>`).join('')
+    : '<tr><td colspan="4" style="text-align:center;color:var(--c-text-tertiary);padding:24px">No per-class premi for this site — every job uses its default premi above.</td></tr>';
+  // populate the add-form dropdowns for this site
+  const wSel = document.getElementById('pc-work'), cSel = document.getElementById('pc-class');
+  if (wSel) wSel.innerHTML = (window._premiWorkTypes || []).filter(w => w.site === site)
+    .map(w => `<option value="${escapeHtml(w.work_name)}">${escapeHtml(w.work_name)}</option>`).join('');
+  if (cSel) {
+    const classes = [...new Set((window._premiUnits || []).filter(u => u.site === site && u.unit_class).map(u => u.unit_class))].sort();
+    cSel.innerHTML = classes.map(c => `<option value="${c}">${escapeHtml(CLS[c] || c)}</option>`).join('')
+      || '<option value="">(no unit classes set for this site)</option>';
+  }
+}
+async function savePremiOverride() {
+  const sb = ensureSupabase(); if (!sb) return;
+  const work = document.getElementById('pc-work')?.value;
+  const cls = document.getElementById('pc-class')?.value;
+  const premi = parseFloat(document.getElementById('pc-premi')?.value);
+  if (!work || !cls || isNaN(premi)) { alert('Pick a work type and unit class, and enter a premi.'); return; }
+  const { error } = await sb.from('work_type_premi')
+    .upsert({ site: _ratesSite, work_name: work, unit_class: cls, premi }, { onConflict: 'site,work_name,unit_class' });
+  if (error) { alert('Save failed: ' + error.message); return; }
+  _premiOverrides = null; _unitClassMap = null; await ensurePremiOverrides(sb);
+  refreshSettings();
+}
+async function deletePremiOverride(id) {
+  if (!confirm('Delete this per-class premi? That class will fall back to the work type default premi.')) return;
+  const sb = ensureSupabase(); if (!sb) return;
+  const { error } = await sb.from('work_type_premi').delete().eq('id', id);
+  if (error) { alert('Delete failed: ' + error.message); return; }
+  _premiOverrides = null; _unitClassMap = null; await ensurePremiOverrides(sb);
+  refreshSettings();
+}
+
+function setRatesSite(s) {
+  _ratesSite = s;
+  if (typeof renderPremiClass === 'function' && document.getElementById('settings-premi-class')) renderPremiClass();
+  ['prabumuli', 'maredan', 'sam2'].forEach(x => {
+    document.getElementById('rates-tab-' + x)?.classList.toggle('active', x === s);
+    const card = document.getElementById('rates-card-' + x);
+    if (card) card.style.display = (x === s) ? 'block' : 'none';
+  });
+}
+// Equipment rental is effective-dated per site × class. equipment_rental rows
+// carry `effective_from`; a row only charges rental for entries on/after that
+// date. This is how Prabumuli switched from subcontractor (BRL paid no rental)
+// to BRL-pays-rental on 1 Jul 2026 without rewriting earlier months.
+// Note: one rate per site|class. If a rental RATE ever changes mid-year, this
+// needs the same list-of-periods treatment as bbm_rate_history.
+function rentalRateOn(lookup, site, cls, dateStr) {
+  if (!lookup || !site || !cls) return 0;
+  const e = lookup[site + '|' + cls];
+  if (!e) return 0;
+  if (typeof e === 'number') return e;              // legacy shape, still safe
+  if (e.from && dateStr && dateStr < e.from) return 0;  // before rental applied
+  return e.rate || 0;
+}
 const SITE_LABELS = { both: 'Both sites', prabumuli: 'Prabumuli', maredan: 'Maredan', sam2: 'SAM2' };
 // Daily fixed cost per unit, per site, from app_settings (<site>_daily_cost).
 function dailyFixedFor(site, settingsArr) {
@@ -4196,7 +4326,7 @@ async function loadDashboardData() {
   }
   
   try {
-    await Promise.all([ensureBbmRates(sb), ensureRateMults(sb)]);  // date-aware fuel rates + work-rate multipliers
+    await Promise.all([ensureBbmRates(sb), ensureRateMults(sb), ensurePremiOverrides(sb)]);  // date-aware fuel rates + work-rate multipliers
     // Determine which site(s) to query
     const sitesToQuery = currentSite === 'both' ? ['prabumuli', 'maredan', 'sam2'] : [currentSite];
     
@@ -4257,7 +4387,7 @@ async function loadDashboardData() {
     const { data: rentalData } = await sb.from('equipment_rental').select('*');
     const rentalLookup = {};
     (rentalData || []).forEach(r => {
-      rentalLookup[r.site + '|' + r.unit_class] = parseFloat(r.rate_per_hm) || 0;
+      rentalLookup[r.site + '|' + r.unit_class] = { rate: parseFloat(r.rate_per_hm) || 0, from: r.effective_from || null };
     });
     
     // Build unit_class lookup (unit_code → class)
@@ -4289,16 +4419,16 @@ async function loadDashboardData() {
         const wt = wtLookup[e.site + '|' + e.work_type];
         // Rows with an unknown work type (e.g. '(standby)') earn no revenue and
         // no premi, but their fuel and rental are REAL costs — never skip them.
-        const premi = wt ? parseFloat(e.output || 0) * parseFloat(wt.premi || 0) : 0;
+        const premi = wt ? parseFloat(e.output || 0) * premiRateFor(e.site, e.work_type, e.unit_code, wt.premi) : 0;
         const liters = parseFloat(e.bbm_allocated || e.bbm_liters || 0);
         const hm = parseFloat(e.hm_allocated || e.hm_hours || 0);
         const bbmCost = liters * bbmPerLiterFor(e, bbmRateMaredan, bbmRatePrabumuli, bbmThresholdPrabumuli);
         // Equipment rental per HM (direct sites only — Prabumuli is subcontractor)
         let rentalCost = 0;
-        if (isDirectSite(e.site) && e.unit_code) {
+        if (e.unit_code) {
           const cls = unitClassLookup[e.unit_code];
           if (cls) {
-            const rate = rentalLookup[e.site + '|' + cls] || 0;
+            const rate = rentalRateOn(rentalLookup, e.site, cls, e.date);
             rentalCost = hm * rate;
           }
         }
@@ -6131,7 +6261,7 @@ async function loadPnlData() {
   if (!sb) return;
 
   try {
-    await Promise.all([ensureBbmRates(sb), ensureRateMults(sb)]);  // date-aware fuel rates + work-rate multipliers
+    await Promise.all([ensureBbmRates(sb), ensureRateMults(sb), ensurePremiOverrides(sb)]);  // date-aware fuel rates + work-rate multipliers
     const [tsRes, wtRes, bdRes, obRes, unitsRes, rentalRes, settingsRes] = await Promise.all([
       sbFetchAll(() => sb.from('time_sheet').select('*').order('id')),
       sb.from('work_types').select('*'),
@@ -6152,7 +6282,7 @@ async function loadPnlData() {
     
     // Build lookups for rental rates and unit classes
     const rentalLookup = {};
-    rentalRates.forEach(r => { rentalLookup[r.site + '|' + r.unit_class] = parseFloat(r.rate_per_hm) || 0; });
+    rentalRates.forEach(r => { rentalLookup[r.site + '|' + r.unit_class] = { rate: parseFloat(r.rate_per_hm) || 0, from: r.effective_from || null }; });
     const unitClassLookup = {};
     unitsAll.forEach(u => { if (u.unit_class) unitClassLookup[u.unit_code] = u.unit_class; });
     
@@ -6181,14 +6311,13 @@ async function loadPnlData() {
     }
     function entryPremi(e) {
       const wt = wtLookup[e.site + '|' + e.work_type];
-      return wt ? (parseFloat(e.output) || 0) * parseFloat(wt.premi || 0) : 0;
+      return wt ? (parseFloat(e.output) || 0) * premiRateFor(e.site, e.work_type, e.unit_code, wt.premi) : 0;
     }
     function entryRental(e) {
       // Per HM × class rate (Maredan only — Prabumuli is subcontractor)
-      if (!isDirectSite(e.site)) return 0;
       const cls = unitClassLookup[e.unit_code];
       if (!cls) return 0;
-      const rate = rentalLookup[e.site + '|' + cls] || 0;
+      const rate = rentalRateOn(rentalLookup, e.site, cls, e.date);
       return (parseFloat(e.hm_allocated || e.hm_hours || 0)) * rate;
     }
     
@@ -6426,7 +6555,7 @@ function updatePnlUnitTable(tableId, entries, site, wtLookup, breakdowns, unitCl
     // half is implicitly unattributed at the unit level.
     // Base contract rate × the date-effective multiplier (client rate increases)
     const fullRate  = (parseFloat(wt.rate) || 0) * rateMultiplierFor(site, e.date);
-    const fullPremi = parseFloat(wt.premi) || 0;
+    const fullPremi = premiRateFor(site, e.work_type, e.unit_code, wt.premi);
     const splitFactor = wt.is_multi_unit ? 0.5 : 1;
     const effRate  = fullRate  * splitFactor;
     const effPremi = fullPremi * splitFactor;
@@ -6448,11 +6577,11 @@ function updatePnlUnitTable(tableId, entries, site, wtLookup, breakdowns, unitCl
     u.byWork[e.work_type].rev   += out * effRate;
     u.byWork[e.work_type].premi += out * effPremi;
     u.bbmCost += (parseFloat(e.bbm_allocated || e.bbm_liters || 0)) * bbmPerLiterFor(e, bbmRateMaredan, bbmRatePrabumuli, bbmThresholdPrabumuli);
-    if (isDirectSite(site)) {
-      // Equipment rental: HM × class rate
+    {
+      // Equipment rental: HM × class rate (0 when site pays none / before effective date)
       const cls = unitClassLookup ? unitClassLookup[e.unit_code] : null;
       if (cls && rentalLookup) {
-        const rate = rentalLookup[site + '|' + cls] || 0;
+        const rate = rentalRateOn(rentalLookup, site, cls, e.date);
         u.rental += hm * rate;
       }
     }
@@ -6625,14 +6754,14 @@ function updatePnlUnitTable(tableId, entries, site, wtLookup, breakdowns, unitCl
 
       // Rental formula
       let rentalLine;
-      if (isDirectSite(site)) {
-        const cls = unitClassLookup ? unitClassLookup[u.unit_code] : null;
-        const rate = (cls && rentalLookup) ? (rentalLookup[site + '|' + cls] || 0) : 0;
-        rentalLine = cls
-          ? `${fmt(u.totalHM)} HM × Rp${fmt(rate)}/HM (class: ${cls}) = <strong>Rp ${fmt(u.rental)}</strong>`
-          : `⚠ Unit has no <code>unit_class</code> set in DB — rental cost not calculated`;
+      const rCls = unitClassLookup ? unitClassLookup[u.unit_code] : null;
+      if (u.rental > 0) {
+        const rate = (u.totalHM > 0) ? Math.round(u.rental / u.totalHM) : 0;
+        rentalLine = `${fmt(u.totalHM)} HM × Rp${fmt(rate)}/HM (class: ${rCls || '—'}) = <strong>Rp ${fmt(u.rental)}</strong>`;
+      } else if (!rCls) {
+        rentalLine = `⚠ Unit has no <code>unit_class</code> set in DB — rental cost not calculated`;
       } else {
-        rentalLine = `Subcontractor model — <strong>Rp 0</strong>`;
+        rentalLine = `No rental charged for this period — <strong>Rp 0</strong>`;
       }
 
       // Fixed cost formula
@@ -6732,13 +6861,13 @@ function updatePnlWorkType(tableId, entries, site, wtLookup, unitClassLookup, re
 
     g.output  += out;
     g.revenue += effRev;
-    g.premi   += out * (parseFloat(wt.premi) || 0) * split;
+    g.premi   += out * premiRateFor(site, e.work_type, e.unit_code, wt.premi) * split;
 
     // BBM cost (date-aware rate)
     g.bbm += liters * bbmPerLiterFor(e, bbmRateMaredan, bbmRatePrabumuli, bbmThresholdPrabumuli);
     // Rental (direct sites only — Prabumuli is subcontractor)
-    if (isDirectSite(site) && cls && rentalLookup) {
-      const rate = rentalLookup[site + '|' + cls] || 0;
+    if (cls && rentalLookup) {
+      const rate = rentalRateOn(rentalLookup, site, cls, e.date);
       g.rental += hm * rate;
     }
 
@@ -6975,7 +7104,7 @@ async function refreshOpsProgress() {
   const sb = ensureSupabase();
   if (!sb) return;
   try {
-    await Promise.all([ensureBbmRates(sb), ensureRateMults(sb)]);  // date-aware fuel rates + work-rate multipliers
+    await Promise.all([ensureBbmRates(sb), ensureRateMults(sb), ensurePremiOverrides(sb)]);  // date-aware fuel rates + work-rate multipliers
     const [tsRes, wtRes, unitsRes, rentalRes, settingsRes, tgtRes, obRes] = await Promise.all([
       sbFetchAll(() => sb.from('time_sheet').select('*').order('id')),
       sb.from('work_types').select('*'),
@@ -6991,7 +7120,7 @@ async function refreshOpsProgress() {
     const unitClassLookup = {};
     (unitsRes.data || []).forEach(u => { if (u.unit_class) unitClassLookup[u.unit_code] = u.unit_class; });
     const rentalLookup = {};
-    (rentalRes.data || []).forEach(r => { rentalLookup[r.site + '|' + r.unit_class] = parseFloat(r.rate_per_hm) || 0; });
+    (rentalRes.data || []).forEach(r => { rentalLookup[r.site + '|' + r.unit_class] = { rate: parseFloat(r.rate_per_hm) || 0, from: r.effective_from || null }; });
     const settings = {};
     (settingsRes.data || []).forEach(s => { settings[s.key] = parseFloat(s.value); });
 
@@ -7190,12 +7319,12 @@ function opsFinancials(entries, site) {
     const hm = parseFloat(e.hm_allocated || e.hm_hours || 0);
     const lit = parseFloat(e.bbm_allocated || e.bbm_liters || 0);
     revenue += out * (parseFloat(wt.rate) || 0) * rateMultiplierFor(e.site, e.date) * split;
-    premi   += out * (parseFloat(wt.premi) || 0) * split;
+    premi   += out * premiRateFor(e.site, e.work_type, e.unit_code, wt.premi) * split;
     liters  += lit;
     bbm += lit * bbmPerLiterFor(e, bbmM, settings['prabumuli_bbm_per_liter'], settings['prabumuli_bbm_threshold']);
-    if (isDirectSite(e.site)) {
+    {
       const cls = unitClassLookup[e.unit_code];
-      if (cls) rental += hm * (rentalLookup[e.site + '|' + cls] || 0);
+      if (cls) rental += hm * rentalRateOn(rentalLookup, e.site, cls, e.date);
     }
     unitDays.add((e.unit_code || '?') + '|' + e.date);
     const k = e.work_type;
@@ -7476,11 +7605,11 @@ function computeRangePnl(timeSheet, L, start, end, site) {
     const split = wt.is_multi_unit ? 0.5 : 1;
     const out = parseFloat(e.output) || 0, hm = parseFloat(e.hm_allocated || e.hm_hours || 0), lit = parseFloat(e.bbm_allocated || e.bbm_liters || 0);
     revenue += out * (parseFloat(wt.rate) || 0) * rateMultiplierFor(e.site, e.date) * split;
-    premi += out * (parseFloat(wt.premi) || 0) * split;
+    premi += out * premiRateFor(e.site, e.work_type, e.unit_code, wt.premi) * split;
     bbm += lit * bbmPerLiterFor(e, bbmM, L.settings['prabumuli_bbm_per_liter'], L.settings['prabumuli_bbm_threshold']);
-    if (isDirectSite(e.site)) {
+    {
       const cls = L.unitClassLookup[e.unit_code];
-      if (cls) rental += hm * (L.rentalLookup[e.site + '|' + cls] || 0);
+      if (cls) rental += hm * rentalRateOn(L.rentalLookup, e.site, cls, e.date);
     }
   });
   let fixed = 0; const seen = {};
@@ -7495,7 +7624,7 @@ async function refreshActualPnl() {
   const recEl = document.getElementById('actual-records');
   const varEl = document.getElementById('actual-variance');
   try {
-    await Promise.all([ensureBbmRates(sb), ensureRateMults(sb)]);  // date-aware fuel rates + work-rate multipliers
+    await Promise.all([ensureBbmRates(sb), ensureRateMults(sb), ensurePremiOverrides(sb)]);  // date-aware fuel rates + work-rate multipliers
     const [acRes, tsRes, wtRes, unitsRes, rentalRes, setRes] = await Promise.all([
       sb.from('actual_pnl').select('*').order('period_start', { ascending: false }),
       sbFetchAll(() => sb.from('time_sheet').select('*').order('id')),
@@ -7508,7 +7637,7 @@ async function refreshActualPnl() {
     const L = { wtLookup: {}, unitClassLookup: {}, rentalLookup: {}, settings: {} };
     (wtRes.data || []).forEach(w => L.wtLookup[w.site + '|' + w.work_name] = w);
     (unitsRes.data || []).forEach(u => { if (u.unit_class) L.unitClassLookup[u.unit_code] = u.unit_class; });
-    (rentalRes.data || []).forEach(r => L.rentalLookup[r.site + '|' + r.unit_class] = parseFloat(r.rate_per_hm) || 0);
+    (rentalRes.data || []).forEach(r => L.rentalLookup[r.site + '|' + r.unit_class] = { rate: parseFloat(r.rate_per_hm) || 0, from: r.effective_from || null });
     (setRes.data || []).forEach(s => L.settings[s.key] = parseFloat(s.value));
     const ts = tsRes.data || [];
     const records = acRes.data || [];
@@ -8150,7 +8279,7 @@ async function refreshSettings() {
   
   try {
     // Load all data in parallel
-    const [profilesRes, ratesRes, unitsRes, opsRes, settingsRes, rentalRes, bbmHistRes, multHistRes] = await Promise.all([
+    const [profilesRes, ratesRes, unitsRes, opsRes, settingsRes, rentalRes, bbmHistRes, multHistRes, premiOvRes] = await Promise.all([
       sb.from('profiles').select('*'),
       sb.from('work_types').select('*').order('site, work_name'),
       sb.from('units').select('*').order('site, unit_code'),
@@ -8159,6 +8288,7 @@ async function refreshSettings() {
       sb.from('equipment_rental').select('*').order('site, unit_class'),
       sb.from('bbm_rate_history').select('*').order('site').order('effective_from', { ascending: false }),
       sb.from('rate_multiplier_history').select('*').order('site').order('effective_from', { ascending: false }),
+      sb.from('work_type_premi').select('*').order('work_name'),
     ]);
     
     // ─── USERS ───
@@ -8262,11 +8392,14 @@ async function refreshSettings() {
       }
     }
 
-    // Rates cards follow the global Site filter (Both sites = show all)
-    ['prabumuli', 'maredan', 'sam2'].forEach(s => {
-      const card = document.getElementById('rates-card-' + s);
-      if (card) card.style.display = (currentSite === 'both' || currentSite === s) ? 'block' : 'none';
-    });
+    // Rates cards are chosen by the Rates sub-tabs (one site at a time)
+    setRatesSite(_ratesSite);
+
+    // ─── PREMI BY UNIT CLASS (per-class overrides) ───
+    window._premiOvData = premiOvRes?.error ? null : (premiOvRes?.data || []);
+    window._premiWorkTypes = ratesRes.data || [];
+    window._premiUnits = unitsRes.data || [];
+    renderPremiClass();
 
     // ─── RATE INCREASE HISTORY (effective-dated multipliers) ───
     const rmTable = document.getElementById('settings-rate-mult');
@@ -8296,7 +8429,7 @@ async function refreshSettings() {
     if (rentalTable) {
       const rentals = rentalRes.data || [];
       if (rentals.length === 0) {
-        rentalTable.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--c-text-tertiary);padding:24px">No rental rates configured</td></tr>';
+        rentalTable.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--c-text-tertiary);padding:24px">No rental rates configured</td></tr>';
       } else {
         const examples = {
           'sk130': 'CK, SP', 'sk200': 'EO',
@@ -8309,6 +8442,7 @@ async function refreshSettings() {
         rentalTable.innerHTML = rentals.map(r => `<tr>
           <td><strong>${labels[r.unit_class] || r.unit_class}</strong> <span class="pill info">${escapeHtml(r.site)}</span></td>
           <td><input type="number" class="settings-input rental-input" data-id="${r.id}" value="${r.rate_per_hm || ''}" placeholder="—" step="5000"></td>
+          <td style="font-family:var(--font-mono);font-size:11px;color:var(--c-text-tertiary)">${r.effective_from ? escapeHtml(String(r.effective_from)) : 'always'}</td>
           <td><span style="color:var(--c-text-tertiary);font-family:var(--font-mono);font-size:11px">${examples[r.unit_class] || '—'}</span></td>
         </tr>`).join('');
       }
@@ -8674,7 +8808,7 @@ async function loadBapData(site) {
         const out = parseFloat(e.output) || 0;
         opAgg[e.operator].output += out;
         opAgg[e.operator].revenue += out * (parseFloat(wt.rate) || 0);
-        opAgg[e.operator].premi += out * (parseFloat(wt.premi) || 0);
+        opAgg[e.operator].premi += out * premiRateFor(e.site, e.work_type, e.unit_code, wt.premi);
       }
     });
     
@@ -9802,6 +9936,7 @@ function setScSite(s) {
 async function refreshScorecard() {
   const sb = ensureSupabase();
   if (!sb) return;
+  await ensurePremiOverrides(sb);   // per-class premi
 
   // Reflect the selected site tab (show only that site's card)
   setScSite(_scSite);
