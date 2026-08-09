@@ -3634,6 +3634,34 @@ function premiRateFor(site, workName, unitCode, fallback) {
   return parseFloat(fallback) || 0;
 }
 
+// Effective-dated revenue rates per work type (work_type_rate_history).
+// work_types.rate stays the fallback for dates before any history row.
+// Contract rates change on a date; rewriting work_types.rate would silently
+// restate months already reconciled against the client BAP.
+let _wtRates = null;   // site|work_name → [{from, rate}] newest first
+async function ensureWtRates(sb) {
+  if (_wtRates) return;
+  _wtRates = {};
+  try {
+    const { data, error } = await sb.from('work_type_rate_history').select('*');
+    if (!error) {
+      (data || []).forEach(r => {
+        const k = r.site + '|' + r.work_name;
+        (_wtRates[k] = _wtRates[k] || []).push({ from: r.effective_from, rate: parseFloat(r.rate) || 0 });
+      });
+      Object.values(_wtRates).forEach(l => l.sort((a, b) => (a.from < b.from ? 1 : -1)));
+    }
+  } catch (e) { /* table may not exist yet — use work_types.rate */ }
+}
+// Revenue rate in force for one entry (before any site-wide multiplier).
+function wtRateFor(site, workName, dateStr, fallback) {
+  const list = _wtRates && _wtRates[site + '|' + workName];
+  if (list && list.length && dateStr) {
+    for (const r of list) if (r.from <= dateStr) return r.rate;
+  }
+  return parseFloat(fallback) || 0;
+}
+
 // Per-hectare extra costs, effective-dated (site_extra_costs):
 //  • helper  — maintenance paid per HA of land clearing, any machine.
 //  • subsidi — paid to excavator operators, but earned on DOZER hectares:
@@ -4373,7 +4401,7 @@ async function loadDashboardData() {
   }
   
   try {
-    await Promise.all([ensureBbmRates(sb), ensureRateMults(sb), ensurePremiOverrides(sb), ensureExtraCosts(sb)]);  // date-aware fuel rates + work-rate multipliers
+    await Promise.all([ensureBbmRates(sb), ensureRateMults(sb), ensurePremiOverrides(sb), ensureExtraCosts(sb), ensureWtRates(sb)]);  // date-aware fuel rates + work-rate multipliers
     // Determine which site(s) to query
     const sitesToQuery = currentSite === 'both' ? ['prabumuli', 'maredan', 'sam2'] : [currentSite];
     
@@ -4455,7 +4483,7 @@ async function loadDashboardData() {
       return entries.reduce((sum, e) => {
         const wt = wtLookup[e.site + '|' + e.work_type];
         if (!wt) return sum;
-        return sum + (parseFloat(e.output || 0) * parseFloat(wt.rate || 0) * rateMultiplierFor(e.site, e.date));
+        return sum + (parseFloat(e.output || 0) * wtRateFor(e.site, e.work_type, e.date, wt.rate) * rateMultiplierFor(e.site, e.date));
       }, 0);
     }
     
@@ -6308,7 +6336,7 @@ async function loadPnlData() {
   if (!sb) return;
 
   try {
-    await Promise.all([ensureBbmRates(sb), ensureRateMults(sb), ensurePremiOverrides(sb), ensureExtraCosts(sb)]);  // date-aware fuel rates + work-rate multipliers
+    await Promise.all([ensureBbmRates(sb), ensureRateMults(sb), ensurePremiOverrides(sb), ensureExtraCosts(sb), ensureWtRates(sb)]);  // date-aware fuel rates + work-rate multipliers
     const [tsRes, wtRes, bdRes, obRes, unitsRes, rentalRes, settingsRes] = await Promise.all([
       sbFetchAll(() => sb.from('time_sheet').select('*').order('id')),
       sb.from('work_types').select('*'),
@@ -6350,7 +6378,7 @@ async function loadPnlData() {
     // Helper functions for P&L calculation per entry
     function entryRevenue(e) {
       const wt = wtLookup[e.site + '|' + e.work_type];
-      return wt ? (parseFloat(e.output) || 0) * parseFloat(wt.rate || 0) * rateMultiplierFor(e.site, e.date) : 0;
+      return wt ? (parseFloat(e.output) || 0) * wtRateFor(e.site, e.work_type, e.date, wt.rate) * rateMultiplierFor(e.site, e.date) : 0;
     }
     function entryBbmCost(e) {
       const liters = parseFloat(e.bbm_allocated || e.bbm_liters || 0);
@@ -6605,7 +6633,7 @@ function updatePnlUnitTable(tableId, entries, site, wtLookup, breakdowns, unitCl
     // since the job requires both. If only one unit's row exists, the other
     // half is implicitly unattributed at the unit level.
     // Base contract rate × the date-effective multiplier (client rate increases)
-    const fullRate  = (parseFloat(wt.rate) || 0) * rateMultiplierFor(site, e.date);
+    const fullRate  = wtRateFor(site, e.work_type, e.date, wt.rate) * rateMultiplierFor(site, e.date);
     const fullPremi = premiRateFor(site, e.work_type, e.unit_code, wt.premi);
     const splitFactor = wt.is_multi_unit ? 0.5 : 1;
     const effRate  = fullRate  * splitFactor;
@@ -6897,7 +6925,7 @@ function updatePnlWorkType(tableId, entries, site, wtLookup, unitClassLookup, re
     const out = parseFloat(e.output) || 0;
     return {
       e, wt, isMulti, split, out,
-      effRev: wt ? out * (parseFloat(wt.rate) || 0) * rateMultiplierFor(site, e.date) * split : 0,
+      effRev: wt ? out * wtRateFor(site, e.work_type, e.date, wt.rate) * rateMultiplierFor(site, e.date) * split : 0,
     };
   }).filter(x => x.wt);
 
@@ -7171,7 +7199,7 @@ async function refreshOpsProgress() {
   const sb = ensureSupabase();
   if (!sb) return;
   try {
-    await Promise.all([ensureBbmRates(sb), ensureRateMults(sb), ensurePremiOverrides(sb), ensureExtraCosts(sb)]);  // date-aware fuel rates + work-rate multipliers
+    await Promise.all([ensureBbmRates(sb), ensureRateMults(sb), ensurePremiOverrides(sb), ensureExtraCosts(sb), ensureWtRates(sb)]);  // date-aware fuel rates + work-rate multipliers
     const [tsRes, wtRes, unitsRes, rentalRes, settingsRes, tgtRes, obRes] = await Promise.all([
       sbFetchAll(() => sb.from('time_sheet').select('*').order('id')),
       sb.from('work_types').select('*'),
@@ -7385,7 +7413,7 @@ function opsFinancials(entries, site) {
     const out = parseFloat(e.output) || 0;
     const hm = parseFloat(e.hm_allocated || e.hm_hours || 0);
     const lit = parseFloat(e.bbm_allocated || e.bbm_liters || 0);
-    revenue += out * (parseFloat(wt.rate) || 0) * rateMultiplierFor(e.site, e.date) * split;
+    revenue += out * wtRateFor(e.site, e.work_type, e.date, wt.rate) * rateMultiplierFor(e.site, e.date) * split;
     premi   += out * premiRateFor(e.site, e.work_type, e.unit_code, wt.premi) * split;
     liters  += lit;
     bbm += lit * bbmPerLiterFor(e, bbmM, settings['prabumuli_bbm_per_liter'], settings['prabumuli_bbm_threshold']);
@@ -7397,7 +7425,7 @@ function opsFinancials(entries, site) {
     const k = e.work_type;
     if (!byWork[k]) byWork[k] = { output: 0, unit: e.output_unit || (wt.unit || ''), revenue: 0 };
     byWork[k].output += out;
-    byWork[k].revenue += out * (parseFloat(wt.rate) || 0) * rateMultiplierFor(e.site, e.date) * split;
+    byWork[k].revenue += out * wtRateFor(e.site, e.work_type, e.date, wt.rate) * rateMultiplierFor(e.site, e.date) * split;
   });
   // Fixed cost: count unit-days × daily rate (mixed sites → rate per entry's site)
   let fixed = 0;
@@ -7676,7 +7704,7 @@ function computeRangePnl(timeSheet, L, start, end, site) {
     const wt = L.wtLookup[e.site + '|' + e.work_type]; if (!wt) return;
     const split = wt.is_multi_unit ? 0.5 : 1;
     const out = parseFloat(e.output) || 0, hm = parseFloat(e.hm_allocated || e.hm_hours || 0), lit = parseFloat(e.bbm_allocated || e.bbm_liters || 0);
-    revenue += out * (parseFloat(wt.rate) || 0) * rateMultiplierFor(e.site, e.date) * split;
+    revenue += out * wtRateFor(e.site, e.work_type, e.date, wt.rate) * rateMultiplierFor(e.site, e.date) * split;
     premi += out * premiRateFor(e.site, e.work_type, e.unit_code, wt.premi) * split;
     bbm += lit * bbmPerLiterFor(e, bbmM, L.settings['prabumuli_bbm_per_liter'], L.settings['prabumuli_bbm_threshold']);
     {
@@ -7701,7 +7729,7 @@ async function refreshActualPnl() {
   const recEl = document.getElementById('actual-records');
   const varEl = document.getElementById('actual-variance');
   try {
-    await Promise.all([ensureBbmRates(sb), ensureRateMults(sb), ensurePremiOverrides(sb), ensureExtraCosts(sb)]);  // date-aware fuel rates + work-rate multipliers
+    await Promise.all([ensureBbmRates(sb), ensureRateMults(sb), ensurePremiOverrides(sb), ensureExtraCosts(sb), ensureWtRates(sb)]);  // date-aware fuel rates + work-rate multipliers
     const [acRes, tsRes, wtRes, unitsRes, rentalRes, setRes] = await Promise.all([
       sb.from('actual_pnl').select('*').order('period_start', { ascending: false }),
       sbFetchAll(() => sb.from('time_sheet').select('*').order('id')),
@@ -8402,12 +8430,25 @@ async function refreshSettings() {
       if (prates.length === 0) {
         pratesTable.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--c-text-tertiary);padding:24px">No work types</td></tr>';
       } else {
-        pratesTable.innerHTML = prates.map(w => `<tr>
+        await ensureWtRates(sb); await ensurePremiOverrides(sb);
+        const ovNames = new Set((premiOvRes?.data || []).filter(r => r.site === 'prabumuli').map(r => r.work_name));
+        pratesTable.innerHTML = prates.map(w => {
+          // A dated rate supersedes this box from its effective date onward.
+          const hist = (_wtRates && _wtRates['prabumuli|' + w.work_name]) || [];
+          const rateHint = hist.length
+            ? `<div style="font-size:10px;color:var(--c-text-tertiary);margin-top:2px">from ${escapeHtml(hist[0].from)}: <strong>Rp ${Number(hist[0].rate).toLocaleString()}</strong></div>`
+            : '';
+          // Per-class premi overrides make this default unused for that job.
+          const premiHint = ovNames.has(w.work_name)
+            ? `<div style="font-size:10px;color:var(--c-warning,#b26a00);margin-top:2px">overridden per unit class below</div>`
+            : '';
+          return `<tr>
           <td><strong>${escapeHtml(w.work_name)}</strong></td>
-          <td><input type="number" class="settings-input rate-input" data-id="${w.id}" data-field="rate" value="${w.rate || ''}" placeholder="—" step="100"></td>
+          <td><input type="number" class="settings-input rate-input" data-id="${w.id}" data-field="rate" value="${w.rate || ''}" placeholder="—" step="100">${rateHint}</td>
           <td>${escapeHtml(w.unit || '—')}</td>
-          <td><input type="number" class="settings-input rate-input" data-id="${w.id}" data-field="premi" value="${w.premi || ''}" placeholder="—" step="100"></td>
-        </tr>`).join('');
+          <td><input type="number" class="settings-input rate-input" data-id="${w.id}" data-field="premi" value="${w.premi || ''}" placeholder="—" step="100">${premiHint}</td>
+        </tr>`;
+        }).join('');
       }
     }
     
