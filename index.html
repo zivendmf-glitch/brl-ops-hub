@@ -3634,6 +3634,53 @@ function premiRateFor(site, workName, unitCode, fallback) {
   return parseFloat(fallback) || 0;
 }
 
+// Per-hectare extra costs, effective-dated (site_extra_costs):
+//  • helper  — maintenance paid per HA of land clearing, any machine.
+//  • subsidi — paid to excavator operators, but earned on DOZER hectares:
+//    each SK200 gets 200k/HA and each SK130 100k/HA of dozer output, so the
+//    cost per dozer hectare is Σ(rate × number of machines in that class).
+//    Charging it on the dozer's own rows keeps every page reconciled.
+let _extraCosts = null;       // site → { helper:{rate,from}, subsidiPerHa:{rate,from} }
+async function ensureExtraCosts(sb) {
+  if (_extraCosts) return;
+  _extraCosts = {};
+  try {
+    const [ec, un] = await Promise.all([
+      sb.from('site_extra_costs').select('*'),
+      sb.from('units').select('site, unit_class'),
+    ]);
+    const counts = {};   // site|class → number of machines
+    (un.data || []).forEach(u => {
+      if (u.unit_class) counts[u.site + '|' + u.unit_class] = (counts[u.site + '|' + u.unit_class] || 0) + 1;
+    });
+    (ec.data || []).forEach(r => {
+      const site = _extraCosts[r.site] = _extraCosts[r.site] || { helper: null, subsidiPerHa: null };
+      const rate = parseFloat(r.rate_per_ha) || 0;
+      if (r.cost_type === 'helper') {
+        site.helper = { rate, from: r.effective_from || null };
+      } else if (r.cost_type === 'subsidi') {
+        // one row per receiving class; multiply by how many of that class exist
+        const n = counts[r.site + '|' + r.unit_class] || 0;
+        const prev = site.subsidiPerHa || { rate: 0, from: r.effective_from || null };
+        site.subsidiPerHa = { rate: prev.rate + rate * n, from: prev.from || r.effective_from || null };
+      }
+    });
+  } catch (e) { /* table may not exist yet — no extra costs */ }
+}
+// Extra per-row cost for one entry. Only HA-measured work carries these.
+function extraCostFor(e, wtUnit, unitClass) {
+  const c = _extraCosts && _extraCosts[e.site];
+  if (!c || wtUnit !== 'HA') return 0;
+  const out = parseFloat(e.output) || 0;
+  if (!out) return 0;
+  let total = 0;
+  if (c.helper && (!c.helper.from || !e.date || e.date >= c.helper.from)) total += out * c.helper.rate;
+  if (unitClass === 'dozer' && c.subsidiPerHa && (!c.subsidiPerHa.from || !e.date || e.date >= c.subsidiPerHa.from)) {
+    total += out * c.subsidiPerHa.rate;
+  }
+  return total;
+}
+
 // Settings → Rates shows one site at a time (rate + premi are per site).
 let _ratesSite = 'prabumuli';
 function renderPremiClass() {
@@ -4326,7 +4373,7 @@ async function loadDashboardData() {
   }
   
   try {
-    await Promise.all([ensureBbmRates(sb), ensureRateMults(sb), ensurePremiOverrides(sb)]);  // date-aware fuel rates + work-rate multipliers
+    await Promise.all([ensureBbmRates(sb), ensureRateMults(sb), ensurePremiOverrides(sb), ensureExtraCosts(sb)]);  // date-aware fuel rates + work-rate multipliers
     // Determine which site(s) to query
     const sitesToQuery = currentSite === 'both' ? ['prabumuli', 'maredan', 'sam2'] : [currentSite];
     
@@ -4432,7 +4479,7 @@ async function loadDashboardData() {
             rentalCost = hm * rate;
           }
         }
-        return sum + premi + bbmCost + rentalCost;
+        return sum + premi + bbmCost + rentalCost + extraCostFor(e, wt ? wt.unit : null, unitClassLookup[e.unit_code]);
       }, 0);
     }
     
@@ -6261,7 +6308,7 @@ async function loadPnlData() {
   if (!sb) return;
 
   try {
-    await Promise.all([ensureBbmRates(sb), ensureRateMults(sb), ensurePremiOverrides(sb)]);  // date-aware fuel rates + work-rate multipliers
+    await Promise.all([ensureBbmRates(sb), ensureRateMults(sb), ensurePremiOverrides(sb), ensureExtraCosts(sb)]);  // date-aware fuel rates + work-rate multipliers
     const [tsRes, wtRes, bdRes, obRes, unitsRes, rentalRes, settingsRes] = await Promise.all([
       sbFetchAll(() => sb.from('time_sheet').select('*').order('id')),
       sb.from('work_types').select('*'),
@@ -6371,8 +6418,12 @@ async function loadPnlData() {
       const dailyRate = dailyFixedFor(site, appSettings);
       const dailyFixed = unitDays.size * dailyRate;
 
-      const cost = bbmCost + premi + rental + dailyFixed;
-      return { revenue, cost, pnl: revenue - cost, bbmCost, premi, rental, dailyFixed };
+      const extra = filtered.reduce((s, e) => {
+        const wt = wtLookup[e.site + '|' + e.work_type];
+        return s + extraCostFor(e, wt ? wt.unit : null, unitClassLookup[e.unit_code]);
+      }, 0);
+      const cost = bbmCost + premi + rental + dailyFixed + extra;
+      return { revenue, cost, pnl: revenue - cost, bbmCost, premi, rental, dailyFixed, extra };
     }
 
     const ytdP = aggSite(ytdEntries, 'prabumuli');
@@ -6577,6 +6628,7 @@ function updatePnlUnitTable(tableId, entries, site, wtLookup, breakdowns, unitCl
     u.byWork[e.work_type].rev   += out * effRate;
     u.byWork[e.work_type].premi += out * effPremi;
     u.bbmCost += (parseFloat(e.bbm_allocated || e.bbm_liters || 0)) * bbmPerLiterFor(e, bbmRateMaredan, bbmRatePrabumuli, bbmThresholdPrabumuli);
+    u.extra = (u.extra || 0) + extraCostFor(e, wt.unit, unitClassLookup ? unitClassLookup[e.unit_code] : null);
     {
       // Equipment rental: HM × class rate (0 when site pays none / before effective date)
       const cls = unitClassLookup ? unitClassLookup[e.unit_code] : null;
@@ -6627,7 +6679,7 @@ function updatePnlUnitTable(tableId, entries, site, wtLookup, breakdowns, unitCl
       u.fixedCost = dailyRate * u.daysWorked.size;
     }
     // Total cost includes rental (for Maredan) + bbm + premi + fixed
-    u.cost = u.bbmCost + u.premi + u.fixedCost + (u.rental || 0);
+    u.cost = u.bbmCost + u.premi + u.fixedCost + (u.rental || 0) + (u.extra || 0);
     u.pnl = u.revenue - u.cost;
   });
   
@@ -6770,6 +6822,20 @@ function updatePnlUnitTable(tableId, entries, site, wtLookup, breakdowns, unitCl
       const fixedLabel = (u.isBd && u.daysWorked.size === 0) ? 'BD days' : 'days worked';
       const fixedLine = `${fixedDays} ${fixedLabel} × Rp${fmt(dailyRate)}/day = <strong>Rp ${fmt(u.fixedCost)}</strong>`;
 
+      // Per-hectare extras (helper maintenance + dozer-earned subsidi)
+      let extraLine = '';
+      if ((u.extra || 0) > 0) {
+        const ec = _extraCosts && _extraCosts[site];
+        const haOut = Object.entries(u.outputByUnit || {}).filter(([un]) => un === 'HA')
+          .reduce((a, [, v]) => a + v, 0);
+        const parts = [];
+        if (ec?.helper) parts.push(`helper ${fmt(haOut)} HA × Rp${fmt(ec.helper.rate)}`);
+        if (ec?.subsidiPerHa && (unitClassLookup ? unitClassLookup[u.unit_code] : null) === 'dozer') {
+          parts.push(`subsidi ${fmt(haOut)} HA × Rp${fmt(ec.subsidiPerHa.rate)}`);
+        }
+        extraLine = `<br><strong style="color:var(--c-text)">Helper / subsidi</strong><br>${parts.join(' + ')} = <strong>Rp ${fmt(u.extra)}</strong><br>`;
+      }
+
       // Margin %
       const margin = u.revenue > 0 ? (u.pnl / u.revenue) * 100 : 0;
       const pnlCls = u.pnl >= 0 ? 'text-success' : 'text-danger';
@@ -6795,7 +6861,7 @@ function updatePnlUnitTable(tableId, entries, site, wtLookup, breakdowns, unitCl
             ${rentalLine}<br><br>
 
             <strong style="color:var(--c-text)">Daily fixed cost</strong><br>
-            ${fixedLine}<br><br>
+            ${fixedLine}<br>${extraLine}<br>
 
             <strong style="color:var(--c-text)">Total cost</strong>: <strong>Rp ${fmt(u.cost)}</strong><br>
             <strong style="color:var(--c-text)">Net P&L</strong> = Rp ${fmt(u.revenue)} − Rp ${fmt(u.cost)} = <strong class="${pnlCls}">${sign}Rp ${fmt(Math.abs(u.pnl))}</strong>
@@ -6865,6 +6931,7 @@ function updatePnlWorkType(tableId, entries, site, wtLookup, unitClassLookup, re
 
     // BBM cost (date-aware rate)
     g.bbm += liters * bbmPerLiterFor(e, bbmRateMaredan, bbmRatePrabumuli, bbmThresholdPrabumuli);
+    g.extra = (g.extra || 0) + extraCostFor(e, wt.unit, cls);
     // Rental (direct sites only — Prabumuli is subcontractor)
     if (cls && rentalLookup) {
       const rate = rentalRateOn(rentalLookup, site, cls, e.date);
@@ -6896,7 +6963,7 @@ function updatePnlWorkType(tableId, entries, site, wtLookup, unitClassLookup, re
   const cell = v => (v && v > 0) ? (v / 1_000_000).toFixed(2) + 'M' : '—';
   let tRev = 0, tPremi = 0, tBbm = 0, tRental = 0, tFixed = 0, tNet = 0;
   const rows = groups.map(g => {
-    const net = g.revenue - g.premi - g.bbm - g.rental - g.fixed;
+    const net = g.revenue - g.premi - g.bbm - g.rental - g.fixed - (g.extra || 0);
     const margin = g.revenue > 0 ? (net / g.revenue) * 100 : 0;
     tRev += g.revenue; tPremi += g.premi; tBbm += g.bbm; tRental += g.rental; tFixed += g.fixed; tNet += net;
     const label = g.isMulti
@@ -7104,7 +7171,7 @@ async function refreshOpsProgress() {
   const sb = ensureSupabase();
   if (!sb) return;
   try {
-    await Promise.all([ensureBbmRates(sb), ensureRateMults(sb), ensurePremiOverrides(sb)]);  // date-aware fuel rates + work-rate multipliers
+    await Promise.all([ensureBbmRates(sb), ensureRateMults(sb), ensurePremiOverrides(sb), ensureExtraCosts(sb)]);  // date-aware fuel rates + work-rate multipliers
     const [tsRes, wtRes, unitsRes, rentalRes, settingsRes, tgtRes, obRes] = await Promise.all([
       sbFetchAll(() => sb.from('time_sheet').select('*').order('id')),
       sb.from('work_types').select('*'),
@@ -7341,8 +7408,13 @@ function opsFinancials(entries, site) {
     if (seen[k]) return; seen[k] = true;
     fixed += dayRateFor(e.site);
   });
-  const cost = premi + bbm + rental + fixed;
-  return { revenue, premi, bbm, rental, fixed, liters, cost, net: revenue - cost, byWork };
+  let extra = 0;
+  entries.forEach(e => {
+    const wt = wtLookup[e.site + '|' + e.work_type];
+    extra += extraCostFor(e, wt ? wt.unit : null, unitClassLookup[e.unit_code]);
+  });
+  const cost = premi + bbm + rental + fixed + extra;
+  return { revenue, premi, bbm, rental, fixed, extra, liters, cost, net: revenue - cost, byWork };
 }
 
 function renderOpsHistoric() {
@@ -7614,7 +7686,12 @@ function computeRangePnl(timeSheet, L, start, end, site) {
   });
   let fixed = 0; const seen = {};
   ents.forEach(e => { const k = (e.unit_code || '?') + '|' + e.date; if (seen[k]) return; seen[k] = true; fixed += e.site === 'maredan' ? dailyM : dailyP; });
-  const cost = premi + bbm + rental + fixed;
+  let extra = 0;
+  ents.forEach(e => {
+    const wt = L.wtLookup[e.site + '|' + e.work_type];
+    extra += extraCostFor(e, wt ? wt.unit : null, L.unitClassLookup[e.unit_code]);
+  });
+  const cost = premi + bbm + rental + fixed + extra;
   return { revenue, cost, net: revenue - cost };
 }
 
@@ -7624,7 +7701,7 @@ async function refreshActualPnl() {
   const recEl = document.getElementById('actual-records');
   const varEl = document.getElementById('actual-variance');
   try {
-    await Promise.all([ensureBbmRates(sb), ensureRateMults(sb), ensurePremiOverrides(sb)]);  // date-aware fuel rates + work-rate multipliers
+    await Promise.all([ensureBbmRates(sb), ensureRateMults(sb), ensurePremiOverrides(sb), ensureExtraCosts(sb)]);  // date-aware fuel rates + work-rate multipliers
     const [acRes, tsRes, wtRes, unitsRes, rentalRes, setRes] = await Promise.all([
       sb.from('actual_pnl').select('*').order('period_start', { ascending: false }),
       sbFetchAll(() => sb.from('time_sheet').select('*').order('id')),
