@@ -10190,9 +10190,7 @@ async function refreshScorecard() {
         // DOMINANT work-type unit (the one with the most machine hours) and show
         // the unit explicitly, e.g. "0.39 HA/HM". Total output is shown per unit.
         const units = Object.entries(data.byUnit || {}).filter(([, v]) => v.output > 0 || v.hm > 0);
-        let dom = null;
-        units.forEach(([u, v]) => { if (!dom || v.hm > dom[1].hm) dom = [u, v]; });
-        const ohm = (dom && dom[1].hm > 0) ? `${(dom[1].output / dom[1].hm).toFixed(2)} ${escapeHtml(dom[0])}/HM` : '—';
+        const ohm = outputPerHmLines(data);
         const totalStr = units.slice().sort((a, b) => b[1].hm - a[1].hm).slice(0, 2)
           .map(([u, v]) => `${formatNum(v.output)} ${escapeHtml(u)}`).join(' · ') || '—';
         const trustHtml = data.trustScore !== undefined
@@ -10234,7 +10232,7 @@ async function refreshScorecard() {
         const lhmClass = data.totalHm > 0 
           ? (data.totalBbm / data.totalHm > 25 ? 'text-danger' : data.totalBbm / data.totalHm > 22 ? 'text-warning' : 'text-success')
           : '';
-        const ohm = data.totalHm > 0 ? (data.totalOutput / data.totalHm).toFixed(1) : '—';
+        const ohm = outputPerHmLines(data);
         const opLabel = data.operators.length > 0 && data.operators[0] !== '(operator TBD)'
           ? data.operators.join(', ')
           : '<span class="placeholder-text">— operator TBD</span>';
@@ -10244,7 +10242,7 @@ async function refreshScorecard() {
           <td><strong>${escapeHtml(unit)}</strong> ${opLabel}</td>
           <td>${escapeHtml(data.workType || '—')}</td>
           <td class="${lhmClass}">${lhm}</td>
-          <td>${ohm} ${data.unit ? data.unit + '/HM' : ''}</td>
+          <td>${ohm}</td>
           <td><span class="trust-score muted">—</span></td>
         </tr>`;
       }).join('');
@@ -10267,7 +10265,7 @@ async function refreshScorecard() {
           const lhmClass = data.totalHm > 0
             ? (data.totalBbm / data.totalHm > 25 ? 'text-danger' : data.totalBbm / data.totalHm > 22 ? 'text-warning' : 'text-success')
             : '';
-          const ohm = data.totalHm > 0 ? (data.totalOutput / data.totalHm).toFixed(1) : '—';
+          const ohm = outputPerHmLines(data);
           const opLabel = data.operators.length > 0 && data.operators[0] !== '(operator TBD)'
             ? data.operators.join(', ')
             : '<span class="placeholder-text">— operator TBD</span>';
@@ -10276,7 +10274,7 @@ async function refreshScorecard() {
             <td><strong>${escapeHtml(unit)}</strong> ${opLabel}</td>
             <td>${escapeHtml(data.workType || '—')}</td>
             <td class="${lhmClass}">${lhm}</td>
-            <td>${ohm} ${data.unit ? data.unit + '/HM' : ''}</td>
+            <td>${ohm}</td>
             <td><span class="trust-score muted">—</span></td>
           </tr>`;
         }).join('');
@@ -10355,8 +10353,29 @@ function aggregateByOperator(entries, site, wtLookup) {
     if (!a.byUnit[ounit]) a.byUnit[ounit] = { output: 0, hm: 0 };
     a.byUnit[ounit].output += out;
     a.byUnit[ounit].hm += hm;
+    // Per WORK TYPE breakdown — a machine doing LC Darat and Jalan on the same
+    // day has two different rates; dividing one job's output by the machine's
+    // whole HM overstates it badly.
+    if (e.work_type && e.work_type !== '(standby)') {
+      a.byWork = a.byWork || {};
+      if (!a.byWork[e.work_type]) a.byWork[e.work_type] = { output: 0, hm: 0, unit: ounit };
+      a.byWork[e.work_type].output += out;
+      a.byWork[e.work_type].hm += hm;
+    }
   });
   return agg;
+}
+
+// Render "LC Darat 0.05 HA/HM · Jalan MR 71 Meter/HM" — one rate per work type,
+// each using only the hours spent on that work. Busiest work first.
+function outputPerHmLines(data) {
+  const bw = Object.entries(data.byWork || {}).filter(([, v]) => v.hm > 0 && v.output > 0);
+  if (!bw.length) return '—';
+  bw.sort((a, b) => b[1].hm - a[1].hm);
+  return bw.map(([wt, v]) =>
+    `<div style="white-space:nowrap"><span style="color:var(--c-text-tertiary);font-size:11px">${escapeHtml(wt)}</span> `
+    + `<strong>${(v.output / v.hm).toFixed(2)} ${escapeHtml(v.unit)}/HM</strong></div>`
+  ).join('');
 }
 
 // Helper: aggregate by unit (for Maredan smart fallback)
@@ -10364,6 +10383,7 @@ function aggregateByUnit(entries, site, wtLookup) {
   const agg = {};
   entries.forEach(e => {
     const key = e.unit_code;
+    // (byWork filled below — same reason as aggregateByOperator)
     if (!agg[key]) {
       agg[key] = {
         operators: [],
@@ -10379,9 +10399,19 @@ function aggregateByUnit(entries, site, wtLookup) {
     if (e.operator && !agg[key].operators.includes(e.operator)) {
       agg[key].operators.push(e.operator);
     }
+    const hmU = parseFloat(e.hm_allocated || e.hm_hours || 0);
+    const outU = parseFloat(e.output || 0);
     agg[key].totalBbm += parseFloat(e.bbm_allocated || e.bbm_liters || 0);
-    agg[key].totalHm += parseFloat(e.hm_allocated || e.hm_hours || 0);
-    agg[key].totalOutput += parseFloat(e.output || 0);
+    agg[key].totalHm += hmU;
+    agg[key].totalOutput += outU;
+    if (e.work_type && e.work_type !== '(standby)') {
+      const wtU = wtLookup[site + '|' + e.work_type];
+      const ou = (wtU && wtU.unit) ? wtU.unit : (e.output_unit || '?');
+      agg[key].byWork = agg[key].byWork || {};
+      if (!agg[key].byWork[e.work_type]) agg[key].byWork[e.work_type] = { output: 0, hm: 0, unit: ou };
+      agg[key].byWork[e.work_type].output += outU;
+      agg[key].byWork[e.work_type].hm += hmU;
+    }
   });
   return agg;
 }
