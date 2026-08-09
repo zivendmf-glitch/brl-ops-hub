@@ -3010,7 +3010,20 @@ code {
           </div>
 
           <div class="section-card">
-            <div class="section-title"><span id="pr-unit-title">Production rate — by unit</span><span class="pill info">per machine</span></div>
+            <div class="section-title"><span id="pr-eff-title">Unit productivity</span><span class="pill info">machine, not operator</span></div>
+            <table class="data-table">
+              <thead>
+                <tr><th>Unit</th><th>Class</th><th>Output / HM</th><th>L / HM</th><th>Total HM</th><th>Liters</th><th>Days</th><th>Operators</th></tr>
+              </thead>
+              <tbody id="pr-eff-table">
+                <tr><td colspan="8" style="text-align:center;color:var(--c-text-tertiary);padding:24px">Loading...</td></tr>
+              </tbody>
+            </table>
+            <div class="section-note">Per machine, so it stays meaningful when operators swap units. Output/HM is shown per work type — a machine's hours on one job never divide another job's output. L/HM is flagged against the site's own median for that class, not a fixed threshold. Standby rows are excluded.</div>
+          </div>
+
+          <div class="section-card">
+            <div class="section-title"><span id="pr-unit-title">Production rate — by unit</span><span class="pill info">per machine × work type</span></div>
             <table class="data-table">
               <thead>
                 <tr><th>Unit</th><th>Work Type</th><th>Total Output</th><th>Active Days</th><th>Avg / Day</th></tr>
@@ -7869,14 +7882,18 @@ async function refreshProdRates() {
   // Reflect active tabs
   document.getElementById('pr-site-prab-tab')?.classList.toggle('active', _prSite === 'prabumuli');
   document.getElementById('pr-site-mar-tab')?.classList.toggle('active', _prSite === 'maredan');
+  document.getElementById('pr-site-sam2-tab')?.classList.toggle('active', _prSite === 'sam2');
   try {
-    const [tsRes, wtRes] = await Promise.all([
+    const [tsRes, wtRes, unRes] = await Promise.all([
       sbFetchAll(() => sb.from('time_sheet').select('*').order('id')),
       sb.from('work_types').select('*'),
+      sb.from('units').select('site, unit_code, unit_class'),
     ]);
     const ts = tsRes.data || [];
     const wtLookup = {};
     (wtRes.data || []).forEach(w => { wtLookup[w.site + '|' + w.work_name] = w; });
+    const unitClassLookup = {};
+    (unRes.data || []).forEach(u => { if (u.unit_class) unitClassLookup[u.unit_code] = u.unit_class; });
 
     const now = new Date();
     const month = now.toISOString().slice(0, 7);
@@ -7918,6 +7935,73 @@ async function refreshProdRates() {
             <td>${d}</td>
             <td><strong>${formatNum(d > 0 ? a.total / d : 0)} ${escapeHtml(a.unit)}/day</strong></td>
             <td>${formatNum(ud > 0 ? a.total / ud : 0)} ${escapeHtml(a.unit)}/unit-day</td>
+          </tr>`;
+        }).join('');
+
+    // ── Unit productivity (per machine: output/HM per work type + L/HM) ──
+    const eagg = {};
+    ts.forEach(e => {
+      if (e.site !== site || !inPeriod(e) || !e.unit_code) return;
+      if (e.work_type === '(standby)') return;          // idle fuel would distort the rate
+      const a = eagg[e.unit_code] = eagg[e.unit_code] || {
+        cls: (unitClassLookup && unitClassLookup[e.unit_code]) || '—',
+        hm: 0, liters: 0, days: new Set(), ops: new Set(), byWork: {},
+      };
+      const hm = parseFloat(e.hm_allocated || e.hm_hours || 0);
+      const out = parseFloat(e.output) || 0;
+      a.hm += hm;
+      a.liters += parseFloat(e.bbm_allocated || e.bbm_liters || 0);
+      if (e.date) a.days.add(e.date);
+      if (e.operator && e.operator !== '(operator TBD)') a.ops.add(e.operator);
+      if (e.work_type) {
+        const ou = unitOf(e.work_type) || e.output_unit || '';
+        a.byWork[e.work_type] = a.byWork[e.work_type] || { out: 0, hm: 0, ou };
+        a.byWork[e.work_type].out += out;
+        a.byWork[e.work_type].hm += hm;
+      }
+    });
+    // Compare each machine against the MEDIAN of its own class this period —
+    // a dozer and an SK130 have no business sharing a fuel threshold.
+    const clsLhm = {};
+    Object.values(eagg).forEach(a => {
+      if (a.hm > 0 && a.liters > 0) (clsLhm[a.cls] = clsLhm[a.cls] || []).push(a.liters / a.hm);
+    });
+    const clsMedian = {};
+    Object.entries(clsLhm).forEach(([c, arr]) => {
+      arr.sort((x, y) => x - y);
+      clsMedian[c] = arr[Math.floor(arr.length / 2)];
+    });
+    const eRows = Object.entries(eagg).filter(([, a]) => a.hm > 0)
+      .sort((x, y) => unitCompare(x[0], y[0]));
+    document.getElementById('pr-eff-table').innerHTML = eRows.length === 0
+      ? `<tr><td colspan="8" style="text-align:center;color:var(--c-text-tertiary);padding:24px">No machine hours in this period</td></tr>`
+      : eRows.map(([code, a]) => {
+          const lhm = a.hm > 0 ? a.liters / a.hm : 0;
+          const med = clsMedian[a.cls];
+          let cls = '';
+          if (med && lhm > 0) {
+            if (lhm > med * 1.25) cls = 'text-danger';
+            else if (lhm > med * 1.10) cls = 'text-warning';
+            else if (lhm < med * 0.75) cls = 'text-warning';   // suspiciously low = under-logged fuel
+            else cls = 'text-success';
+          }
+          const perWork = Object.entries(a.byWork).filter(([, v]) => v.hm > 0 && v.out > 0)
+            .sort((x, y) => y[1].hm - x[1].hm)
+            .map(([wt, v]) => `<div style="white-space:nowrap"><span style="color:var(--c-text-tertiary);font-size:11px">${escapeHtml(wt)}</span> <strong>${(v.out / v.hm).toFixed(2)} ${escapeHtml(v.ou)}/HM</strong></div>`)
+            .join('') || '<span style="color:var(--c-text-tertiary)">—</span>';
+          const opsList = [...a.ops];
+          const opsStr = opsList.length === 0 ? '<span style="color:var(--c-text-tertiary)">—</span>'
+            : opsList.length === 1 ? escapeHtml(opsList[0])
+            : `<span title="${escapeHtml(opsList.join(', '))}">${escapeHtml(opsList[0])} <span class="pill warning">+${opsList.length - 1}</span></span>`;
+          return `<tr>
+            <td><strong>${escapeHtml(code)}</strong></td>
+            <td><span style="font-family:var(--font-mono);font-size:11px;color:var(--c-text-tertiary)">${escapeHtml(a.cls)}</span></td>
+            <td>${perWork}</td>
+            <td class="${cls}"><strong>${lhm > 0 ? lhm.toFixed(1) : '—'}</strong></td>
+            <td>${formatNum(a.hm)}</td>
+            <td>${formatNum(a.liters)}</td>
+            <td>${a.days.size}</td>
+            <td>${opsStr}</td>
           </tr>`;
         }).join('');
 
