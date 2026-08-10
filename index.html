@@ -2988,6 +2988,7 @@ code {
             <span style="font-weight:600">Period:</span>
             <button class="settings-tab active" id="pr-tab-mtd" onclick="setProdPeriod('mtd')">This month (MTD)</button>
             <button class="settings-tab" id="pr-tab-ytd" onclick="setProdPeriod('ytd')">Year to date (YTD)</button>
+            <select id="pr-month" class="settings-input" style="max-width:190px" onchange="setProdMonth(this.value)"></select>
             <span style="width:1px;height:22px;background:var(--c-border);margin:0 4px"></span>
             <span style="font-weight:600">Site:</span>
             <button class="settings-tab active" id="pr-site-prab-tab" onclick="setProdSite('prabumuli')">Prabumuli</button>
@@ -4093,7 +4094,8 @@ let currentUser = null;
 let currentSite = 'both';
 let _pnlSelectedMonth = null;  // which month the P&L page is showing (YYYY-MM)
 let _scPeriod = 'all';         // operator scorecard period: 'all' or 'YYYY-MM'
-let _prodPeriod = 'mtd';       // production rates page: 'mtd' or 'ytd'
+let _prodPeriod = 'mtd';       // production rates page: 'mtd' | 'ytd' | a 'YYYY-MM'
+let _prodMonth = null;         // chosen month when _prodPeriod is a specific month
 let _prSite = 'prabumuli';     // production rates page: selected site
 let _scSite = 'prabumuli';     // operator scorecard page: selected site
 let _benchPeriod = 'mtd';      // cross-site benchmark: 'all' | 'mtd' | 'ytd'
@@ -7864,8 +7866,21 @@ async function refreshActualPnl() {
 // ════════════════════════════════════════════════════════════════════
 function setProdPeriod(p) {
   _prodPeriod = p;
+  _prodMonth = null;
+  const sel = document.getElementById('pr-month');
+  if (sel) sel.value = '';
   document.getElementById('pr-tab-mtd')?.classList.toggle('active', p === 'mtd');
   document.getElementById('pr-tab-ytd')?.classList.toggle('active', p === 'ytd');
+  refreshProdRates();
+}
+// Pick a specific month, so a machine's rate can be compared like-for-like with
+// the same month on the Operator scorecard.
+function setProdMonth(m) {
+  if (!m) { setProdPeriod('mtd'); return; }
+  _prodMonth = m;
+  _prodPeriod = 'month';
+  document.getElementById('pr-tab-mtd')?.classList.remove('active');
+  document.getElementById('pr-tab-ytd')?.classList.remove('active');
   refreshProdRates();
 }
 function setProdSite(s) {
@@ -7900,10 +7915,24 @@ async function refreshProdRates() {
     const year = String(now.getFullYear());
     const MN = ['', 'January', 'February', 'March', 'April', 'May', 'June',
       'July', 'August', 'September', 'October', 'November', 'December'];
-    const inPeriod = e => _prodPeriod === 'mtd'
-      ? (e.date && e.date.startsWith(month))
-      : (e.date && e.date.startsWith(year));
-    const periodLabel = _prodPeriod === 'mtd' ? `${MN[now.getMonth() + 1]} ${year}` : `${year} YTD`;
+    const inPeriod = e => {
+      if (!e.date) return false;
+      if (_prodPeriod === 'month' && _prodMonth) return e.date.startsWith(_prodMonth);
+      if (_prodPeriod === 'mtd') return e.date.startsWith(month);
+      return e.date.startsWith(year);
+    };
+    const monthLabel = m => `${MN[parseInt(m.slice(5, 7), 10)]} ${m.slice(0, 4)}`;
+    const periodLabel = (_prodPeriod === 'month' && _prodMonth) ? monthLabel(_prodMonth)
+      : _prodPeriod === 'mtd' ? `${MN[now.getMonth() + 1]} ${year}` : `${year} YTD`;
+
+    // Populate the month list from the months this site actually has data for
+    const monthSel = document.getElementById('pr-month');
+    if (monthSel) {
+      const months = [...new Set(ts.filter(e => e.site === site && e.date).map(e => e.date.slice(0, 7)))].sort().reverse();
+      const want = (_prodPeriod === 'month' && _prodMonth) ? _prodMonth : '';
+      monthSel.innerHTML = '<option value="">Pick a month…</option>'
+        + months.map(m => `<option value="${m}"${m === want ? ' selected' : ''}>${monthLabel(m)}</option>`).join('');
+    }
     const siteLabel = _prSite.charAt(0).toUpperCase() + _prSite.slice(1);
     document.getElementById('pr-wt-title').textContent = `${siteLabel} — by work type (${periodLabel})`;
     document.getElementById('pr-unit-title').textContent = `${siteLabel} — by unit (${periodLabel})`;
