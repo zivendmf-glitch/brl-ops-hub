@@ -4680,7 +4680,11 @@ async function updateUrgentAlerts(breakdowns, timeSheet, workTypes) {
         priority: 2,
         title: `${b.unit_code} ${siteLabel} — ${(b.description || 'breakdown').toLowerCase()}`,
         pill: `${days} days`,
-        desc: `${b.action || 'Standby'}. ${days} days aging — investigate parts/repair status.`,
+        // b.action is free text typed into the Excel breakdown sheet, and the
+        // alert renderer injects desc as raw HTML (it carries a manager-only
+        // span). Escape the untrusted half here or an uploaded workbook can
+        // script the manager's dashboard.
+        desc: `${escapeHtml(b.action || 'Standby')}. ${days} days aging — investigate parts/repair status.`,
       });
     }
   });
@@ -4731,15 +4735,16 @@ async function updateUrgentAlerts(breakdowns, timeSheet, workTypes) {
   timeSheet.forEach(e => {
     const key = e.site + '|' + e.unit_code;
     if (!unitAgg[key]) {
-      unitAgg[key] = { unit_code: e.unit_code, site: e.site, totalBbm: 0, totalHm: 0 };
+      unitAgg[key] = { unit_code: e.unit_code, site: e.site, totalBbm: 0, totalHm: 0, lhm: newLhmAcc() };
     }
+    addToLhm(unitAgg[key].lhm, e);
     unitAgg[key].totalBbm += parseFloat(e.bbm_allocated || e.bbm_liters || 0);
     unitAgg[key].totalHm += parseFloat(e.hm_allocated || e.hm_hours || 0);
   });
-  
+
   Object.values(unitAgg).forEach(u => {
-    if (u.totalHm < 5) return;  // need enough hours
-    const lhm = u.totalBbm / u.totalHm;
+    if (u.lhm.fuelledHm < 5) return;  // need enough fuelled hours to judge
+    const lhm = lhmValue(u.lhm);
     if (lhm > 28) {
       const siteLabel = u.site.charAt(0).toUpperCase() + u.site.slice(1);
       alerts.push({
@@ -4823,10 +4828,10 @@ function updateYtdProgressTable(timeSheet, openingBalance, workTypes, mtdEntries
       if (opening === 0 && mtd === 0) return;
       const u = w.unit;
       html += `<tr>
-        <td style="padding:6px 0;font-weight:500">${w.work_name}</td>
-        <td style="text-align:right;color:var(--c-text-tertiary)">${formatNum(opening)} ${u}</td>
-        <td style="text-align:right">${formatNum(mtd)} ${u}</td>
-        <td style="text-align:right;font-weight:500">${formatNum(ytd)} ${u}</td>
+        <td style="padding:6px 0;font-weight:500">${escapeHtml(w.work_name)}</td>
+        <td style="text-align:right;color:var(--c-text-tertiary)">${formatNum(opening)} ${escapeHtml(u)}</td>
+        <td style="text-align:right">${formatNum(mtd)} ${escapeHtml(u)}</td>
+        <td style="text-align:right;font-weight:500">${formatNum(ytd)} ${escapeHtml(u)}</td>
       </tr>`;
     });
   }
@@ -4842,10 +4847,10 @@ function updateYtdProgressTable(timeSheet, openingBalance, workTypes, mtdEntries
       if (opening === 0 && mtd === 0) return;
       const u = w.unit;
       html += `<tr>
-        <td style="padding:6px 0;font-weight:500">${w.work_name}</td>
-        <td style="text-align:right;color:var(--c-text-tertiary)">${formatNum(opening)} ${u}</td>
-        <td style="text-align:right">${formatNum(mtd)} ${u}</td>
-        <td style="text-align:right;font-weight:500">${formatNum(ytd)} ${u}</td>
+        <td style="padding:6px 0;font-weight:500">${escapeHtml(w.work_name)}</td>
+        <td style="text-align:right;color:var(--c-text-tertiary)">${formatNum(opening)} ${escapeHtml(u)}</td>
+        <td style="text-align:right">${formatNum(mtd)} ${escapeHtml(u)}</td>
+        <td style="text-align:right;font-weight:500">${formatNum(ytd)} ${escapeHtml(u)}</td>
       </tr>`;
     });
   }
@@ -4864,10 +4869,10 @@ function updateYtdProgressTable(timeSheet, openingBalance, workTypes, mtdEntries
       if (opening === 0 && mtd === 0 && ytd === 0) return;
       const u = w.unit;
       sHtml += `<tr>
-        <td style="padding:6px 0;font-weight:500">${w.work_name}</td>
-        <td style="text-align:right;color:var(--c-text-tertiary)">${formatNum(opening)} ${u}</td>
-        <td style="text-align:right">${formatNum(mtd)} ${u}</td>
-        <td style="text-align:right;font-weight:500">${formatNum(ytd)} ${u}</td>
+        <td style="padding:6px 0;font-weight:500">${escapeHtml(w.work_name)}</td>
+        <td style="text-align:right;color:var(--c-text-tertiary)">${formatNum(opening)} ${escapeHtml(u)}</td>
+        <td style="text-align:right">${formatNum(mtd)} ${escapeHtml(u)}</td>
+        <td style="text-align:right;font-weight:500">${formatNum(ytd)} ${escapeHtml(u)}</td>
       </tr>`;
     });
     if (sHtml) html += `<tr><td colspan="4" style="padding:8px 0 4px;font-size:10px;color:var(--c-text-tertiary);font-family:var(--font-mono);text-transform:uppercase">SAM2</td></tr>` + sHtml;
@@ -4971,7 +4976,7 @@ async function updateUnitDropdown() {
     // Work types
     if (worksRes.data && worksRes.data.length > 0) {
       workSelect.innerHTML = '<option value="">-- Select work type --</option>' +
-        worksRes.data.map(w => `<option value="${w.work_name}">${w.work_name}</option>`).join('');
+        worksRes.data.map(w => `<option value="${escapeHtml(w.work_name)}">${escapeHtml(w.work_name)}</option>`).join('');
     } else {
       workSelect.innerHTML = '<option value="">-- No work types --</option>';
     }
@@ -6819,7 +6824,7 @@ function updatePnlUnitTable(tableId, entries, site, wtLookup, breakdowns, unitCl
           const rateExpr = w.isMultiUnit
             ? `Rp${fmt(w.fullRate)} × 50% (multi-unit split)`
             : `Rp${fmt(w.fullRate)}`;
-          return `${escapeHtml(wt)}: ${fmt(w.output)} ${w.unit} × ${rateExpr} = <strong>Rp ${fmt(w.rev)}</strong>`;
+          return `${escapeHtml(wt)}: ${fmt(w.output)} ${escapeHtml(w.unit)} × ${rateExpr} = <strong>Rp ${fmt(w.rev)}</strong>`;
         })
         .join('<br>');
       // Premi breakdown by work_type (only those with premi > 0)
@@ -7017,7 +7022,7 @@ function updatePnlWorkType(tableId, entries, site, wtLookup, unitClassLookup, re
     const marginCls = margin >= 15 ? 'text-success' : margin >= 0 ? 'text-warning' : 'text-danger';
     return `<tr>
       <td><strong>${label}</strong></td>
-      <td>${formatNum(g.output)} ${g.unit}</td>
+      <td>${formatNum(g.output)} ${escapeHtml(g.unit)}</td>
       <td>${(g.revenue/1_000_000).toFixed(2)}M</td>
       <td>${cell(g.premi)}</td>
       <td>${cell(g.bbm)}</td>
@@ -7343,7 +7348,10 @@ function renderOpsCurrent() {
     };
   };
   const tInput = (periodKey, wt, val) => canEdit
-    ? `<input type="number" class="settings-input" style="max-width:120px" value="${val || ''}" placeholder="0" onchange="saveOpsTarget('${periodKey}','${wt.replace(/'/g, "\\'")}',this.value)">`
+    // The work type rides in a data- attribute rather than being spliced into
+    // the inline handler as a JS string literal. Escaping only ' left a double
+    // quote free to close the attribute and add handlers of its own.
+    ? `<input type="number" class="settings-input" style="max-width:120px" value="${escapeHtml(val || '')}" placeholder="0" data-wt="${escapeHtml(wt)}" data-period="${escapeHtml(periodKey)}" onchange="saveOpsTarget(this.dataset.period,this.dataset.wt,this.value)">`
     : `${formatNum(val || 0)}`;
 
   // ── Year table ──
@@ -7412,6 +7420,23 @@ function renderOpsCurrent() {
 }
 
 // Full financials for a set of entries (reuses the P&L cost model).
+// Output can't be summed into a single number: work types are measured in
+// different units (HA, Meter, Pokok, Unit), and adding hectares to metres is
+// meaningless. Everything that reports output therefore keeps it split by unit.
+function outputByUnit(entries) {
+  const { wtLookup } = _opsCache;
+  const acc = {};
+  entries.forEach(e => {
+    if (e.work_type === '(standby)') return;
+    const out = parseFloat(e.output) || 0;
+    if (!out) return;
+    const wt = wtLookup[e.site + '|' + e.work_type];
+    const u = e.output_unit || (wt && wt.unit) || '?';
+    acc[u] = (acc[u] || 0) + out;
+  });
+  return acc;
+}
+
 function opsFinancials(entries, site) {
   const { wtLookup, unitClassLookup, rentalLookup, settings } = _opsCache;
   const bbmM = settings['maredan_bbm_per_liter'] || 27000;
@@ -7512,10 +7537,48 @@ function renderOpsHistoric() {
   if (_opsHistYear) {
     const months = [...new Set(rows.filter(e => e.date.startsWith(_opsHistYear)).map(e => e.date.slice(0, 7)))].sort();
     bc.innerHTML = `<a href="#" onclick="opsHistGo(null,null);return false">All years</a> › <strong>${_opsHistYear}</strong>`;
-    body.innerHTML = months.length
-      ? `<div style="display:flex;flex-wrap:wrap;gap:8px">` + months.map(m =>
-          `<button class="settings-tab" onclick="opsHistGo('${_opsHistYear}','${m}')">${MN[parseInt(m.slice(5), 10)]} ${_opsHistYear}</button>`).join('') + `</div>`
-      : '<div style="text-align:center;color:var(--c-text-tertiary);padding:24px">No data this year</div>';
+    if (!months.length) {
+      body.innerHTML = '<div style="text-align:center;color:var(--c-text-tertiary);padding:24px">No data this year</div>';
+      return;
+    }
+
+    // Every month at once, so output can be compared across the year without
+    // opening each month in turn. One column per output unit — see outputByUnit.
+    const sites = currentSite === 'both' ? ['prabumuli', 'maredan', 'sam2'] : [currentSite];
+    const cells = {};                       // site|month -> { unit: total }
+    const unitsSeen = new Set();
+    sites.forEach(s => months.forEach(m => {
+      const ents = rows.filter(e => e.site === s && e.date.startsWith(m));
+      const by = outputByUnit(ents);
+      if (!Object.keys(by).length) return;
+      cells[s + '|' + m] = by;
+      Object.keys(by).forEach(u => unitsSeen.add(u));
+    }));
+    const unitCols = [...unitsSeen].sort();
+
+    const head = `<tr>${currentSite === 'both' ? '<th>Site</th>' : ''}<th>Month</th>`
+      + unitCols.map(u => `<th style="text-align:right">${escapeHtml(u)}</th>`).join('') + `</tr>`;
+
+    const bodyRows = [];
+    sites.forEach(s => months.forEach(m => {
+      const by = cells[s + '|' + m];
+      if (!by) return;
+      bodyRows.push(`<tr>`
+        + (currentSite === 'both' ? `<td>${escapeHtml(s.charAt(0).toUpperCase() + s.slice(1))}</td>` : '')
+        + `<td><a href="#" onclick="opsHistGo('${_opsHistYear}','${m}');return false">`
+        + `${MN[parseInt(m.slice(5), 10)]} ${_opsHistYear}</a></td>`
+        + unitCols.map(u => `<td style="text-align:right">${by[u] ? formatNum(by[u]) : '<span style="color:var(--c-text-tertiary)">—</span>'}</td>`).join('')
+        + `</tr>`);
+    }));
+
+    body.innerHTML =
+      `<div class="section-title"><span>Output by month</span><span class="pill info">per output unit</span></div>`
+      + `<table class="data-table"><thead>${head}</thead><tbody>`
+      + (bodyRows.join('') || `<tr><td colspan="${unitCols.length + 2}" style="text-align:center;color:var(--c-text-tertiary);padding:18px">No output logged this year</td></tr>`)
+      + `</tbody></table>`
+      + `<div class="section-note">Units are never added together — hectares and metres are different work. Click a month for its full P&L and per-work-type breakdown. Months are calendar months; the Excel templates run 26th–25th, so a template period spans two columns here.</div>`
+      + `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px">` + months.map(m =>
+          `<button class="settings-tab" onclick="opsHistGo('${_opsHistYear}','${m}')">${MN[parseInt(m.slice(5), 10)]} ${_opsHistYear}</button>`).join('') + `</div>`;
     return;
   }
 
@@ -7925,6 +7988,11 @@ async function refreshProdRates() {
     const periodLabel = (_prodPeriod === 'month' && _prodMonth) ? monthLabel(_prodMonth)
       : _prodPeriod === 'mtd' ? `${MN[now.getMonth() + 1]} ${year}` : `${year} YTD`;
 
+    // Declared before first use: the month list below filters on `site`, and a
+    // const read ahead of its declaration throws (temporal dead zone) rather
+    // than reading undefined — which silently killed this whole page.
+    const site = _prSite;
+
     // Populate the month list from the months this site actually has data for
     const monthSel = document.getElementById('pr-month');
     if (monthSel) {
@@ -7939,7 +8007,6 @@ async function refreshProdRates() {
     const note = document.getElementById('pr-period-note');
     if (note) note.textContent = `${siteLabel} · average output per active day · ${periodLabel}.`;
 
-    const site = _prSite;
     const unitOf = wt_name => { const wt = wtLookup[site + '|' + wt_name]; return (wt && wt.unit) || ''; };
 
     // ── By work type ──
@@ -7972,19 +8039,15 @@ async function refreshProdRates() {
     ts.forEach(e => {
       if (e.site !== site || !inPeriod(e) || !e.unit_code) return;
       if (e.work_type === '(standby)') return;          // idle fuel would distort the rate
-      const a = eagg[e.unit_code] = eagg[e.unit_code] || {
+      const a = eagg[e.unit_code] = eagg[e.unit_code] || Object.assign(newLhmAcc(), {
         cls: (unitClassLookup && unitClassLookup[e.unit_code]) || '—',
-        hm: 0, fuelledHm: 0, liters: 0, days: new Set(), ops: new Set(), byWork: {},
-      };
+        days: new Set(), ops: new Set(), byWork: {},
+      });
       const hm = parseFloat(e.hm_allocated || e.hm_hours || 0);
       const out = parseFloat(e.output) || 0;
-      const lit = parseFloat(e.bbm_allocated || e.bbm_liters || 0);
-      a.hm += hm;
-      a.liters += lit;
-      // Fuel is often not yet issued/recorded for the newest days, while the
-      // hours are. Dividing litres by ALL hours then understates consumption,
-      // so L/HM uses only hours on days that actually carried fuel.
-      if (lit > 0) a.fuelledHm += hm;
+      // The L/HM rules (standby excluded, fuelled hours only) live in addToLhm,
+      // shared with the cross-site benchmark and the operator scorecard.
+      addToLhm(a, e);
       if (e.date) a.days.add(e.date);
       if (e.operator && e.operator !== '(operator TBD)') a.ops.add(e.operator);
       if (e.work_type) {
@@ -7996,10 +8059,9 @@ async function refreshProdRates() {
     });
     // Compare each machine against the MEDIAN of its own class this period —
     // a dozer and an SK130 have no business sharing a fuel threshold.
-    const lhmOf = a => (a.fuelledHm > 0 ? a.liters / a.fuelledHm : 0);
     const clsLhm = {};
     Object.values(eagg).forEach(a => {
-      const v = lhmOf(a);
+      const v = lhmValue(a);
       if (v > 0) (clsLhm[a.cls] = clsLhm[a.cls] || []).push(v);
     });
     const clsMedian = {};
@@ -8012,13 +8074,10 @@ async function refreshProdRates() {
     document.getElementById('pr-eff-table').innerHTML = eRows.length === 0
       ? `<tr><td colspan="8" style="text-align:center;color:var(--c-text-tertiary);padding:24px">No machine hours in this period</td></tr>`
       : eRows.map(([code, a]) => {
-          const lhm = lhmOf(a);
+          const lhm = lhmValue(a);
           // Flag when a chunk of the hours has no fuel logged yet — the rate is
           // real but provisional until those days are filled in.
-          const gap = a.hm - a.fuelledHm;
-          const cover = (gap > 0.01)
-            ? `<div style="font-size:10px;color:var(--c-warning,#b26a00);margin-top:2px">${formatNum(a.fuelledHm)} of ${formatNum(a.hm)} HM fuelled</div>`
-            : '';
+          const cover = lhmCoverageNote(a);
           const med = clsMedian[a.cls];
           let cls = '';
           if (med && lhm > 0) {
@@ -8132,6 +8191,26 @@ async function refreshDataHealth() {
       if (dupSeen[dk]) dupCount++; else dupSeen[dk] = true;
     });
 
+    // 3b) Impossible hours. The recurring data-entry slip is the BBM figure
+    // being typed into the HM cell (DZP 12 read 140 HM on 3 Aug against 140 L
+    // of fuel), which silently divides a month's litres by a bogus denominator
+    // and craters that machine's L/HM. No machine runs more than 24 h a day.
+    const badHours = [];
+    ts.forEach(e => {
+      const raw = parseFloat(e.hm_hours) || 0, alloc = parseFloat(e.hm_allocated) || 0;
+      const worst = Math.max(raw, alloc);
+      if (worst > 24) badHours.push({ e, worst, matchesFuel: worst === (parseFloat(e.bbm_liters) || -1) });
+    });
+    badHours.sort((a, b) => b.worst - a.worst);
+
+    // 3c) Half-corrected rows. Fixing hm_hours by hand in the database without
+    // fixing hm_allocated leaves the app reading the OLD value — every page
+    // prefers hm_allocated. On a single-work row the two must be equal.
+    const allocDrift = ts.filter(e =>
+      !e.is_multi_work &&
+      e.hm_allocated != null && e.hm_hours != null &&
+      Math.abs(parseFloat(e.hm_allocated) - parseFloat(e.hm_hours)) > 0.01);
+
     // 4) Productivity outliers — output/HM more than 3× off the median of the
     // SAME site × work type × unit CLASS. Classes must not be pooled: on shared
     // jobs (Terasan/Cuci/Jalan) a dozer's m/HM is ~6× an excavator's, so a
@@ -8160,7 +8239,8 @@ async function refreshDataHealth() {
     outliers.sort((a, b) => Math.abs(Math.log(b.ratio / b.median)) - Math.abs(Math.log(a.ratio / a.median)));
 
     // ── KPIs ──
-    const totalIssues = orphanList.reduce((s, o) => s + o.count, 0) + mismCount + outliers.length;
+    const totalIssues = orphanList.reduce((s, o) => s + o.count, 0) + mismCount + outliers.length
+      + badHours.length + allocDrift.length;
     document.getElementById('dh-kpi-total').textContent = totalIssues;
     document.getElementById('dh-kpi-orphan').textContent = orphanList.length;
     document.getElementById('dh-kpi-unit').textContent = mismCount;
@@ -8197,7 +8277,23 @@ async function refreshDataHealth() {
         }).join('');
 
     // ── Misc table ──
+    const badHoursNote = badHours.length === 0
+      ? 'None — no machine logged more than 24 h in a day'
+      : badHours.slice(0, 12).map(b =>
+          `<strong style="color:var(--c-danger,#e5484d)">${escapeHtml(b.e.unit_code || '?')}</strong> ${b.e.date || ''}: `
+          + `${formatNum(b.worst)} HM${b.matchesFuel ? ' (= its BBM litres — fuel typed into the HM cell)' : ''}`
+        ).join('<br>') + (badHours.length > 12 ? `<br>…and ${badHours.length - 12} more` : '');
+
+    const driftNote = allocDrift.length === 0
+      ? 'None — every single-work row agrees'
+      : allocDrift.slice(0, 12).map(e =>
+          `<strong>${escapeHtml(e.unit_code || '?')}</strong> ${e.date || ''}: `
+          + `raw ${formatNum(parseFloat(e.hm_hours))} vs allocated ${formatNum(parseFloat(e.hm_allocated))} — the app uses the allocated figure`
+        ).join('<br>') + (allocDrift.length > 12 ? `<br>…and ${allocDrift.length - 12} more` : '');
+
     document.getElementById('dh-misc-table').innerHTML = `
+      <tr><td>Impossible HM (&gt;24 h in a day)</td><td class="${badHours.length ? 'text-danger' : ''}">${badHours.length}</td><td>${badHoursNote}</td></tr>
+      <tr><td>HM raw ≠ HM allocated</td><td class="${allocDrift.length ? 'text-danger' : ''}">${allocDrift.length}</td><td>${driftNote}</td></tr>
       <tr><td>Output entered, no HM</td><td>${outNoHm}</td><td>Usually OK — HM allocated to the day's main work type</td></tr>
       <tr><td>HM entered, no output</td><td>${hmNoOut}</td><td>Standby / idle, or a forgotten output number</td></tr>
       <tr><td>Unit-label mismatches</td><td>${mismCount}</td><td>${mismList.map(m => `${escapeHtml(m.wt)}: "${escapeHtml(m.got)}"→"${escapeHtml(m.expected)}"`).join('; ') || '—'}</td></tr>
@@ -9562,7 +9658,8 @@ async function refreshBenchmark() {
       'July', 'August', 'September', 'October', 'November', 'December'];
     const note = document.getElementById('bm-period-note');
     if (note) note.textContent = (_benchPeriod === 'mtd' ? `${MN[_now.getMonth() + 1]} ${_y}` :
-      _benchPeriod === 'ytd' ? `${_y} YTD` : 'All-time') + ' · L/HM & output/HM by unit class.';
+      _benchPeriod === 'ytd' ? `${_y} YTD` : 'All-time')
+      + ' · L/HM & output/HM by unit class. Standby excluded; L/HM counts only hours on days that had fuel recorded — same rule as Production rates.';
     
     // Build unit_type lookup
     const unitTypeMap = {};
@@ -9583,8 +9680,14 @@ async function refreshBenchmark() {
           totalHm: 0,
           totalOutput: 0,
           entries: 0,
+          lhm: newLhmAcc(),
         };
       }
+      // Standby burns fuel and clocks hours against no work at all, so counting
+      // it dilutes both L/HM and output/HM. Production rates has always dropped
+      // these rows; the benchmark now agrees instead of quietly disagreeing.
+      if (e.work_type === '(standby)') return;
+      addToLhm(unitAgg[key].lhm, e);
       unitAgg[key].totalBbm += parseFloat(e.bbm_allocated || e.bbm_liters || 0);
       unitAgg[key].totalHm += parseFloat(e.hm_allocated || e.hm_hours || 0);
       unitAgg[key].totalOutput += parseFloat(e.output || 0);
@@ -9599,17 +9702,23 @@ async function refreshBenchmark() {
     setText('bm-kpi-total-sub', units.length > 0 ? `across ${new Set(units.map(u => u.unit_type)).size} types` : 'no units yet');
     
     if (unitsWithData.length > 0) {
-      const sorted = [...unitsWithData].sort((a, b) => (a.totalBbm/a.totalHm) - (b.totalBbm/b.totalHm));
+      // Rank on the shared L/HM. Machines whose hours carry no fuel yet have no
+      // computable rate, so they can't be "best in fleet" or pad the average.
+      const rated = unitsWithData.filter(u => lhmValue(u.lhm) > 0);
+      const sorted = [...rated].sort((a, b) => lhmValue(a.lhm) - lhmValue(b.lhm));
       const best = sorted[0];
-      setText('bm-kpi-best', best.unit_code);
-      setText('bm-kpi-best-sub', `${(best.totalBbm/best.totalHm).toFixed(1)} L/HM · ${best.site.charAt(0).toUpperCase() + best.site.slice(1)}`);
-      
-      const watchCount = unitsWithData.filter(u => u.totalBbm/u.totalHm > 22).length;
+      setText('bm-kpi-best', best ? best.unit_code : '—');
+      setText('bm-kpi-best-sub', best
+        ? `${lhmValue(best.lhm).toFixed(1)} L/HM · ${best.site.charAt(0).toUpperCase() + best.site.slice(1)}`
+        : 'no fuelled hours yet');
+
+      const watchCount = rated.filter(u => lhmValue(u.lhm) > 22).length;
       setText('bm-kpi-watch', watchCount);
       setText('bm-kpi-watch-sub', watchCount === 0 ? 'no concerns' : 'high BBM consumption');
-      
-      const fleetAvg = unitsWithData.reduce((s, u) => s + u.totalBbm/u.totalHm, 0) / unitsWithData.length;
-      setText('bm-kpi-avg', fleetAvg.toFixed(1));
+
+      const fleetAvg = rated.length
+        ? rated.reduce((s, u) => s + lhmValue(u.lhm), 0) / rated.length : 0;
+      setText('bm-kpi-avg', rated.length ? fleetAvg.toFixed(1) : '—');
       const totalHm = unitsWithData.reduce((s, u) => s + u.totalHm, 0);
       setText('bm-kpi-avg-sub', `${formatNum(totalHm)} HM logged`);
     } else {
@@ -9640,25 +9749,30 @@ async function refreshBenchmark() {
     const sections = Object.entries(byType)
       .sort((a, b) => b[1].length - a[1].length)
       .map(([type, list]) => {
-        const sortedList = list.sort((a, b) => (a.totalBbm/a.totalHm) - (b.totalBbm/b.totalHm));
-        const minLhm = sortedList[0].totalBbm / sortedList[0].totalHm;
-        
+        // Unrated machines (hours logged, no fuel yet) sort last rather than
+        // sorting first on a rate of zero and stealing "best in fleet".
+        const sortedList = list.sort((a, b) => {
+          const av = lhmValue(a.lhm), bv = lhmValue(b.lhm);
+          if (av > 0 && bv > 0) return av - bv;
+          return (av > 0 ? -1 : 0) - (bv > 0 ? -1 : 0);
+        });
+
         const rows = sortedList.map((u, idx) => {
-          const lhm = u.totalBbm / u.totalHm;
+          const lhm = lhmValue(u.lhm);
           const ohm = u.totalOutput / u.totalHm;
-          const isBest = idx === 0;
-          const isWorst = idx === sortedList.length - 1 && sortedList.length > 1;
-          
+          const isBest = idx === 0 && lhm > 0;
+
           let lhmClass = 'text-success';
           let status = '<span class="pill success">good</span>';
-          if (lhm > 22) { lhmClass = 'text-danger'; status = '<span class="pill warning">investigate</span>'; }
+          if (lhm <= 0) { lhmClass = ''; status = '<span class="pill">no fuel logged</span>'; }
+          else if (lhm > 22) { lhmClass = 'text-danger'; status = '<span class="pill warning">investigate</span>'; }
           else if (lhm > 20) { lhmClass = 'text-warning'; status = '<span class="pill warning">watch</span>'; }
           else if (isBest) { status = '<span class="pill success">best in fleet</span>'; }
-          
+
           return `<tr>
             <td><strong>${escapeHtml(u.unit_code)}</strong></td>
             <td>${u.site.charAt(0).toUpperCase() + u.site.slice(1)}</td>
-            <td class="${lhmClass}">${lhm.toFixed(1)}</td>
+            <td class="${lhmClass}">${lhm > 0 ? lhm.toFixed(1) : '—'}${lhmCoverageNote(u.lhm)}</td>
             <td>${ohm.toFixed(2)}</td>
             <td>${status}</td>
           </tr>`;
@@ -10308,9 +10422,10 @@ async function refreshScorecard() {
                        : rank === 2 ? '<span class="rank-medal silver">2</span>'
                        : rank === 3 ? '<span class="rank-medal bronze">3</span>'
                        : rank;
-        const lhm = data.totalHm > 0 ? (data.totalBbm / data.totalHm).toFixed(1) : '—';
-        const lhmClass = data.totalHm > 0
-          ? (data.totalBbm / data.totalHm > 25 ? 'text-danger' : data.totalBbm / data.totalHm > 22 ? 'text-warning' : 'text-success')
+        const lhmV = lhmValue(data.lhm);
+        const lhm = lhmV > 0 ? lhmV.toFixed(1) : '—';
+        const lhmClass = lhmV > 0
+          ? (lhmV > 25 ? 'text-danger' : lhmV > 22 ? 'text-warning' : 'text-success')
           : '';
         // Output/HM only makes sense within one output unit. Use the operator's
         // DOMINANT work-type unit (the one with the most machine hours) and show
@@ -10354,9 +10469,10 @@ async function refreshScorecard() {
                        : rank === 2 ? '<span class="rank-medal silver">2</span>'
                        : rank === 3 ? '<span class="rank-medal bronze">3</span>'
                        : rank;
-        const lhm = data.totalHm > 0 ? (data.totalBbm / data.totalHm).toFixed(1) : '—';
-        const lhmClass = data.totalHm > 0 
-          ? (data.totalBbm / data.totalHm > 25 ? 'text-danger' : data.totalBbm / data.totalHm > 22 ? 'text-warning' : 'text-success')
+        const lhmV = lhmValue(data.lhm);
+        const lhm = lhmV > 0 ? lhmV.toFixed(1) : '—';
+        const lhmClass = lhmV > 0
+          ? (lhmV > 25 ? 'text-danger' : lhmV > 22 ? 'text-warning' : 'text-success')
           : '';
         const ohm = outputPerHmLines(data);
         const opLabel = data.operators.length > 0 && data.operators[0] !== '(operator TBD)'
@@ -10387,9 +10503,10 @@ async function refreshScorecard() {
                          : rank === 2 ? '<span class="rank-medal silver">2</span>'
                          : rank === 3 ? '<span class="rank-medal bronze">3</span>'
                          : rank;
-          const lhm = data.totalHm > 0 ? (data.totalBbm / data.totalHm).toFixed(1) : '—';
-          const lhmClass = data.totalHm > 0
-            ? (data.totalBbm / data.totalHm > 25 ? 'text-danger' : data.totalBbm / data.totalHm > 22 ? 'text-warning' : 'text-success')
+          const lhmV = lhmValue(data.lhm);
+          const lhm = lhmV > 0 ? lhmV.toFixed(1) : '—';
+          const lhmClass = lhmV > 0
+            ? (lhmV > 25 ? 'text-danger' : lhmV > 22 ? 'text-warning' : 'text-success')
             : '';
           const ohm = outputPerHmLines(data);
           const opLabel = data.operators.length > 0 && data.operators[0] !== '(operator TBD)'
@@ -10448,6 +10565,38 @@ async function refreshScorecard() {
   }
 }
 
+// ── L/HM: ONE definition, shared by every page that shows it ────────────────
+// Production rates, the cross-site benchmark and the operator scorecard each
+// computed this their own way, so one machine could read three different rates
+// depending on which page you opened. Two rules, both learned from real data:
+//   • Standby rows are excluded — idle fuel is not a consumption rate.
+//   • Only hours on days that actually carried fuel count. Fuel is issued and
+//     written up a day or two behind the hours, so dividing litres by ALL hours
+//     understates consumption (KC 122 read 10.6 L/HM in August against a real
+//     16.2 across the 15 of its 23 hours that were fuelled).
+function newLhmAcc() {
+  return { liters: 0, hm: 0, fuelledHm: 0 };
+}
+function addToLhm(acc, e) {
+  if (e.work_type === '(standby)') return;
+  const lit = parseFloat(e.bbm_allocated || e.bbm_liters || 0);
+  const hm  = parseFloat(e.hm_allocated  || e.hm_hours  || 0);
+  acc.liters += lit;
+  acc.hm     += hm;
+  if (lit > 0) acc.fuelledHm += hm;
+}
+// 0 means "not computable" — callers render an em dash rather than a zero rate.
+function lhmValue(acc) {
+  return (acc && acc.fuelledHm > 0) ? acc.liters / acc.fuelledHm : 0;
+}
+// "15 of 23 HM fuelled" — shown when part of the hours carries no fuel yet, so
+// the figure reads as provisional rather than as good news.
+function lhmCoverageNote(acc) {
+  if (!acc || !(acc.hm - acc.fuelledHm > 0.01)) return '';
+  return `<div style="font-size:10px;color:var(--c-warning,#b26a00);margin-top:2px">`
+       + `${formatNum(acc.fuelledHm)} of ${formatNum(acc.hm)} HM fuelled</div>`;
+}
+
 // Helper: aggregate time_sheet entries by operator.
 // Output is tracked PER output-unit (HA / Meter / Lubang …) because an operator
 // may do work types with different units — summing them into one number is
@@ -10464,11 +10613,13 @@ function aggregateByOperator(entries, site, wtLookup) {
         totalHm: 0,
         totalOutput: 0,   // kept for backward-compat; NOT used for output/HM
         byUnit: {},       // { 'HA': {output, hm}, 'Meter': {output, hm}, … }
+        lhm: newLhmAcc(), // shared L/HM — same rules as the other pages
       };
     }
     const a = agg[e.operator];
     const hm = parseFloat(e.hm_allocated || e.hm_hours || 0);
     const out = parseFloat(e.output || 0);
+    addToLhm(a.lhm, e);
     a.totalBbm += parseFloat(e.bbm_allocated || e.bbm_liters || 0);
     a.totalHm += hm;
     a.totalOutput += out;
@@ -10518,6 +10669,7 @@ function aggregateByUnit(entries, site, wtLookup) {
         totalHm: 0,
         totalOutput: 0,
         unit: '',
+        lhm: newLhmAcc(), // shared L/HM — same rules as the other pages
       };
       const wt = wtLookup[site + '|' + e.work_type];
       if (wt) agg[key].unit = wt.unit;
@@ -10527,6 +10679,7 @@ function aggregateByUnit(entries, site, wtLookup) {
     }
     const hmU = parseFloat(e.hm_allocated || e.hm_hours || 0);
     const outU = parseFloat(e.output || 0);
+    addToLhm(agg[key].lhm, e);
     agg[key].totalBbm += parseFloat(e.bbm_allocated || e.bbm_liters || 0);
     agg[key].totalHm += hmU;
     agg[key].totalOutput += outU;

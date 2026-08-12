@@ -8,3 +8,8 @@ Thumbs.db
 .env.*
 *secret*
 *service_role*
+
+# Local working folder. Holds BRL_PROJECT_HANDOFF.md with plaintext credentials,
+# plus scratch copies of index.html. This repo is PUBLIC and Netlify deploys
+# from it — anything in here would be served at a public URL.
+BRL OPS/
