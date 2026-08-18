@@ -3040,6 +3040,13 @@ code {
                 <div class="page" id="page-actual-pnl">
           <div class="manager-only-banner">🔒 MANAGER ONLY — actual P&amp;L from accounting (Accurate reports).</div>
 
+          <div class="section-card" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <button class="settings-tab active" id="ap-tab-records" onclick="setActualTab('records')">Records</button>
+            <button class="settings-tab" id="ap-tab-variance" onclick="setActualTab('variance')">Variance vs platform</button>
+            <span class="section-note" id="ap-tab-note" style="margin:0">Upload invoices and see what is stored. Switch to Variance to compare them against the platform month by month.</span>
+          </div>
+
+          <div id="ap-pane-records">
           <div class="section-card">
             <div class="section-title"><span>Upload actual P&amp;L (PDF)</span><span class="pill info">Accurate report</span></div>
             <input type="file" id="actual-pdf-file" accept="application/pdf" style="display:none" onchange="handleActualPdf(this.files[0])">
@@ -3093,6 +3100,33 @@ code {
             </table>
             <div class="section-note">Needs the <code>actual_pnl</code> table. It's fine if actuals don't match the platform month-to-month — late invoices reconcile over the year.</div>
           </div>
+          </div><!-- /ap-pane-records -->
+
+          <div id="ap-pane-variance" style="display:none">
+
+          <div class="section-card">
+            <div class="section-title"><span>Invoice coverage</span><span class="pill info" id="ap-cov-pill">—</span></div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">
+              <div class="kpi-card"><div class="kpi-label">Site-months with data</div><div class="kpi-value" id="ap-kpi-months">—</div></div>
+              <div class="kpi-card"><div class="kpi-label">Invoiced</div><div class="kpi-value" id="ap-kpi-invoiced">—</div></div>
+              <div class="kpi-card"><div class="kpi-label">Not invoiced</div><div class="kpi-value danger" id="ap-kpi-missing">—</div><div class="kpi-sub" id="ap-kpi-missing-sub">&nbsp;</div></div>
+              <div class="kpi-card"><div class="kpi-label">Platform Net not invoiced</div><div class="kpi-value" id="ap-kpi-uninvoiced-net">—</div></div>
+            </div>
+            <div class="section-note">A month counts as invoiced when an uploaded invoice's period overlaps it. Months before the platform had any time sheet data are excluded — there is nothing to compare them against.</div>
+          </div>
+
+          <div class="section-card">
+            <div class="section-title"><span>Month by month</span><span class="pill info">per site</span></div>
+            <table class="data-table">
+              <thead>
+                <tr><th>Month</th><th>Site</th><th>Covered by</th><th>Actual Net</th><th>Platform Net</th><th>Variance</th><th>%</th></tr>
+              </thead>
+              <tbody id="ap-month-table">
+                <tr><td colspan="7" style="text-align:center;color:var(--c-text-tertiary);padding:24px">Loading...</td></tr>
+              </tbody>
+            </table>
+            <div class="section-note">One row per site-month that has platform data. An invoice covering a single month is compared against that month directly. An invoice spanning several months cannot be split into months, so its months are listed for context and the comparison is made on the <strong>subtotal</strong> row over the same span. Rows marked <em>not invoiced</em> are the gaps — platform work with no accounting figure yet.</div>
+          </div>
 
           <div class="section-card">
             <div class="section-title"><span>Variance — Actual vs Platform</span><span class="pill info" id="actual-var-year">—</span></div>
@@ -3106,6 +3140,8 @@ code {
             </table>
             <div class="section-note">Per record: platform Net is computed for the exact period &amp; site of the invoice. YTD row: sum of all actuals this year vs platform Net over the same coverage span. Variance = Actual − Platform.</div>
           </div>
+
+          </div><!-- /ap-pane-variance -->
         </div>
 
                 <div class="page" id="page-ops-progress">
@@ -4101,6 +4137,7 @@ let _scSite = 'prabumuli';     // operator scorecard page: selected site
 let _benchPeriod = 'mtd';      // cross-site benchmark: 'all' | 'mtd' | 'ytd'
 let _pnlTab = 'unit';          // P&L page view: 'unit' | 'worktype' | 'breakdown'
 let _opsTab = 'current';       // Operational Progress: 'current' | 'historic'
+let _actualTab = 'records';    // P&L actual: 'records' | 'variance'
 let _opsHistYear = null;       // Historic drill-down: selected year
 let _opsHistMonth = null;      // Historic drill-down: selected month (YYYY-MM)
 let _opsCache = null;          // cached datasets for Operational Progress
@@ -7055,6 +7092,21 @@ function updatePnlWorkType(tableId, entries, site, wtLookup, unitClassLookup, re
 // OPERATIONAL PROGRESS — output targets vs actual + historic drill-down
 // ════════════════════════════════════════════════════════════════════
 
+// P&L actual sub-tabs. Both panes are rendered by the same refreshActualPnl()
+// pass, so switching is a pure show/hide — no refetch.
+function setActualTab(tab) {
+  _actualTab = tab;
+  ['records', 'variance'].forEach(t => {
+    document.getElementById('ap-tab-' + t)?.classList.toggle('active', tab === t);
+    const el = document.getElementById('ap-pane-' + t);
+    if (el) el.style.display = tab === t ? 'block' : 'none';
+  });
+  const note = document.getElementById('ap-tab-note');
+  if (note) note.textContent = tab === 'records'
+    ? 'Upload invoices and see what is stored. Switch to Variance to compare them against the platform month by month.'
+    : 'Where the accounting figures and the platform disagree, and which months have no invoice at all.';
+}
+
 function setOpsTab(tab) {
   _opsTab = tab;
   ['current', 'historic', 'client'].forEach(t => {
@@ -7801,6 +7853,125 @@ function computeRangePnl(timeSheet, L, start, end, site) {
   return { revenue, cost, net: revenue - cost };
 }
 
+// Month-by-month invoice coverage for the P&L actual → Variance tab.
+// Walks every site-month that HAS platform data (rather than every month that
+// happens to have an invoice), so uninvoiced months show up as gaps instead of
+// silently not existing.
+function renderActualCoverage(ts, L, records, platformStart, fmtM, siteLabel) {
+  const tbody = document.getElementById('ap-month-table');
+  if (!tbody) return;
+  const MN = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const mLabel = m => `${MN[parseInt(m.slice(5), 10)]} ${m.slice(0, 4)}`;
+  // computeRangePnl compares dates as strings, so 'YYYY-MM-01'..'YYYY-MM-31'
+  // is a safe month window even for February: no real date in the month sorts
+  // above -31, and the next month's -01 sorts above it.
+  const mStart = m => m + '-01';
+  const mEnd = m => m + '-31';
+
+  const varCells = (actual, platform) => {
+    const v = actual - platform;
+    const pct = platform !== 0 ? (v / Math.abs(platform) * 100) : null;
+    const vCls = v >= 0 ? 'text-success' : 'text-danger';
+    const pCls = pct === null ? '' : Math.abs(pct) <= 10 ? 'text-success'
+               : Math.abs(pct) <= 25 ? 'text-warning' : 'text-danger';
+    return `<td class="${vCls}">${v >= 0 ? '+' : '−'}${(Math.abs(v) / 1e6).toFixed(1)}M</td>`
+         + `<td class="${pCls}">${pct === null ? '—' : (pct >= 0 ? '+' : '−') + Math.abs(pct).toFixed(1) + '%'}</td>`;
+  };
+  const dash = '<td style="color:var(--c-text-tertiary)">—</td>';
+
+  const monthsBySite = {};
+  ts.forEach(e => {
+    if (!e.date || !e.site) return;
+    if (platformStart && e.date < platformStart) return;
+    (monthsBySite[e.site] = monthsBySite[e.site] || new Set()).add(e.date.slice(0, 7));
+  });
+
+  const rows = [];
+  let nMonths = 0, nInvoiced = 0, nMissing = 0, uninvoicedNet = 0;
+
+  ['prabumuli', 'maredan', 'sam2'].forEach(site => {
+    const months = [...(monthsBySite[site] || [])].sort();
+    if (!months.length) return;
+    const recs = records.filter(r => r.site === site);
+    // An invoice covers a month when its period overlaps that month at all.
+    const coverOf = m => recs.find(r => r.period_start <= mEnd(m) && r.period_end >= mStart(m)) || null;
+
+    let i = 0;
+    while (i < months.length) {
+      const rec = coverOf(months[i]);
+      const group = [months[i]];
+      if (rec) {                       // pull in the rest of this invoice's months
+        while (i + 1 < months.length && coverOf(months[i + 1]) === rec) { group.push(months[++i]); }
+      }
+      i++;
+      nMonths += group.length;
+
+      if (!rec) {
+        const net = computeRangePnl(ts, L, mStart(group[0]), mEnd(group[0]), site).net;
+        nMissing++; uninvoicedNet += net;
+        rows.push(`<tr>
+          <td><strong>${mLabel(group[0])}</strong></td>
+          <td>${siteLabel(site)}</td>
+          <td><span class="pill warning">not invoiced</span></td>
+          ${dash}
+          <td>${fmtM(net)}</td>${dash}${dash}
+        </tr>`);
+        continue;
+      }
+
+      nInvoiced += group.length;
+      const label = escapeHtml(rec.label || `${rec.period_start} → ${rec.period_end}`);
+
+      if (group.length === 1) {        // one invoice, one month → compare directly
+        const net = computeRangePnl(ts, L, mStart(group[0]), mEnd(group[0]), site).net;
+        rows.push(`<tr>
+          <td><strong>${mLabel(group[0])}</strong></td>
+          <td>${siteLabel(site)}</td>
+          <td>${label}</td>
+          <td>${fmtM(rec.net_pnl || 0)}</td>
+          <td>${fmtM(net)}</td>
+          ${varCells(rec.net_pnl || 0, net)}
+        </tr>`);
+        continue;
+      }
+
+      // Multi-month invoice: the accounting total cannot be split across months
+      // without inventing a split, so each month shows platform only and the
+      // comparison happens on the subtotal, over the invoice's exact span.
+      group.forEach(m => {
+        const net = computeRangePnl(ts, L, mStart(m), mEnd(m), site).net;
+        rows.push(`<tr>
+          <td style="padding-left:18px">${mLabel(m)}</td>
+          <td>${siteLabel(site)}</td>
+          <td style="color:var(--c-text-tertiary)">part of ${label}</td>
+          ${dash}
+          <td>${fmtM(net)}</td>${dash}${dash}
+        </tr>`);
+      });
+      const spanNet = computeRangePnl(ts, L, rec.period_start, rec.period_end, site).net;
+      rows.push(`<tr class="total-row">
+        <td><strong>${mLabel(group[0])} – ${mLabel(group[group.length - 1])}</strong></td>
+        <td>${siteLabel(site)}</td>
+        <td><strong>${label}</strong> subtotal</td>
+        <td>${fmtM(rec.net_pnl || 0)}</td>
+        <td>${fmtM(spanNet)}</td>
+        ${varCells(rec.net_pnl || 0, spanNet)}
+      </tr>`);
+    }
+  });
+
+  tbody.innerHTML = rows.length ? rows.join('')
+    : '<tr><td colspan="7" style="text-align:center;color:var(--c-text-tertiary);padding:24px">No platform data yet</td></tr>';
+
+  setText('ap-kpi-months', String(nMonths));
+  setText('ap-kpi-invoiced', String(nInvoiced));
+  setText('ap-kpi-missing', String(nMissing));
+  setText('ap-kpi-missing-sub', nMissing === 0 ? 'every month invoiced' : 'site-months with no invoice');
+  setText('ap-kpi-uninvoiced-net', fmtM(uninvoicedNet));
+  const pill = document.getElementById('ap-cov-pill');
+  if (pill) pill.textContent = nMonths ? `${nInvoiced} of ${nMonths} site-months invoiced` : 'no data';
+}
+
 async function refreshActualPnl() {
   const sb = ensureSupabase();
   if (!sb) return;
@@ -7916,6 +8087,13 @@ async function refreshActualPnl() {
 
     varEl.innerHTML = rows.length ? rows.join('')
       : '<tr><td colspan="7" style="text-align:center;color:var(--c-text-tertiary);padding:24px">Upload an actual P&L to see variance</td></tr>';
+
+    // ── Month-by-month coverage ──
+    // The per-invoice table above can only speak about spans someone happened
+    // to upload, so a month that was never invoiced is invisible in it. This
+    // walks every site-month that HAS platform data instead, and says plainly
+    // which invoice covers it — or that none does.
+    renderActualCoverage(ts, L, comparable, platformStart, fmtM, siteLabel);
   } catch (e) {
     console.error('refreshActualPnl:', e);
     const msg = `<tr><td colspan="7" style="text-align:center;color:var(--c-danger,#e5484d);padding:24px">Error — has the <code>actual_pnl</code> table been created? (${escapeHtml(e.message || '')})</td></tr>`;
