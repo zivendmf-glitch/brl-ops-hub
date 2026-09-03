@@ -5352,12 +5352,20 @@ function parseTimeSheet(wb, site) {
     // match) but its BBM/HM still flow into cost.
     // Known misnamed work types in the admins' templates are normalised on
     // import so they never orphan again (orphans earn Rp 0 and skew reports).
+    // Keys are UPPER-CASE; the lookup ignores case and extra spaces.
     const WORK_TYPE_ALIASES = {
-      'Cuci Parit 1x1': 'Cuci Parit 1x0.75x1',
-      'Terasan >5.5m CRStop Bund': 'Terasan >5.5m Stop Bund',
+      'CUCI PARIT 1X1': 'Cuci Parit 1x0.75x1',
+      'TERASAN >5.5M CRSTOP BUND': 'Terasan >5.5m Stop Bund',
+      // Maredan sub-tasks of terracing (rumpukan / revisi / topian) are part
+      // of the Terasan job — same hours, same rate. Ziven, 3 Sep 2026.
+      'RUMPUKAN': 'Terasan >5.5m Stop Bund',
+      'RUMPUK':   'Terasan >5.5m Stop Bund',
+      'REVISI':   'Terasan >5.5m Stop Bund',
+      'TOPIAN':   'Terasan >5.5m Stop Bund',
     };
     let workType = workCell?.v ? String(workCell.v).trim() : '(standby)';
-    if (WORK_TYPE_ALIASES[workType]) workType = WORK_TYPE_ALIASES[workType];
+    const aliasKey = workType.toUpperCase().replace(/\s+/g, ' ');
+    if (WORK_TYPE_ALIASES[aliasKey]) workType = WORK_TYPE_ALIASES[aliasKey];
 
     entries.push({
       date: dateStr,
