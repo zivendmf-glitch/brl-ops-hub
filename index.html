@@ -3837,6 +3837,20 @@ function rentalRateOn(lookup, site, cls, dateStr) {
   return e.rate || 0;
 }
 const SITE_LABELS = { both: 'Both sites', prabumuli: 'Prabumuli', maredan: 'Maredan', sam2: 'SAM2' };
+// ── Allocation readers ───────────────────────────────────────────────────
+// The allocated value wins whenever it is PRESENT — including a legitimate 0.
+// The refuel-spread step moves a delivery's litres onto the preceding empty
+// days and writes bbm_allocated = 0 on the delivery row. The old
+// `allocated || raw` treated that 0 as "missing" and re-added the raw litres:
+// Maredan Jul 2026 counted 2,510 L twice (≈ Rp 63M of phantom BBM cost).
+function allocBbm(e) { const a = parseFloat(e.bbm_allocated); return isNaN(a) ? (parseFloat(e.bbm_liters) || 0) : a; }
+function allocHm(e)  { const a = parseFloat(e.hm_allocated);  return isNaN(a) ? (parseFloat(e.hm_hours)  || 0) : a; }
+// Idle rows: the '(standby)' sentinel (fuel-only rows with no work cell) AND
+// the typed 'Standby' work type (rate 0). Both are fuel without work, so
+// neither may feed L/HM or output/HM. Only the sentinel used to be excluded;
+// 82 Maredan 'Standby' rows (5,957 L on 14 HM) were inflating every fuel rate.
+function isStandbyRow(e) { return /standby/i.test((e && e.work_type) || ''); }
+
 // Daily fixed cost per unit, per site, from app_settings (<site>_daily_cost).
 function dailyFixedFor(site, settingsArr) {
   const row = (settingsArr || []).find(s => s.key === site + '_daily_cost');
@@ -4141,6 +4155,7 @@ let _actualTab = 'records';    // P&L actual: 'records' | 'variance'
 let _opsHistYear = null;       // Historic drill-down: selected year
 let _opsHistMonth = null;      // Historic drill-down: selected month (YYYY-MM)
 let _opsCache = null;          // cached datasets for Operational Progress
+let _pnlSettings = [];         // raw app_settings rows from the last P&L load (per-site daily cost)
 let currentPage = 'dashboard';
 
 /* ═══ LOGIN ═══ */
@@ -4547,8 +4562,8 @@ async function loadDashboardData() {
         // Rows with an unknown work type (e.g. '(standby)') earn no revenue and
         // no premi, but their fuel and rental are REAL costs — never skip them.
         const premi = wt ? parseFloat(e.output || 0) * premiRateFor(e.site, e.work_type, e.unit_code, wt.premi) : 0;
-        const liters = parseFloat(e.bbm_allocated || e.bbm_liters || 0);
-        const hm = parseFloat(e.hm_allocated || e.hm_hours || 0);
+        const liters = allocBbm(e);
+        const hm = allocHm(e);
         const bbmCost = liters * bbmPerLiterFor(e, bbmRateMaredan, bbmRatePrabumuli, bbmThresholdPrabumuli);
         // Equipment rental per HM (direct sites only — Prabumuli is subcontractor)
         let rentalCost = 0;
@@ -4775,8 +4790,8 @@ async function updateUrgentAlerts(breakdowns, timeSheet, workTypes) {
       unitAgg[key] = { unit_code: e.unit_code, site: e.site, totalBbm: 0, totalHm: 0, lhm: newLhmAcc() };
     }
     addToLhm(unitAgg[key].lhm, e);
-    unitAgg[key].totalBbm += parseFloat(e.bbm_allocated || e.bbm_liters || 0);
-    unitAgg[key].totalHm += parseFloat(e.hm_allocated || e.hm_hours || 0);
+    unitAgg[key].totalBbm += allocBbm(e);
+    unitAgg[key].totalHm += allocHm(e);
   });
 
   Object.values(unitAgg).forEach(u => {
@@ -5499,7 +5514,10 @@ function parseLapBbm(wb, site) {
 
 function parseBreakdowns(wb, site) {
   const ws = wb.Sheets['DAILY BREAKDOWN'];
-  if (!ws) return { entries: [], errors: [] };
+  // `present` = the sheet exists AND at least one date section parsed. Only
+  // then does "resolution by absence" below mean anything; without it the
+  // upload must leave open breakdowns untouched.
+  if (!ws) return { entries: [], errors: [], present: false };
   
   const rawEntries = [];
   // Data starts row 8 (0-indexed: 7)
@@ -5653,7 +5671,7 @@ function parseBreakdowns(wb, site) {
     errors.push(`Deduplicated ${dedupCount} breakdown row(s) — kept latest aging value`);
   }
   
-  return { entries, errors };
+  return { entries, errors, present: maxDate !== null };
 }
 
 function parseBapRecon(wb, site) {
@@ -5870,7 +5888,7 @@ function recomputeLapBbm(result) {
   const bbmByDate = {};
   result.timeSheet.entries.forEach(e => {
     if (!e.date) return;
-    const bbm = parseFloat(e.bbm_allocated || e.bbm_liters || 0);
+    const bbm = allocBbm(e);
     if (bbm > 0) {
       bbmByDate[e.date] = (bbmByDate[e.date] || 0) + bbm;
     }
@@ -6106,13 +6124,16 @@ async function confirmUpload() {
         .delete()
         .eq('site', result.site)
         .in('date', dates);
-      if (delErr) summary.errors.push('time_sheet delete: ' + delErr.message);
-      
-      // Insert all new entries with created_by
-      const toInsert = result.timeSheet.entries.map(e => ({...e, created_by: createdBy}));
-      const { data, error } = await sb.from('time_sheet').insert(toInsert).select();
-      if (error) summary.errors.push('time_sheet insert: ' + error.message);
-      else summary.ts = data.length;
+      if (delErr) {
+        // Do NOT insert on top of rows we failed to delete — that duplicates every date.
+        summary.errors.push('time_sheet delete failed, nothing inserted: ' + delErr.message);
+      } else {
+        // Insert all new entries with created_by
+        const toInsert = result.timeSheet.entries.map(e => ({...e, created_by: createdBy}));
+        const { data, error } = await sb.from('time_sheet').insert(toInsert).select();
+        if (error) summary.errors.push('time_sheet insert FAILED — the dates in this file are now EMPTY until a re-upload succeeds: ' + error.message);
+        else summary.ts = data.length;
+      }
     }
     
     // 2. OPENING BALANCE — upsert, guarded. Openings are calibrated reference
@@ -6167,7 +6188,12 @@ async function confirmUpload() {
     //   3. If still in upload → keep (update aging via start_date recalc)
     //   4. If NOT in upload → set end_date = today (resolved)
     //   5. For new BDs in upload that don't match existing → insert as new
-    if (result.breakdowns.entries.length > 0 || true) {  // also handle the case where upload has 0 BDs but DB has open ones
+    if (!result.breakdowns.present) {
+      // No DAILY BREAKDOWN sheet (or no date in it): we cannot tell what is
+      // still broken, so leave the open breakdowns exactly as they are.
+      // Previously this branch ran anyway and closed every open BD for the site.
+      summary.errors.push('breakdowns: no DAILY BREAKDOWN sheet with a date found — open breakdowns left unchanged');
+    } else {  // 0 entries is valid here: it means everything was fixed
       const today = new Date().toISOString().slice(0, 10);
       
       // Get current open BDs for this site
@@ -6264,9 +6290,14 @@ async function confirmUpload() {
     
     // Show success
     const hasErrors = summary.errors.length > 0;
+    // A file that HAD time-sheet rows but saved none is a failure, not a warning.
+    const tsFailed = result.timeSheet.entries.length > 0 && summary.ts === 0;
+    const boxBg = tsFailed ? 'var(--c-danger-bg)' : hasErrors ? 'var(--c-warning-bg)' : 'var(--c-success-bg)';
+    const boxFg = tsFailed ? 'var(--c-danger)' : hasErrors ? 'var(--c-warning)' : 'var(--c-success)';
+    const boxTitle = tsFailed ? '✗ Save FAILED — time sheet not saved' : hasErrors ? '⚠ Saved with warnings' : '✓ Saved successfully';
     contentEl.innerHTML = `
-      <div style="padding:16px;background:${hasErrors ? 'var(--c-warning-bg)' : 'var(--c-success-bg)'};color:${hasErrors ? 'var(--c-warning)' : 'var(--c-success)'};border-radius:var(--radius-md);font-size:12px">
-        <div style="font-weight:600;margin-bottom:8px;font-size:13px">${hasErrors ? '⚠ Saved with warnings' : '✓ Saved successfully'}</div>
+      <div style="padding:16px;background:${boxBg};color:${boxFg};border-radius:var(--radius-md);font-size:12px">
+        <div style="font-weight:600;margin-bottom:8px;font-size:13px">${boxTitle}</div>
         <div>Time sheet: ${summary.ts} rows · Opening balance: ${summary.ob} · LAP. BBM: ${summary.bbm} · Breakdowns: ${summary.bd} · BAP recon: ${summary.bap}</div>
         ${hasErrors ? `<div style="margin-top:8px;font-size:11px"><strong>Errors:</strong><br>${summary.errors.map(e=>'· ' + e).join('<br>')}</div>` : ''}
         <div style="margin-top:10px;font-size:11px">Refresh dashboard to see updated numbers.</div>
@@ -6411,6 +6442,7 @@ async function loadPnlData() {
     const unitsAll = unitsRes.data || [];
     const rentalRates = rentalRes.data || [];
     const appSettings = settingsRes.data || [];
+    _pnlSettings = appSettings;
     
     // Build lookups for rental rates and unit classes
     const rentalLookup = {};
@@ -6438,7 +6470,7 @@ async function loadPnlData() {
       return wt ? (parseFloat(e.output) || 0) * wtRateFor(e.site, e.work_type, e.date, wt.rate) * rateMultiplierFor(e.site, e.date) : 0;
     }
     function entryBbmCost(e) {
-      const liters = parseFloat(e.bbm_allocated || e.bbm_liters || 0);
+      const liters = allocBbm(e);
       return liters * bbmPerLiterFor(e, bbmRateMaredan, bbmRatePrabumuli, bbmThresholdPrabumuli);
     }
     function entryPremi(e) {
@@ -6450,7 +6482,7 @@ async function loadPnlData() {
       const cls = unitClassLookup[e.unit_code];
       if (!cls) return 0;
       const rate = rentalRateOn(rentalLookup, e.site, cls, e.date);
-      return (parseFloat(e.hm_allocated || e.hm_hours || 0)) * rate;
+      return (allocHm(e)) * rate;
     }
     
     // ─── Month selector ───
@@ -6678,11 +6710,29 @@ function updatePnlUnitTable(tableId, entries, site, wtLookup, breakdowns, unitCl
     }
     const u = unitAgg[e.unit_code];
     const wt = wtLookup[site + '|' + e.work_type];
-    if (!wt) return;
-
     const out = parseFloat(e.output) || 0;
-    const hm = parseFloat(e.hm_allocated || e.hm_hours || 0);
-    const liters = parseFloat(e.bbm_allocated || e.bbm_liters || 0);
+    const hm = allocHm(e);
+    const liters = allocBbm(e);
+
+    // Costs that do not depend on a rate — fuel, rental, fixed-cost days —
+    // apply to EVERY row, including '(standby)' / unknown work types. The
+    // site KPI (aggSite) already counts them; skipping them here was why this
+    // table never reconciled with the KPI above it (Maredan Jun 2026: ~Rp 164M
+    // BBM + Rp 9.4M fixed cost missing from the table).
+    u.totalHM += hm;
+    u.totalLiters = (u.totalLiters || 0) + liters;
+    u.bbmCost += liters * bbmPerLiterFor(e, bbmRateMaredan, bbmRatePrabumuli, bbmThresholdPrabumuli);
+    {
+      // Equipment rental: HM × class rate (0 when site pays none / before effective date)
+      const cls = unitClassLookup ? unitClassLookup[e.unit_code] : null;
+      if (cls && rentalLookup) {
+        const rate = rentalRateOn(rentalLookup, site, cls, e.date);
+        u.rental += hm * rate;
+      }
+    }
+    u.daysWorked.add(e.date);
+
+    if (!wt) return;   // no rate → no revenue, premi or per-hectare extras
     const unit = wt.unit || '';
 
     // 50/50 split for multi-unit work types (Terasan / Jalan): each participating
@@ -6698,8 +6748,6 @@ function updatePnlUnitTable(tableId, entries, site, wtLookup, breakdowns, unitCl
 
     u.outputByUnit[unit] = (u.outputByUnit[unit] || 0) + out;
     u.revenue += out * effRate;
-    u.totalHM += hm;
-    u.totalLiters = (u.totalLiters || 0) + liters;
     // Per-work_type revenue/premi breakdown for the detail card
     u.byWork = u.byWork || {};
     if (!u.byWork[e.work_type]) u.byWork[e.work_type] = {
@@ -6712,18 +6760,8 @@ function updatePnlUnitTable(tableId, entries, site, wtLookup, breakdowns, unitCl
     u.byWork[e.work_type].output += out;
     u.byWork[e.work_type].rev   += out * effRate;
     u.byWork[e.work_type].premi += out * effPremi;
-    u.bbmCost += (parseFloat(e.bbm_allocated || e.bbm_liters || 0)) * bbmPerLiterFor(e, bbmRateMaredan, bbmRatePrabumuli, bbmThresholdPrabumuli);
     u.extra = (u.extra || 0) + extraCostFor(e, wt.unit, unitClassLookup ? unitClassLookup[e.unit_code] : null);
-    {
-      // Equipment rental: HM × class rate (0 when site pays none / before effective date)
-      const cls = unitClassLookup ? unitClassLookup[e.unit_code] : null;
-      if (cls && rentalLookup) {
-        const rate = rentalRateOn(rentalLookup, site, cls, e.date);
-        u.rental += hm * rate;
-      }
-    }
     u.premi += out * effPremi;  // also split for multi-unit jobs
-    u.daysWorked.add(e.date);
   });
   
   // Add BD units that have no output (for visibility)
@@ -6752,7 +6790,7 @@ function updatePnlUnitTable(tableId, entries, site, wtLookup, breakdowns, unitCl
   
   // Daily fixed cost (uang makan + lain-lain) per unit per day worked
   // For BD units with no work: still charged for days they're on standby (in current month)
-  const dailyRate = site === 'maredan' ? (dailyFixedMaredan || 184000) : site === 'prabumuli' ? (dailyFixedPrabumuli || 138000) : dailyFixedFor(site, null);
+  const dailyRate = dailyFixedFor(site, _pnlSettings);   // per-site setting, incl. sam2_daily_cost
   const dayOfMonth = today.getDate();
   
   Object.values(unitAgg).forEach(u => {
@@ -6902,7 +6940,7 @@ function updatePnlUnitTable(tableId, entries, site, wtLookup, breakdowns, unitCl
       }
 
       // Fixed cost formula
-      const dailyRate = site === 'maredan' ? (dailyFixedMaredan || 184000) : site === 'prabumuli' ? (dailyFixedPrabumuli || 138000) : dailyFixedFor(site, null);
+      const dailyRate = dailyFixedFor(site, _pnlSettings);
       const fixedDays = (u.isBd && u.daysWorked.size === 0) ? Math.min(u.bdDays || 0, new Date().getDate()) : u.daysWorked.size;
       const fixedLabel = (u.isBd && u.daysWorked.size === 0) ? 'BD days' : 'days worked';
       const fixedLine = `${fixedDays} ${fixedLabel} × Rp${fmt(dailyRate)}/day = <strong>Rp ${fmt(u.fixedCost)}</strong>`;
@@ -7007,8 +7045,8 @@ function updatePnlWorkType(tableId, entries, site, wtLookup, unitClassLookup, re
       };
     }
     const g = agg[key];
-    const hm     = parseFloat(e.hm_allocated || e.hm_hours || 0);
-    const liters = parseFloat(e.bbm_allocated || e.bbm_liters || 0);
+    const hm     = allocHm(e);
+    const liters = allocBbm(e);
 
     g.output  += out;
     g.revenue += effRev;
@@ -7479,7 +7517,7 @@ function outputByUnit(entries) {
   const { wtLookup } = _opsCache;
   const acc = {};
   entries.forEach(e => {
-    if (e.work_type === '(standby)') return;
+    if (isStandbyRow(e)) return;
     const out = parseFloat(e.output) || 0;
     if (!out) return;
     const wt = wtLookup[e.site + '|' + e.work_type];
@@ -7493,8 +7531,6 @@ function opsFinancials(entries, site) {
   const { wtLookup, unitClassLookup, rentalLookup, settings } = _opsCache;
   const bbmM = settings['maredan_bbm_per_liter'] || 27000;
   const bbmPexcess = Math.max(0, (settings['prabumuli_bbm_per_liter'] || 15000) - (settings['prabumuli_bbm_threshold'] || 15000));
-  const dailyM = settings['maredan_daily_cost'] || 184000;
-  const dailyP = settings['prabumuli_daily_cost'] || 138000;
   let revenue = 0, premi = 0, bbm = 0, rental = 0, liters = 0;
   const unitDays = new Set();
   const byWork = {};
@@ -7503,8 +7539,8 @@ function opsFinancials(entries, site) {
     if (!wt) return;
     const split = wt.is_multi_unit ? 0.5 : 1;
     const out = parseFloat(e.output) || 0;
-    const hm = parseFloat(e.hm_allocated || e.hm_hours || 0);
-    const lit = parseFloat(e.bbm_allocated || e.bbm_liters || 0);
+    const hm = allocHm(e);
+    const lit = allocBbm(e);
     revenue += out * wtRateFor(e.site, e.work_type, e.date, wt.rate) * rateMultiplierFor(e.site, e.date) * split;
     premi   += out * premiRateFor(e.site, e.work_type, e.unit_code, wt.premi) * split;
     liters  += lit;
@@ -7521,7 +7557,8 @@ function opsFinancials(entries, site) {
   });
   // Fixed cost: count unit-days × daily rate (mixed sites → rate per entry's site)
   let fixed = 0;
-  const dayRateFor = s => s === 'maredan' ? dailyM : dailyP;
+  // Per-site daily cost (<site>_daily_cost) — SAM2 used to fall through to the Prabumuli rate.
+  const dayRateFor = s => settings[s + '_daily_cost'] || dailyFixedFor(s, null);
   const seen = {};
   entries.forEach(e => {
     const k = (e.unit_code || '?') + '|' + e.date;
@@ -7827,13 +7864,11 @@ function computeRangePnl(timeSheet, L, start, end, site) {
   const ents = timeSheet.filter(e => e.date && e.date >= start && e.date <= end && e.site === site);
   const bbmM = L.settings['maredan_bbm_per_liter'] || 27000;
   const bbmPexcess = Math.max(0, (L.settings['prabumuli_bbm_per_liter'] || 15000) - (L.settings['prabumuli_bbm_threshold'] || 15000));
-  const dailyM = L.settings['maredan_daily_cost'] || 184000;
-  const dailyP = L.settings['prabumuli_daily_cost'] || 138000;
   let revenue = 0, premi = 0, bbm = 0, rental = 0;
   ents.forEach(e => {
     const wt = L.wtLookup[e.site + '|' + e.work_type]; if (!wt) return;
     const split = wt.is_multi_unit ? 0.5 : 1;
-    const out = parseFloat(e.output) || 0, hm = parseFloat(e.hm_allocated || e.hm_hours || 0), lit = parseFloat(e.bbm_allocated || e.bbm_liters || 0);
+    const out = parseFloat(e.output) || 0, hm = allocHm(e), lit = allocBbm(e);
     revenue += out * wtRateFor(e.site, e.work_type, e.date, wt.rate) * rateMultiplierFor(e.site, e.date) * split;
     premi += out * premiRateFor(e.site, e.work_type, e.unit_code, wt.premi) * split;
     bbm += lit * bbmPerLiterFor(e, bbmM, L.settings['prabumuli_bbm_per_liter'], L.settings['prabumuli_bbm_threshold']);
@@ -7843,7 +7878,7 @@ function computeRangePnl(timeSheet, L, start, end, site) {
     }
   });
   let fixed = 0; const seen = {};
-  ents.forEach(e => { const k = (e.unit_code || '?') + '|' + e.date; if (seen[k]) return; seen[k] = true; fixed += e.site === 'maredan' ? dailyM : dailyP; });
+  ents.forEach(e => { const k = (e.unit_code || '?') + '|' + e.date; if (seen[k]) return; seen[k] = true; fixed += L.settings[e.site + '_daily_cost'] || dailyFixedFor(e.site, null); });
   let extra = 0;
   ents.forEach(e => {
     const wt = L.wtLookup[e.site + '|' + e.work_type];
@@ -8216,12 +8251,12 @@ async function refreshProdRates() {
     const eagg = {};
     ts.forEach(e => {
       if (e.site !== site || !inPeriod(e) || !e.unit_code) return;
-      if (e.work_type === '(standby)') return;          // idle fuel would distort the rate
+      if (isStandbyRow(e)) return;          // idle fuel would distort the rate
       const a = eagg[e.unit_code] = eagg[e.unit_code] || Object.assign(newLhmAcc(), {
         cls: (unitClassLookup && unitClassLookup[e.unit_code]) || '—',
         days: new Set(), ops: new Set(), byWork: {},
       });
-      const hm = parseFloat(e.hm_allocated || e.hm_hours || 0);
+      const hm = allocHm(e);
       const out = parseFloat(e.output) || 0;
       // The L/HM rules (standby excluded, fuelled hours only) live in addToLhm,
       // shared with the cross-site benchmark and the operator scorecard.
@@ -8336,7 +8371,7 @@ async function refreshDataHealth() {
     const orphans = {};
     ts.forEach(e => {
       if (!e.work_type) return;
-      if (e.work_type === '(standby)') return;  // sentinel for fuel-only rows — not a typo
+      if (isStandbyRow(e)) return;  // sentinel for fuel-only rows — not a typo
       const k = e.site + '|' + e.work_type;
       if (!wtSet.has(k)) {
         if (!orphans[k]) orphans[k] = { site: e.site, wt: e.work_type, count: 0, output: 0 };
@@ -8362,7 +8397,7 @@ async function refreshDataHealth() {
     let outNoHm = 0, hmNoOut = 0;
     const dupSeen = {}; let dupCount = 0;
     ts.forEach(e => {
-      const hm = parseFloat(e.hm_allocated || e.hm_hours || 0), out = parseFloat(e.output || 0);
+      const hm = allocHm(e), out = parseFloat(e.output || 0);
       if (out > 0 && hm === 0) outNoHm++;
       if (out === 0 && hm > 0) hmNoOut++;
       const dk = [e.site, e.date, e.unit_code, e.work_type, e.operator, e.output, e.hm_hours, e.bbm_liters].join('|');
@@ -8398,7 +8433,7 @@ async function refreshDataHealth() {
     ts.forEach(e => {
       const k = e.site + '|' + e.work_type;
       if (!wtSet.has(k)) return;
-      const hm = parseFloat(e.hm_allocated || e.hm_hours || 0), out = parseFloat(e.output || 0);
+      const hm = allocHm(e), out = parseFloat(e.output || 0);
       if (hm < 2 || out <= 0) return;
       const gk = k + '|' + (clsOf[e.site + '|' + e.unit_code] || '?');
       (byWt[gk] = byWt[gk] || []).push({ e, ratio: out / hm });
@@ -8439,7 +8474,7 @@ async function refreshDataHealth() {
     document.getElementById('dh-outlier-table').innerHTML = outliers.length === 0
       ? `<tr><td colspan="9" style="text-align:center;color:var(--c-text-success);padding:20px">✓ No extreme productivity outliers.</td></tr>`
       : outliers.slice(0, 50).map(o => {
-          const e = o.e, hm = parseFloat(e.hm_allocated || e.hm_hours || 0);
+          const e = o.e, hm = allocHm(e);
           const high = o.ratio > o.median;
           return `<tr>
             <td>${e.date || '—'}</td>
@@ -9864,10 +9899,10 @@ async function refreshBenchmark() {
       // Standby burns fuel and clocks hours against no work at all, so counting
       // it dilutes both L/HM and output/HM. Production rates has always dropped
       // these rows; the benchmark now agrees instead of quietly disagreeing.
-      if (e.work_type === '(standby)') return;
+      if (isStandbyRow(e)) return;
       addToLhm(unitAgg[key].lhm, e);
-      unitAgg[key].totalBbm += parseFloat(e.bbm_allocated || e.bbm_liters || 0);
-      unitAgg[key].totalHm += parseFloat(e.hm_allocated || e.hm_hours || 0);
+      unitAgg[key].totalBbm += allocBbm(e);
+      unitAgg[key].totalHm += allocHm(e);
       unitAgg[key].totalOutput += parseFloat(e.output || 0);
       unitAgg[key].entries++;
     });
@@ -10756,9 +10791,9 @@ function newLhmAcc() {
   return { liters: 0, hm: 0, fuelledHm: 0 };
 }
 function addToLhm(acc, e) {
-  if (e.work_type === '(standby)') return;
-  const lit = parseFloat(e.bbm_allocated || e.bbm_liters || 0);
-  const hm  = parseFloat(e.hm_allocated  || e.hm_hours  || 0);
+  if (isStandbyRow(e)) return;
+  const lit = allocBbm(e);
+  const hm  = allocHm(e);
   acc.liters += lit;
   acc.hm     += hm;
   if (lit > 0) acc.fuelledHm += hm;
@@ -10795,10 +10830,10 @@ function aggregateByOperator(entries, site, wtLookup) {
       };
     }
     const a = agg[e.operator];
-    const hm = parseFloat(e.hm_allocated || e.hm_hours || 0);
+    const hm = allocHm(e);
     const out = parseFloat(e.output || 0);
     addToLhm(a.lhm, e);
-    a.totalBbm += parseFloat(e.bbm_allocated || e.bbm_liters || 0);
+    a.totalBbm += allocBbm(e);
     a.totalHm += hm;
     a.totalOutput += out;
     if (e.unit_code) a.unit = e.unit_code;
@@ -10811,7 +10846,7 @@ function aggregateByOperator(entries, site, wtLookup) {
     // Per WORK TYPE breakdown — a machine doing LC Darat and Jalan on the same
     // day has two different rates; dividing one job's output by the machine's
     // whole HM overstates it badly.
-    if (e.work_type && e.work_type !== '(standby)') {
+    if (e.work_type && !isStandbyRow(e)) {
       a.byWork = a.byWork || {};
       if (!a.byWork[e.work_type]) a.byWork[e.work_type] = { output: 0, hm: 0, unit: ounit };
       a.byWork[e.work_type].output += out;
@@ -10855,13 +10890,13 @@ function aggregateByUnit(entries, site, wtLookup) {
     if (e.operator && !agg[key].operators.includes(e.operator)) {
       agg[key].operators.push(e.operator);
     }
-    const hmU = parseFloat(e.hm_allocated || e.hm_hours || 0);
+    const hmU = allocHm(e);
     const outU = parseFloat(e.output || 0);
     addToLhm(agg[key].lhm, e);
-    agg[key].totalBbm += parseFloat(e.bbm_allocated || e.bbm_liters || 0);
+    agg[key].totalBbm += allocBbm(e);
     agg[key].totalHm += hmU;
     agg[key].totalOutput += outU;
-    if (e.work_type && e.work_type !== '(standby)') {
+    if (e.work_type && !isStandbyRow(e)) {
       const wtU = wtLookup[site + '|' + e.work_type];
       const ou = (wtU && wtU.unit) ? wtU.unit : (e.output_unit || '?');
       agg[key].byWork = agg[key].byWork || {};
