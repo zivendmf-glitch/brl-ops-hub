@@ -2994,20 +2994,20 @@ code {
             <button class="settings-tab active" id="pr-site-prab-tab" onclick="setProdSite('prabumuli')">Prabumuli</button>
             <button class="settings-tab" id="pr-site-mar-tab" onclick="setProdSite('maredan')">Maredan</button>
             <button class="settings-tab" id="pr-site-sam2-tab" onclick="setProdSite('sam2')">SAM2</button>
-            <span class="section-note" id="pr-period-note" style="margin:0">Average output per active day.</span>
+            <span class="section-note" id="pr-period-note" style="margin:0">Average output per machine hour (HM).</span>
           </div>
 
           <div class="section-card">
             <div class="section-title"><span id="pr-wt-title">Production rate — by work type</span><span class="pill info">per work type</span></div>
             <table class="data-table">
               <thead>
-                <tr><th>Work Type</th><th>Unit</th><th>Total Output</th><th>Active Days</th><th>Avg / Day</th><th>Avg / Unit-Day</th></tr>
+                <tr><th>Work Type</th><th>Unit</th><th>Total Output</th><th>Total HM</th><th>Avg / HM</th><th>Machines</th></tr>
               </thead>
               <tbody id="pr-worktype-table">
                 <tr><td colspan="6" style="text-align:center;color:var(--c-text-tertiary);padding:24px">Loading...</td></tr>
               </tbody>
             </table>
-            <div class="section-note">Avg / Day = total output ÷ days that work type was active. Avg / Unit-Day = total ÷ (unit × day) combos — per-machine rate. Opening balance excluded.</div>
+            <div class="section-note">Avg / HM = total output ÷ machine hours logged on that work type (allocated HM). Hours are used instead of days because a "day" can be 4 or 12 hours. Machines = distinct units that did the work. Standby rows and opening balance excluded.</div>
           </div>
 
           <div class="section-card">
@@ -3027,13 +3027,13 @@ code {
             <div class="section-title"><span id="pr-unit-title">Production rate — by unit</span><span class="pill info">per machine × work type</span></div>
             <table class="data-table">
               <thead>
-                <tr><th>Unit</th><th>Work Type</th><th>Total Output</th><th>Active Days</th><th>Avg / Day</th></tr>
+                <tr><th>Unit</th><th>Work Type</th><th>Total Output</th><th>Total HM</th><th>Avg / HM</th></tr>
               </thead>
               <tbody id="pr-unit-table">
                 <tr><td colspan="5" style="text-align:center;color:var(--c-text-tertiary);padding:24px">Loading...</td></tr>
               </tbody>
             </table>
-            <div class="section-note">Each row = one machine on one work type. Avg / Day = that unit's total output ÷ days it did that work.</div>
+            <div class="section-note">Each row = one machine on one work type. Avg / HM = that unit's total output ÷ the hours it logged on that work.</div>
           </div>
         </div>
 
@@ -8138,7 +8138,7 @@ async function refreshActualPnl() {
 }
 
 // ════════════════════════════════════════════════════════════════════
-// PRODUCTION RATES — avg output/day per work type, per site, MTD or YTD
+// PRODUCTION RATES — avg output per machine hour (HM) per work type, per site, MTD or YTD
 // ════════════════════════════════════════════════════════════════════
 function setProdPeriod(p) {
   _prodPeriod = p;
@@ -8218,34 +8218,36 @@ async function refreshProdRates() {
     document.getElementById('pr-wt-title').textContent = `${siteLabel} — by work type (${periodLabel})`;
     document.getElementById('pr-unit-title').textContent = `${siteLabel} — by unit (${periodLabel})`;
     const note = document.getElementById('pr-period-note');
-    if (note) note.textContent = `${siteLabel} · average output per active day · ${periodLabel}.`;
+    if (note) note.textContent = `${siteLabel} · average output per machine hour (HM) · ${periodLabel}.`;
 
     const unitOf = wt_name => { const wt = wtLookup[site + '|' + wt_name]; return (wt && wt.unit) || ''; };
 
     // ── By work type ──
+    // Rates are per machine HOUR, not per day: a "day" is 4 hours on one
+    // sheet and 12 on another, so output/day is not comparable across units
+    // or months. HM comes from the allocated hours (multi-work days split).
     const agg = {};
     ts.forEach(e => {
-      if (e.site !== site || !inPeriod(e) || !e.work_type) return;
-      if (!agg[e.work_type]) agg[e.work_type] = { unit: unitOf(e.work_type) || e.output_unit || '', total: 0, days: new Set(), unitDays: new Set() };
+      if (e.site !== site || !inPeriod(e) || !e.work_type || isStandbyRow(e)) return;
+      if (!agg[e.work_type]) agg[e.work_type] = { unit: unitOf(e.work_type) || e.output_unit || '', total: 0, hm: 0, units: new Set() };
       const a = agg[e.work_type];
       a.total += parseFloat(e.output) || 0;
-      if (e.date) { a.days.add(e.date); a.unitDays.add((e.unit_code || '?') + '|' + e.date); }
+      a.hm += allocHm(e);
+      if (e.unit_code) a.units.add(e.unit_code);
     });
+    const perHm = a => a.hm > 0 ? a.total / a.hm : 0;
     const wtRows = Object.entries(agg).filter(([, a]) => a.total > 0)
-      .sort((x, y) => (y[1].total / Math.max(1, y[1].days.size)) - (x[1].total / Math.max(1, x[1].days.size)));
+      .sort((x, y) => perHm(y[1]) - perHm(x[1]));
     document.getElementById('pr-worktype-table').innerHTML = wtRows.length === 0
       ? `<tr><td colspan="6" style="text-align:center;color:var(--c-text-tertiary);padding:24px">No output in this period</td></tr>`
-      : wtRows.map(([wt, a]) => {
-          const d = a.days.size, ud = a.unitDays.size;
-          return `<tr>
+      : wtRows.map(([wt, a]) => `<tr>
             <td><strong>${escapeHtml(wt)}</strong></td>
             <td>${escapeHtml(a.unit)}</td>
             <td>${formatNum(a.total)} ${escapeHtml(a.unit)}</td>
-            <td>${d}</td>
-            <td><strong>${formatNum(d > 0 ? a.total / d : 0)} ${escapeHtml(a.unit)}/day</strong></td>
-            <td>${formatNum(ud > 0 ? a.total / ud : 0)} ${escapeHtml(a.unit)}/unit-day</td>
-          </tr>`;
-        }).join('');
+            <td>${formatNum(a.hm)}</td>
+            <td><strong>${a.hm > 0 ? formatNum(perHm(a)) + ' ' + escapeHtml(a.unit) + '/HM' : '<span title="output recorded but no hours">—</span>'}</strong></td>
+            <td>${a.units.size}</td>
+          </tr>`).join('');
 
     // ── Unit productivity (per machine: output/HM per work type + L/HM) ──
     const eagg = {};
@@ -8322,27 +8324,24 @@ async function refreshProdRates() {
     // ── By unit (per machine × work type) ──
     const uagg = {};
     ts.forEach(e => {
-      if (e.site !== site || !inPeriod(e) || !e.work_type || !e.unit_code) return;
+      if (e.site !== site || !inPeriod(e) || !e.work_type || !e.unit_code || isStandbyRow(e)) return;
       const key = e.unit_code + '||' + e.work_type;
-      if (!uagg[key]) uagg[key] = { unit_code: e.unit_code, work: e.work_type, ounit: unitOf(e.work_type) || e.output_unit || '', total: 0, days: new Set() };
+      if (!uagg[key]) uagg[key] = { unit_code: e.unit_code, work: e.work_type, ounit: unitOf(e.work_type) || e.output_unit || '', total: 0, hm: 0 };
       const a = uagg[key];
       a.total += parseFloat(e.output) || 0;
-      if (e.date) a.days.add(e.date);
+      a.hm += allocHm(e);
     });
     const uRows = Object.values(uagg).filter(a => a.total > 0)
       .sort((x, y) => unitCompare(x.unit_code, y.unit_code) || (y.total - x.total));
     document.getElementById('pr-unit-table').innerHTML = uRows.length === 0
       ? `<tr><td colspan="5" style="text-align:center;color:var(--c-text-tertiary);padding:24px">No output in this period</td></tr>`
-      : uRows.map(a => {
-          const d = a.days.size;
-          return `<tr>
+      : uRows.map(a => `<tr>
             <td><strong>${escapeHtml(a.unit_code)}</strong></td>
             <td>${escapeHtml(a.work)}</td>
             <td>${formatNum(a.total)} ${escapeHtml(a.ounit)}</td>
-            <td>${d}</td>
-            <td><strong>${formatNum(d > 0 ? a.total / d : 0)} ${escapeHtml(a.ounit)}/day</strong></td>
-          </tr>`;
-        }).join('');
+            <td>${formatNum(a.hm)}</td>
+            <td><strong>${a.hm > 0 ? formatNum(a.total / a.hm) + ' ' + escapeHtml(a.ounit) + '/HM' : '<span title="output recorded but no hours">—</span>'}</strong></td>
+          </tr>`).join('');
   } catch (e) {
     console.error('refreshProdRates error:', e);
   }
