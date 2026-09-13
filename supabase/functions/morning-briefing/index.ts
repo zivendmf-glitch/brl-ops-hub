@@ -1,5 +1,7 @@
 // Morning Briefing Edge Function — v2 (2026-09-13)
 //
+// Indonesia is covered from three angles: domestic reporting, global forces
+// with a channel into Indonesia, and how the foreign press reads Indonesia.
 // Same shape as v1 (direct RSS feeds → one schema-guaranteed Claude call →
 // Resend), with the quality levers turned up:
 //  • More and better feeds: Bloomberg (markets/economics/politics), Nikkei Asia,
@@ -71,6 +73,9 @@ const FEEDS: Feed[] = [
   { url: "https://news.google.com/rss/search?q=sawit+OR+CPO+OR+%22minyak+sawit%22+OR+biodiesel+when:1d&hl=id&gl=ID&ceid=ID:id", source: "Google News", lang: "id", cap: 10, kind: "gnews" },
   { url: "https://news.google.com/rss/search?q=%22solar+industri%22+OR+%22harga+solar%22+OR+%22BBM+industri%22+OR+%22alat+berat%22+when:2d&hl=id&gl=ID&ceid=ID:id", source: "Google News", lang: "id", cap: 8, kind: "gnews" },
   { url: "https://news.google.com/rss/search?q=site:reuters.com+Indonesia+when:1d&hl=en-ID&gl=ID&ceid=ID:en", source: "Reuters", lang: "en", cap: 10, kind: "gnews" },
+  // Foreign press on Indonesia — feeds the "Indonesia Through Foreign Eyes" section
+  { url: "https://news.google.com/rss/search?q=(Indonesia+economy+OR+rupiah+OR+%22Bank+Indonesia%22+OR+Prabowo+OR+Jakarta)+(site:bloomberg.com+OR+site:reuters.com+OR+site:ft.com+OR+site:economist.com+OR+site:wsj.com+OR+site:asia.nikkei.com+OR+site:scmp.com)+when:2d&hl=en-ID&gl=ID&ceid=ID:en", source: "Foreign press", lang: "en", cap: 14, kind: "gnews" },
+  { url: "https://news.google.com/rss/search?q=Indonesia+(site:bloomberg.com+OR+site:ft.com+OR+site:economist.com+OR+site:wsj.com+OR+site:asia.nikkei.com+OR+site:channelnewsasia.com+OR+site:reuters.com)+when:1d&hl=en-ID&gl=ID&ceid=ID:en", source: "Foreign press", lang: "en", cap: 10, kind: "gnews" },
 ];
 
 interface Candidate {
@@ -131,10 +136,22 @@ interface Section { name: string; emoji: string; hint: string; count: number }
 
 const SECTIONS: Section[] = [
   {
-    name: "Indonesian Government Policy & Economy",
+    name: "Indonesia: Domestic Policy & Economy",
     emoji: "\u{1F1EE}\u{1F1E9}",
-    hint: "Indonesian government policy, regulation, Bank Indonesia, fiscal/trade/investment policy, subsidies, taxes, macro data.",
+    hint: "What Indonesia's own institutions and press are reporting: government policy, regulation, Bank Indonesia, fiscal/trade/investment policy, subsidies, taxes, macro data. Prefer DOMESTIC outlets (Kontan, Katadata, Detik Finance, CNBC Indonesia, Tempo); use a foreign outlet here only if no domestic item covers the story.",
     count: 4,
+  },
+  {
+    name: "Global Forces on the Indonesian Economy",
+    emoji: "\u{1F30F}",
+    hint: "Developments OUTSIDE Indonesia with a specific channel into its economy: Fed/ECB/BoJ rates and the rupiah, US and China tariffs or trade rulings, China demand, oil and commodity prices, capital flows, ASEAN and regional deals. The summary must name the channel into Indonesia (rupiah, exports, fuel subsidy bill, foreign investment, rates).",
+    count: 3,
+  },
+  {
+    name: "Indonesia Through Foreign Eyes",
+    emoji: "\u{1F52D}",
+    hint: "How the international press is reading Indonesia's economy, policy and politics right now — ONLY items from foreign outlets (Bloomberg, Reuters, WSJ, Financial Times, The Economist, Nikkei Asia, SCMP, CNA, BBC, CNBC, The Guardian) whose subject is Indonesia. Favour analysis, investor sentiment, ratings, market commentary and policy critique over spot news; note the outlet's framing or verdict in the summary.",
+    count: 3,
   },
   {
     name: "Indonesian Business News",
@@ -152,12 +169,6 @@ const SECTIONS: Section[] = [
     name: "Indonesian & Global Politics",
     emoji: "\u{1F5F3}\u{FE0F}",
     hint: "Political developments shaping business and the economy: cabinet and leadership moves, legislation, elections, diplomacy, geopolitics and political risk — in Indonesia and globally.",
-    count: 3,
-  },
-  {
-    name: "Global Policy Impact on Economy",
-    emoji: "\u{1F3DB}\u{FE0F}",
-    hint: "Government policy worldwide with economic impact: tariffs, trade, central banks (Fed/ECB/BoJ/PBoC), sanctions, regulation.",
     count: 3,
   },
   {
@@ -225,8 +236,10 @@ async function fetchFeed(feed: Feed): Promise<Candidate[]> {
         const src = cleanText(extractTag(item, "source"));
         if (src) source = src;
         const dash = title.lastIndexOf(" - ");
-        if (dash > 20) title = title.slice(0, dash).trim();
+        if (dash > 0) title = title.slice(0, dash).trim();
         if (feed.source === "Reuters") source = "Reuters";
+        source = source.replace(/\.com$/i, "").replace(/^economist$/i, "The Economist");
+        if (title.length < 28) continue;   // section pages and index stubs, not articles
       } else {
         const enc = cleanText(extractTag(item, "content:encoded"));
         const desc = cleanText(extractTag(item, "description"));
@@ -335,6 +348,7 @@ Sections:
 ${sectionSpec}
 
 Editorial standard:
+- The first three sections are three lenses on Indonesia and must not overlap: domestic reporting goes in "Domestic Policy & Economy"; a foreign development with a channel into Indonesia goes in "Global Forces"; a foreign outlet's own reporting or analysis ABOUT Indonesia goes in "Through Foreign Eyes". Check the outlet in the item's parentheses before placing it.
 - Pick for consequence, not volume. A section with two strong stories beats four weak ones. Leave a section empty if nothing in the window earns a place.
 - One event, one story. When several outlets cover the same development, pick the best-sourced item (prefer Bloomberg, WSJ, Reuters, FT, The Economist, Nikkei Asia when quality is equal) and do not use the others.
 - Freshness: prefer items dated inside the window; treat undated items as recent only if the content is clearly new.
@@ -453,9 +467,11 @@ function fallbackSections(candidates: Candidate[]): NewsItem[][] {
     return out;
   };
   const palm = /sawit|palm|cpo|biodiesel|solar industri|plantation|perkebunan/i;
+  const indo = /indonesia|jakarta|rupiah|prabowo/i;
   return SECTIONS.map((s) => {
     if (s.name === PALM_SECTION) return pick((c) => palm.test(c.title + " " + c.description), s.count);
-    if (s.name.startsWith("Indonesian")) return pick((c) => c.lang === "id", s.count);
+    if (s.name === "Indonesia Through Foreign Eyes") return pick((c) => c.lang === "en" && indo.test(c.title + " " + c.description), s.count);
+    if (s.name.startsWith("Indonesia")) return pick((c) => c.lang === "id", s.count);
     return pick((c) => c.lang === "en", s.count);
   });
 }
