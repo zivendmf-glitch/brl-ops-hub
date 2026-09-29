@@ -2076,7 +2076,7 @@ code {
               <div class="section-title"><span>Site comparison MTD</span></div>
               <table class="data-table">
                 <thead>
-                  <tr><th>Site</th><th>Revenue</th><th>Cost</th><th>Net P&amp;L</th><th>Margin</th></tr>
+                  <tr><th>Site</th><th>Revenue</th><th>Cost</th><th>Survey + Tax</th><th>Net P&amp;L</th><th>Margin</th></tr>
                 </thead>
                 <tbody id="pnl-both-comparison">
                   <tr><td colspan="5" style="text-align:center;color:var(--c-text-tertiary);padding:24px">Loading...</td></tr>
@@ -2100,6 +2100,7 @@ code {
               <div class="kpi-card">
                 <div class="kpi-label">Net P&amp;L MTD</div>
                 <div class="kpi-value" id="pnl-p-pnl">+ 0 <span class="kpi-unit">M</span></div>
+                <div class="kpi-sub" id="pnl-p-pnl-sub">—</div>
               </div>
               <div class="kpi-card">
                 <div class="kpi-label">Margin</div>
@@ -2111,13 +2112,13 @@ code {
               <div class="section-title"><span>P&amp;L per unit MTD — Prabumuli</span></div>
               <table class="data-table">
                 <thead>
-                  <tr><th>Unit</th><th>Output</th><th>Revenue</th><th>Premi</th><th>BBM Cost</th><th>Rental</th><th>Fixed Cost</th><th>Net P&amp;L</th><th>Margin</th></tr>
+                  <tr><th>Unit</th><th>Output</th><th>Revenue</th><th>Premi</th><th>BBM Cost</th><th>Rental</th><th>Fixed Cost</th><th>Survey + Tax</th><th>Net P&amp;L</th><th>Margin</th></tr>
                 </thead>
                 <tbody id="pnl-p-units">
-                  <tr><td colspan="9" style="text-align:center;color:var(--c-text-tertiary);padding:24px">Loading...</td></tr>
+                  <tr><td colspan="10" style="text-align:center;color:var(--c-text-tertiary);padding:24px">Loading...</td></tr>
                 </tbody>
               </table>
-              <div class="section-note" id="pnl-p-note">P&amp;L calculated per unit. Prabumuli: subcontractor model — no rental cost, BBM cost only on excess above contract threshold.</div>
+              <div class="section-note" id="pnl-p-note">P&amp;L per unit. Net = Revenue − Premi − BBM − Rental − Fixed − Survey adj − Tax. Prabumuli: BRL pays fuel only above the contract threshold; from 1 Jul 2026 it also pays rental, helper/subsidi per HA and the full site overhead (dated rate in Settings).</div>
             </div>
             <div class="section-card pnl-sec pnl-sec-breakdown" style="display:none">
               <div class="section-title"><span>Cost breakdown per unit — Prabumuli</span><span class="pill info">formulas</span></div>
@@ -2130,13 +2131,13 @@ code {
               <div class="section-title"><span>P&amp;L by work type — Prabumuli</span><span class="pill info">multi-unit split by class</span></div>
               <table class="data-table">
                 <thead>
-                  <tr><th>Work Type</th><th>Output</th><th>Revenue</th><th>Premi</th><th>BBM</th><th>Rental</th><th>Fixed</th><th>Net</th><th>Margin</th></tr>
+                  <tr><th>Work Type</th><th>Output</th><th>Revenue</th><th>Premi</th><th>BBM</th><th>Rental</th><th>Fixed</th><th>Survey + Tax</th><th>Net</th><th>Margin</th></tr>
                 </thead>
                 <tbody id="pnl-p-worktype">
-                  <tr><td colspan="9" style="text-align:center;color:var(--c-text-tertiary);padding:24px">Loading...</td></tr>
+                  <tr><td colspan="10" style="text-align:center;color:var(--c-text-tertiary);padding:24px">Loading...</td></tr>
                 </tbody>
               </table>
-              <div class="section-note">Full P&amp;L. Net = Revenue − Premi − BBM − Rental − Fixed. Daily fixed cost is allocated per work type by revenue weight within each unit-day, so these totals reconcile with the per-unit table. Multi-unit work (Terasan/Jalan) is split 50/50 and shown per unit class.</div>
+              <div class="section-note">Full P&amp;L. Net = Revenue − Premi − BBM − Rental − Fixed − Survey adj − Tax. Daily fixed cost is allocated per work type by revenue weight within each unit-day, so these totals reconcile with the per-unit table. Multi-unit work (Terasan/Jalan) is split 50/50 and shown per unit class.</div>
             </div>
           </div>
           
@@ -2154,6 +2155,7 @@ code {
               <div class="kpi-card">
                 <div class="kpi-label">Net P&amp;L MTD</div>
                 <div class="kpi-value" id="pnl-m-pnl">+ 0 <span class="kpi-unit">M</span></div>
+                <div class="kpi-sub" id="pnl-m-pnl-sub">—</div>
               </div>
               <div class="kpi-card">
                 <div class="kpi-label">Margin</div>
@@ -2165,13 +2167,13 @@ code {
               <div class="section-title"><span>P&amp;L per unit MTD — Maredan</span></div>
               <table class="data-table">
                 <thead>
-                  <tr><th>Unit</th><th>Output</th><th>Revenue</th><th>Premi</th><th>BBM Cost</th><th>Rental</th><th>Fixed Cost</th><th>Net P&amp;L</th><th>Margin</th></tr>
+                  <tr><th>Unit</th><th>Output</th><th>Revenue</th><th>Premi</th><th>BBM Cost</th><th>Rental</th><th>Fixed Cost</th><th>Survey + Tax</th><th>Net P&amp;L</th><th>Margin</th></tr>
                 </thead>
                 <tbody id="pnl-m-units">
-                  <tr><td colspan="9" style="text-align:center;color:var(--c-text-tertiary);padding:24px">Loading...</td></tr>
+                  <tr><td colspan="10" style="text-align:center;color:var(--c-text-tertiary);padding:24px">Loading...</td></tr>
                 </tbody>
               </table>
-              <div class="section-note" id="pnl-m-note">Multi-unit work types (Terasan/Jalan) split 50/50 between excavator + dozer. BBM cost: liters × rate (settings). Rental: HM × class rate.</div>
+              <div class="section-note" id="pnl-m-note">Multi-unit work types (Terasan/Jalan) split 50/50 between excavator + dozer. BBM cost: liters × rate (settings). Rental: HM × class rate. Net is after the survey adjustment and tax set in Settings (nothing is deducted until set).</div>
             </div>
             <div class="section-card pnl-sec pnl-sec-breakdown" style="display:none">
               <div class="section-title"><span>Cost breakdown per unit — Maredan</span><span class="pill info">formulas</span></div>
@@ -2184,13 +2186,13 @@ code {
               <div class="section-title"><span>P&amp;L by work type — Maredan</span><span class="pill info">multi-unit split by class</span></div>
               <table class="data-table">
                 <thead>
-                  <tr><th>Work Type</th><th>Output</th><th>Revenue</th><th>Premi</th><th>BBM</th><th>Rental</th><th>Fixed</th><th>Net</th><th>Margin</th></tr>
+                  <tr><th>Work Type</th><th>Output</th><th>Revenue</th><th>Premi</th><th>BBM</th><th>Rental</th><th>Fixed</th><th>Survey + Tax</th><th>Net</th><th>Margin</th></tr>
                 </thead>
                 <tbody id="pnl-m-worktype">
-                  <tr><td colspan="9" style="text-align:center;color:var(--c-text-tertiary);padding:24px">Loading...</td></tr>
+                  <tr><td colspan="10" style="text-align:center;color:var(--c-text-tertiary);padding:24px">Loading...</td></tr>
                 </tbody>
               </table>
-              <div class="section-note">Full P&amp;L. Net = Revenue − Premi − BBM − Rental − Fixed. Daily fixed cost is allocated per work type by revenue weight within each unit-day, so these totals reconcile with the per-unit table. Multi-unit work (Terasan/Jalan) is split 50/50 and shown per unit class.</div>
+              <div class="section-note">Full P&amp;L. Net = Revenue − Premi − BBM − Rental − Fixed − Survey adj − Tax. Daily fixed cost is allocated per work type by revenue weight within each unit-day, so these totals reconcile with the per-unit table. Multi-unit work (Terasan/Jalan) is split 50/50 and shown per unit class.</div>
             </div>
           </div>
           <div id="pnl-sam2" style="display:none">
@@ -2206,6 +2208,7 @@ code {
               <div class="kpi-card">
                 <div class="kpi-label">Net P&amp;L MTD</div>
                 <div class="kpi-value" id="pnl-s-pnl">+ 0 <span class="kpi-unit">M</span></div>
+                <div class="kpi-sub" id="pnl-s-pnl-sub">—</div>
               </div>
               <div class="kpi-card">
                 <div class="kpi-label">Margin</div>
@@ -2217,13 +2220,13 @@ code {
               <div class="section-title"><span>P&amp;L per unit MTD — SAM2</span></div>
               <table class="data-table">
                 <thead>
-                  <tr><th>Unit</th><th>Output</th><th>Revenue</th><th>Premi</th><th>BBM Cost</th><th>Rental</th><th>Fixed Cost</th><th>Net P&amp;L</th><th>Margin</th></tr>
+                  <tr><th>Unit</th><th>Output</th><th>Revenue</th><th>Premi</th><th>BBM Cost</th><th>Rental</th><th>Fixed Cost</th><th>Survey + Tax</th><th>Net P&amp;L</th><th>Margin</th></tr>
                 </thead>
                 <tbody id="pnl-s-units">
-                  <tr><td colspan="9" style="text-align:center;color:var(--c-text-tertiary);padding:24px">Loading...</td></tr>
+                  <tr><td colspan="10" style="text-align:center;color:var(--c-text-tertiary);padding:24px">Loading...</td></tr>
                 </tbody>
               </table>
-              <div class="section-note" id="pnl-s-note">Multi-unit work types (Terasan/Jalan) split 50/50 between excavator + dozer. BBM cost: liters × rate (settings). Rental: HM × class rate.</div>
+              <div class="section-note" id="pnl-s-note">Multi-unit work types (Terasan/Jalan) split 50/50 between excavator + dozer. BBM cost: liters × rate (settings). Rental: HM × class rate. Net is after the survey adjustment and tax set in Settings (nothing is deducted until set).</div>
             </div>
             <div class="section-card pnl-sec pnl-sec-breakdown" style="display:none">
               <div class="section-title"><span>Cost breakdown per unit — SAM2</span><span class="pill info">formulas</span></div>
@@ -2236,13 +2239,13 @@ code {
               <div class="section-title"><span>P&amp;L by work type — SAM2</span><span class="pill info">multi-unit split by class</span></div>
               <table class="data-table">
                 <thead>
-                  <tr><th>Work Type</th><th>Output</th><th>Revenue</th><th>Premi</th><th>BBM</th><th>Rental</th><th>Fixed</th><th>Net</th><th>Margin</th></tr>
+                  <tr><th>Work Type</th><th>Output</th><th>Revenue</th><th>Premi</th><th>BBM</th><th>Rental</th><th>Fixed</th><th>Survey + Tax</th><th>Net</th><th>Margin</th></tr>
                 </thead>
                 <tbody id="pnl-s-worktype">
-                  <tr><td colspan="9" style="text-align:center;color:var(--c-text-tertiary);padding:24px">Loading...</td></tr>
+                  <tr><td colspan="10" style="text-align:center;color:var(--c-text-tertiary);padding:24px">Loading...</td></tr>
                 </tbody>
               </table>
-              <div class="section-note">Full P&amp;L. Net = Revenue − Premi − BBM − Rental − Fixed. Daily fixed cost is allocated per work type by revenue weight within each unit-day, so these totals reconcile with the per-unit table. Multi-unit work (Terasan/Jalan) is split 50/50 and shown per unit class.</div>
+              <div class="section-note">Full P&amp;L. Net = Revenue − Premi − BBM − Rental − Fixed − Survey adj − Tax. Daily fixed cost is allocated per work type by revenue weight within each unit-day, so these totals reconcile with the per-unit table. Multi-unit work (Terasan/Jalan) is split 50/50 and shown per unit class.</div>
             </div>
           </div>
         </div>
@@ -2311,14 +2314,14 @@ code {
               </div>
               <table class="data-table">
                 <thead>
-                  <tr><th>Operator</th><th>Reported HA</th><th>% Share</th><th>Adj HA</th><th>Adj Premi</th><th>Trust Score</th></tr>
+                  <tr><th>Operator</th><th>Reported HA</th><th>% Share</th><th>Adj HA</th><th>Trust Score</th></tr>
                 </thead>
                 <tbody>
-                  <tr><td><strong>Lukman S</strong></td><td>0.72</td><td>26.0%</td><td>0.72</td><td>4.07M</td><td><span class="trust-score" data-score="—">Pending BAP</span></td></tr>
-                  <tr><td><strong>Abi Jani Situmeang</strong></td><td>0.85</td><td>30.7%</td><td>0.85</td><td>4.80M</td><td><span class="trust-score" data-score="—">Pending BAP</span></td></tr>
-                  <tr><td><strong>Ayub Septedi</strong></td><td>0.68</td><td>24.5%</td><td>0.68</td><td>3.84M</td><td><span class="trust-score" data-score="—">Pending BAP</span></td></tr>
-                  <tr><td><strong>Betman Nababan</strong></td><td>0.52</td><td>18.8%</td><td>0.52</td><td>2.94M</td><td><span class="trust-score" data-score="—">Pending BAP</span></td></tr>
-                  <tr><td><strong>Dalton Hutapea</strong></td><td>0.00</td><td>0.0%</td><td>0.00</td><td>0</td><td><span class="trust-score muted">—</span></td></tr>
+                  <tr><td><strong>Lukman S</strong></td><td>0.72</td><td>26.0%</td><td>0.72</td><td><span class="trust-score" data-score="—">Pending BAP</span></td></tr>
+                  <tr><td><strong>Abi Jani Situmeang</strong></td><td>0.85</td><td>30.7%</td><td>0.85</td><td><span class="trust-score" data-score="—">Pending BAP</span></td></tr>
+                  <tr><td><strong>Ayub Septedi</strong></td><td>0.68</td><td>24.5%</td><td>0.68</td><td><span class="trust-score" data-score="—">Pending BAP</span></td></tr>
+                  <tr><td><strong>Betman Nababan</strong></td><td>0.52</td><td>18.8%</td><td>0.52</td><td><span class="trust-score" data-score="—">Pending BAP</span></td></tr>
+                  <tr><td><strong>Dalton Hutapea</strong></td><td>0.00</td><td>0.0%</td><td>0.00</td><td><span class="trust-score muted">—</span></td></tr>
                 </tbody>
               </table>
               <div class="section-note">Trust score formula: 100 − (|variance%| × 1.8). Strict scoring. Updates automatically when BAP filled in above.</div>
@@ -3393,7 +3396,7 @@ code {
                   <tr>
                     <td><strong>Prabumuli</strong></td>
                     <td><input type="number" class="settings-input" id="cost-prabumuli-daily" data-key="prabumuli_daily_cost" placeholder="138000" step="1000"></td>
-                    <td>Operator base, supervisor, depreciation, insurance</td>
+                    <td>Site overhead before 1 Jul 2026 — the dated rates below take over from that date.</td>
                   </tr>
                   <tr>
                     <td><strong>Maredan</strong></td>
@@ -3407,7 +3410,55 @@ code {
                   </tr>
                 </tbody>
               </table>
-              <div class="section-note">Used for breakdown cost calculations (Cost MTD on BD Alerts page) and per-unit P&L margin calculations.</div>
+              <div class="section-note">Charged once per unit per working day. Used on the dashboard, P&amp;L, ops history, P&amp;L actual and the BD pages.</div>
+
+              <div class="section-title" style="margin-top:18px"><span>Dated overhead rates</span><span class="pill info">effective-dated</span></div>
+              <table class="data-table">
+                <thead>
+                  <tr><th>Site</th><th>Rate / unit-day (Rp)</th><th>Charged from</th><th></th></tr>
+                </thead>
+                <tbody id="settings-daily-history">
+                  <tr><td colspan="4" style="text-align:center;color:var(--c-text-tertiary);padding:24px">Loading...</td></tr>
+                </tbody>
+              </table>
+              <div class="manager-only" style="display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap">
+                <select id="dc-site" class="settings-input" style="max-width:150px">
+                  <option value="prabumuli">Prabumuli</option>
+                  <option value="maredan">Maredan</option>
+                  <option value="sam2">SAM2</option>
+                </select>
+                <input type="number" id="dc-rate" class="settings-input" style="max-width:160px" step="1000" placeholder="Rp per unit-day">
+                <input type="date" id="dc-from" class="settings-input" style="max-width:160px">
+                <button class="btn-secondary" onclick="saveDailyCostRow()">Add / update</button>
+              </div>
+              <div class="section-note">Site overhead is booked monthly — kitchen, staff wages, mess, office, tickets, travel, insurance — so re-set the rate from each month's accounts: overhead ÷ unit-days. A row applies from its date until the next row; months before the first row keep the flat rate above. Prabumuli Jul–Aug 2026: Rp 130.6M ÷ 239 unit-days = Rp 546k.</div>
+            </div>
+
+            <div class="section-card">
+              <div class="section-title"><span>Revenue deductions</span><span class="pill info">% of revenue</span></div>
+              <table class="data-table">
+                <thead>
+                  <tr><th>Site</th><th>Survey adjustment %</th><th>Tax %</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Prabumuli</strong></td>
+                    <td><input type="number" class="settings-input" data-key="prabumuli_survey_pct" placeholder="10" step="0.1"></td>
+                    <td><input type="number" class="settings-input" data-key="prabumuli_tax_pct" placeholder="5.9" step="0.1"></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Maredan</strong></td>
+                    <td><input type="number" class="settings-input" data-key="maredan_survey_pct" placeholder="0" step="0.1"></td>
+                    <td><input type="number" class="settings-input" data-key="maredan_tax_pct" placeholder="0" step="0.1"></td>
+                  </tr>
+                  <tr>
+                    <td><strong>SAM2</strong></td>
+                    <td><input type="number" class="settings-input" data-key="sam2_survey_pct" placeholder="0" step="0.1"></td>
+                    <td><input type="number" class="settings-input" data-key="sam2_tax_pct" placeholder="0" step="0.1"></td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="section-note">Net P&amp;L = Revenue − costs − survey adjustment − tax. <strong>Survey</strong>: the client's drone survey usually measures about 10% less than the timesheet, and the invoice follows the survey. <strong>Tax</strong>: PPh 23 (jasa), PPh 21 and PPh 25/29 as a % of the surveyed revenue — Prabumuli's Jul–Aug 2026 books came to 5.9%. Revenue columns keep the timesheet figure; the deduction is shown as its own line.</div>
             </div>
           </div>
           
@@ -3812,6 +3863,27 @@ async function deletePremiOverride(id) {
   _premiOverrides = null; _unitClassMap = null; await ensurePremiOverrides(sb);
   refreshSettings();
 }
+// Dated daily overhead rows (Settings → Daily fixed cost → Dated overhead rates)
+async function saveDailyCostRow() {
+  const sb = ensureSupabase(); if (!sb) return;
+  const site = document.getElementById('dc-site')?.value;
+  const rate = parseFloat(document.getElementById('dc-rate')?.value);
+  const from = document.getElementById('dc-from')?.value;
+  if (!site || isNaN(rate) || !from) { alert('Pick a site, enter the rate per unit-day, and the date it applies from.'); return; }
+  const { error } = await sb.from('daily_cost_history')
+    .upsert({ site, rate_per_unit_day: rate, effective_from: from }, { onConflict: 'site,effective_from' });
+  if (error) { alert('Save failed: ' + error.message); return; }
+  _dailyCostHist = null; await ensureDailyCostHist(sb);
+  refreshSettings();
+}
+async function deleteDailyCostRow(id) {
+  if (!confirm('Delete this dated rate? The dates it covered fall back to the previous row, or to the flat rate.')) return;
+  const sb = ensureSupabase(); if (!sb) return;
+  const { error } = await sb.from('daily_cost_history').delete().eq('id', id);
+  if (error) { alert('Delete failed: ' + error.message); return; }
+  _dailyCostHist = null; await ensureDailyCostHist(sb);
+  refreshSettings();
+}
 
 function setRatesSite(s) {
   _ratesSite = s;
@@ -3851,12 +3923,67 @@ function allocHm(e)  { const a = parseFloat(e.hm_allocated);  return isNaN(a) ? 
 // 82 Maredan 'Standby' rows (5,957 L on 14 HM) were inflating every fuel rate.
 function isStandbyRow(e) { return /standby/i.test((e && e.work_type) || ''); }
 
-// Daily fixed cost per unit, per site, from app_settings (<site>_daily_cost).
-function dailyFixedFor(site, settingsArr) {
-  const row = (settingsArr || []).find(s => s.key === site + '_daily_cost');
-  const v = row ? parseFloat(row.value) : NaN;
+// ── Settings readers ──────────────────────────────────────────────────────
+// app_settings arrives in two shapes: raw rows [{key, value}] (dashboard, P&L,
+// settings page) or a key → number map (ops progress, P&L actual). Read either.
+function settingNum(settings, key) {
+  if (!settings) return NaN;
+  const raw = Array.isArray(settings) ? settings.find(s => s.key === key)?.value : settings[key];
+  return raw === undefined || raw === null ? NaN : parseFloat(raw);
+}
+// Effective-dated daily overhead per unit-day (daily_cost_history). Site
+// overhead — kitchen, staff wages, mess, office, tickets, travel, insurance —
+// is booked monthly, so the rate is re-set from each month's accounts. A dated
+// row applies to entries on/after its date; earlier dates fall back to the
+// flat <site>_daily_cost setting, so months already reconciled do not move.
+// Prabumuli Jul–Aug 2026 books: Rp 130.6M over 239 unit-days ≈ 546k/unit-day,
+// against the 150k the flat setting carried.
+let _dailyCostHist = null;   // site → [{from, rate}] newest first
+async function ensureDailyCostHist(sb) {
+  if (_dailyCostHist) return;
+  _dailyCostHist = {};
+  try {
+    const { data, error } = await sb.from('daily_cost_history').select('*');
+    if (!error) {
+      (data || []).forEach(r => {
+        (_dailyCostHist[r.site] = _dailyCostHist[r.site] || []).push({ from: r.effective_from, rate: parseFloat(r.rate_per_unit_day) || 0 });
+      });
+      Object.values(_dailyCostHist).forEach(l => l.sort((a, b) => (a.from < b.from ? 1 : -1)));
+    }
+  } catch (e) { /* table may not exist yet — the flat setting applies */ }
+}
+// Daily fixed cost per unit-day for one site on one date. No date = today (WIB),
+// which is what the BD pages want: the cost of a unit standing idle right now.
+function dailyFixedFor(site, settings, dateStr) {
+  const d = dateStr || new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10);
+  const list = _dailyCostHist && _dailyCostHist[site];
+  if (list) for (const r of list) if (r.from <= d) return r.rate;
+  const v = settingNum(settings, site + '_daily_cost');
   if (!isNaN(v)) return v;
   return site === 'prabumuli' ? 138000 : 184000;
+}
+// ── Revenue deductions ────────────────────────────────────────────────────
+// Timesheet revenue is not what gets paid:
+//  • <site>_survey_pct — the client's drone survey usually measures ~10% fewer
+//    hectares than the timesheet reports, and the invoice follows the survey.
+//  • <site>_tax_pct    — PPh 23 (jasa), PPh 21 and PPh 25/29 as % of the
+//    surveyed revenue (Prabumuli Jul–Aug 2026 books: 5.9%).
+// Both are linear in revenue, so charging them per row / unit / work type sums
+// exactly to the site figure and every table stays reconciled. Defaults are
+// Prabumuli's confirmed figures; other sites deduct nothing until set.
+function surveyPctFor(site, settings) {
+  const v = settingNum(settings, site + '_survey_pct');
+  return !isNaN(v) ? v : (site === 'prabumuli' ? 10 : 0);
+}
+function taxPctFor(site, settings) {
+  const v = settingNum(settings, site + '_tax_pct');
+  return !isNaN(v) ? v : (site === 'prabumuli' ? 5.9 : 0);
+}
+function deductionsFor(site, revenue, settings) {
+  const rev = revenue || 0;
+  const survey = rev * surveyPctFor(site, settings) / 100;
+  const tax = (rev - survey) * taxPctFor(site, settings) / 100;
+  return { survey, tax, total: survey + tax };
 }
 // ── Effective-dated work-rate multipliers ─────────────────────────────────
 // Client rate increases apply from a date forward (e.g. Maredan +7.9% from
@@ -4468,7 +4595,7 @@ async function loadDashboardData() {
   }
   
   try {
-    await Promise.all([ensureBbmRates(sb), ensureRateMults(sb), ensurePremiOverrides(sb), ensureExtraCosts(sb), ensureWtRates(sb)]);  // date-aware fuel rates + work-rate multipliers
+    await Promise.all([ensureBbmRates(sb), ensureRateMults(sb), ensurePremiOverrides(sb), ensureExtraCosts(sb), ensureWtRates(sb), ensureDailyCostHist(sb)]);  // date-aware fuel rates + work-rate multipliers
     // Determine which site(s) to query
     const sitesToQuery = currentSite === 'both' ? ['prabumuli', 'maredan', 'sam2'] : [currentSite];
     
@@ -4578,16 +4705,23 @@ async function loadDashboardData() {
       }, 0);
     }
     
-    // Daily fixed cost (uang makan + fixed lain-lain) per unit per day
+    // Daily fixed cost (site overhead) per unit per day: one charge per
+    // unit-day, at the rate in force on that date for that site.
     function calcDailyFixed(entries) {
-      // Count unique unit-date combinations per site × that site's daily rate
-      const combosBySite = {};
-      entries.forEach(e => {
-        if (!e.site) return;
-        (combosBySite[e.site] = combosBySite[e.site] || new Set()).add((e.unit_code || '?') + '|' + e.date);
-      });
-      return Object.entries(combosBySite).reduce(
-        (sum, [site, combos]) => sum + combos.size * dailyFixedFor(site, appSettingsData), 0);
+      const seen = new Set();
+      return entries.reduce((sum, e) => {
+        if (!e.site) return sum;
+        const k = e.site + '|' + (e.unit_code || '?') + '|' + e.date;
+        if (seen.has(k)) return sum;
+        seen.add(k);
+        return sum + dailyFixedFor(e.site, appSettingsData, e.date);
+      }, 0);
+    }
+    // Survey adjustment + tax on the revenue, per site (rates differ by site)
+    function calcDeductions(entries) {
+      const sites = [...new Set(entries.map(e => e.site).filter(Boolean))];
+      return sites.reduce((sum, s) =>
+        sum + deductionsFor(s, calcRevenue(entries.filter(e => e.site === s)), appSettingsData).total, 0);
     }
     
     const ytdRevenue = calcRevenue(ytdEntries);
@@ -4604,11 +4738,12 @@ async function loadDashboardData() {
     const ytdDailyFixed = calcDailyFixed(ytdEntries);
     const mtdDailyFixed = calcDailyFixed(mtdEntries);
     const ytdCostWithOpening = ytdCost + ytdOpeningPremi + ytdDailyFixed;  // Premi for opening output + fixed costs
-    const ytdPnL = ytdRevenueWithOpening - ytdCostWithOpening;
+    // Net is after the survey adjustment and tax — the same figure as the P&L page.
+    const ytdPnL = ytdRevenueWithOpening - ytdCostWithOpening - calcDeductions(ytdEntries);
     
     const mtdRevenue = calcRevenue(mtdEntries);
     const mtdCost = calcCost(mtdEntries) + mtdDailyFixed;
-    const mtdPnL = mtdRevenue - mtdCost;
+    const mtdPnL = mtdRevenue - mtdCost - calcDeductions(mtdEntries);
     
     // Format helpers
     function fmtM(value) {
@@ -6432,7 +6567,7 @@ async function loadPnlData() {
   if (!sb) return;
 
   try {
-    await Promise.all([ensureBbmRates(sb), ensureRateMults(sb), ensurePremiOverrides(sb), ensureExtraCosts(sb), ensureWtRates(sb)]);  // date-aware fuel rates + work-rate multipliers
+    await Promise.all([ensureBbmRates(sb), ensureRateMults(sb), ensurePremiOverrides(sb), ensureExtraCosts(sb), ensureWtRates(sb), ensureDailyCostHist(sb)]);  // date-aware fuel rates + work-rate multipliers
     const [tsRes, wtRes, bdRes, obRes, unitsRes, rentalRes, settingsRes] = await Promise.all([
       sbFetchAll(() => sb.from('time_sheet').select('*').order('id')),
       sb.from('work_types').select('*'),
@@ -6537,18 +6672,24 @@ async function loadPnlData() {
       const bbmCost = filtered.reduce((s, e) => s + entryBbmCost(e), 0);
       const premi = filtered.reduce((s, e) => s + entryPremi(e), 0);
       const rental = filtered.reduce((s, e) => s + entryRental(e), 0);
-      // Daily fixed cost: count unique unit-day combos
-      const unitDays = new Set();
-      filtered.forEach(e => unitDays.add((e.unit_code || '?') + '|' + e.date));
-      const dailyRate = dailyFixedFor(site, appSettings);
-      const dailyFixed = unitDays.size * dailyRate;
+      // Daily fixed cost: one charge per unit-day, at that date's rate
+      const seenUD = new Set();
+      let dailyFixed = 0;
+      filtered.forEach(e => {
+        const k = (e.unit_code || '?') + '|' + e.date;
+        if (seenUD.has(k)) return;
+        seenUD.add(k);
+        dailyFixed += dailyFixedFor(site, appSettings, e.date);
+      });
 
       const extra = filtered.reduce((s, e) => {
         const wt = wtLookup[e.site + '|' + e.work_type];
         return s + extraCostFor(e, wt ? wt.unit : null, unitClassLookup[e.unit_code]);
       }, 0);
       const cost = bbmCost + premi + rental + dailyFixed + extra;
-      return { revenue, cost, pnl: revenue - cost, bbmCost, premi, rental, dailyFixed, extra };
+      // Net = revenue − operating cost − survey adjustment − tax
+      const ded = deductionsFor(site, revenue, appSettings);
+      return { revenue, cost, survey: ded.survey, tax: ded.tax, pnl: revenue - cost - ded.total, bbmCost, premi, rental, dailyFixed, extra };
     }
 
     const ytdP = aggSite(ytdEntries, 'prabumuli');
@@ -6566,11 +6707,15 @@ async function loadPnlData() {
     const ytdTotal = {
       revenue: ytdP.revenue + ytdM.revenue + ytdS.revenue,
       cost: ytdP.cost + ytdM.cost + ytdS.cost,
+      survey: ytdP.survey + ytdM.survey + ytdS.survey,
+      tax: ytdP.tax + ytdM.tax + ytdS.tax,
       pnl: ytdP.pnl + ytdM.pnl + ytdS.pnl,
     };
     const mtdTotal = {
       revenue: mtdP.revenue + mtdM.revenue + mtdS.revenue,
       cost: mtdP.cost + mtdM.cost + mtdS.cost,
+      survey: mtdP.survey + mtdM.survey + mtdS.survey,
+      tax: mtdP.tax + mtdM.tax + mtdS.tax,
       pnl: mtdP.pnl + mtdM.pnl + mtdS.pnl,
     };
 
@@ -6611,7 +6756,7 @@ async function loadPnlData() {
       pnlEl.innerHTML = fmtM(ytdTotal.pnl);
       pnlEl.className = 'kpi-value ' + (ytdTotal.pnl >= 0 ? 'success' : 'danger');
     }
-    setText('pnl-both-pnl-sub', `margin ${pct(ytdTotal.pnl, ytdTotal.revenue)}`);
+    setText('pnl-both-pnl-sub', `margin ${pct(ytdTotal.pnl, ytdTotal.revenue)}` + (pnlDedParts(ytdTotal).length ? ' · after ' + pnlDedParts(ytdTotal).join(' · ') : ''));
     
     const ytdMargin = ytdTotal.revenue > 0 ? (ytdTotal.pnl / ytdTotal.revenue) * 100 : 0;
     const mtdMargin = mtdTotal.revenue > 0 ? (mtdTotal.pnl / mtdTotal.revenue) * 100 : 0;
@@ -6624,7 +6769,7 @@ async function loadPnlData() {
       const rows = [];
       [['Prabumuli', mtdP], ['Maredan', mtdM], ['SAM2', mtdS]].forEach(([name, agg]) => {
         if (agg.revenue === 0 && agg.cost === 0) {
-          rows.push(`<tr><td>${name}</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>`);
+          rows.push(`<tr><td>${name}</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>`);
         } else {
           const margin = agg.revenue > 0 ? (agg.pnl / agg.revenue) * 100 : 0;
           const pnlClass = agg.pnl >= 0 ? 'text-success' : 'text-danger';
@@ -6633,6 +6778,7 @@ async function loadPnlData() {
             <td>${name}</td>
             <td>${(agg.revenue/1_000_000).toFixed(1)}M</td>
             <td>${(agg.cost/1_000_000).toFixed(1)}M</td>
+            <td>${((agg.survey + agg.tax)/1_000_000).toFixed(1)}M</td>
             <td class="${pnlClass}">${pnlSign}${(Math.abs(agg.pnl)/1_000_000).toFixed(1)}M</td>
             <td class="${pnlClass}">${margin.toFixed(1)}%</td>
           </tr>`);
@@ -6644,6 +6790,7 @@ async function loadPnlData() {
         <td>Total</td>
         <td>${(mtdTotal.revenue/1_000_000).toFixed(1)}M</td>
         <td>${(mtdTotal.cost/1_000_000).toFixed(1)}M</td>
+        <td>${((mtdTotal.survey + mtdTotal.tax)/1_000_000).toFixed(1)}M</td>
         <td class="${tPnlClass}">${tSign}${(Math.abs(mtdTotal.pnl)/1_000_000).toFixed(1)}M</td>
         <td>${mtdMargin.toFixed(1)}%</td>
       </tr>`);
@@ -6666,9 +6813,9 @@ async function loadPnlData() {
     updatePnlUnitTable('pnl-s-units', mtdEntries.filter(e => e.site === 'sam2'), 'sam2', wtLookup, bdForView, unitClassLookup, rentalLookup, bbmRateMaredan, dailyFixedPrabumuli, dailyFixedMaredan, bbmRatePrabumuli, bbmThresholdPrabumuli);
 
     // P&L by work type (multi-unit work split by unit class)
-    updatePnlWorkType('pnl-p-worktype', mtdEntries.filter(e => e.site === 'prabumuli'), 'prabumuli', wtLookup, unitClassLookup, rentalLookup, bbmRateMaredan, bbmRatePrabumuli, bbmThresholdPrabumuli, dailyFixedPrabumuli);
-    updatePnlWorkType('pnl-m-worktype', mtdEntries.filter(e => e.site === 'maredan'), 'maredan', wtLookup, unitClassLookup, rentalLookup, bbmRateMaredan, bbmRatePrabumuli, bbmThresholdPrabumuli, dailyFixedMaredan);
-    updatePnlWorkType('pnl-s-worktype', mtdEntries.filter(e => e.site === 'sam2'), 'sam2', wtLookup, unitClassLookup, rentalLookup, bbmRateMaredan, bbmRatePrabumuli, bbmThresholdPrabumuli, dailyFixedFor('sam2', appSettings));
+    updatePnlWorkType('pnl-p-worktype', mtdEntries.filter(e => e.site === 'prabumuli'), 'prabumuli', wtLookup, unitClassLookup, rentalLookup, bbmRateMaredan, bbmRatePrabumuli, bbmThresholdPrabumuli);
+    updatePnlWorkType('pnl-m-worktype', mtdEntries.filter(e => e.site === 'maredan'), 'maredan', wtLookup, unitClassLookup, rentalLookup, bbmRateMaredan, bbmRatePrabumuli, bbmThresholdPrabumuli);
+    updatePnlWorkType('pnl-s-worktype', mtdEntries.filter(e => e.site === 'sam2'), 'sam2', wtLookup, unitClassLookup, rentalLookup, bbmRateMaredan, bbmRatePrabumuli, bbmThresholdPrabumuli);
 
     // Re-apply the active view tab after re-rendering the cards
     setPnlTab(_pnlTab);
@@ -6678,9 +6825,18 @@ async function loadPnlData() {
   }
 }
 
+// "survey −X.XM", "tax −Y.YM" — the lines between operating cost and net
+function pnlDedParts(agg) {
+  const parts = [];
+  if (agg.survey > 0) parts.push(`survey −${(agg.survey/1_000_000).toFixed(1)}M`);
+  if (agg.tax > 0) parts.push(`tax −${(agg.tax/1_000_000).toFixed(1)}M`);
+  return parts;
+}
 function updatePnlSiteKpi(prefix, agg) {
   setHtml(`pnl-${prefix}-revenue`, `${(agg.revenue/1_000_000).toFixed(1)} <span class="kpi-unit">M</span>`);
   setHtml(`pnl-${prefix}-cost`, `${(agg.cost/1_000_000).toFixed(1)} <span class="kpi-unit">M</span>`);
+  const ded = pnlDedParts(agg);
+  setText(`pnl-${prefix}-pnl-sub`, ded.length ? 'after ' + ded.join(' · ') : 'revenue − cost');
   
   const pnlEl = document.getElementById(`pnl-${prefix}-pnl`);
   if (pnlEl) {
@@ -6796,34 +6952,36 @@ function updatePnlUnitTable(tableId, entries, site, wtLookup, breakdowns, unitCl
     }
   });
   
-  // Daily fixed cost (uang makan + lain-lain) per unit per day worked
-  // For BD units with no work: still charged for days they're on standby (in current month)
-  const dailyRate = dailyFixedFor(site, _pnlSettings);   // per-site setting, incl. sam2_daily_cost
+  // Daily fixed cost (site overhead) per unit per day worked, at each day's
+  // rate. BD units with no work are still charged for the days they stand
+  // idle this month, at today's rate.
   const dayOfMonth = today.getDate();
   
   Object.values(unitAgg).forEach(u => {
     if (u.isBd && u.daysWorked.size === 0) {
       // Pure BD unit — fixed cost for month-so-far days (no rental since no HM)
-      u.fixedCost = dailyRate * Math.min(u.bdDays || dayOfMonth, dayOfMonth);
+      u.fixedCost = dailyFixedFor(site, _pnlSettings) * Math.min(u.bdDays || dayOfMonth, dayOfMonth);
     } else {
       // Working unit: fixed cost only for days worked + rental from HM
-      u.fixedCost = dailyRate * u.daysWorked.size;
+      u.fixedCost = [...u.daysWorked].reduce((s, d) => s + dailyFixedFor(site, _pnlSettings, d), 0);
     }
-    // Total cost includes rental (for Maredan) + bbm + premi + fixed
+    // Total cost includes rental + bbm + premi + fixed + helper/subsidi
     u.cost = u.bbmCost + u.premi + u.fixedCost + (u.rental || 0) + (u.extra || 0);
-    u.pnl = u.revenue - u.cost;
+    // Net is after the survey adjustment and tax on this unit's revenue
+    u.ded = deductionsFor(site, u.revenue, _pnlSettings);
+    u.pnl = u.revenue - u.cost - u.ded.total;
   });
   
   const sorted = Object.values(unitAgg).sort((a, b) => unitCompare(a.unit_code, b.unit_code));
 
   if (sorted.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--c-text-tertiary);padding:24px">No entries this month</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--c-text-tertiary);padding:24px">No entries this month</td></tr>';
     return;
   }
   
   const rows = [];
   let totalOutput = {};
-  let totalRev = 0, totalBbm = 0, totalFix = 0, totalPnl = 0, totalPremi = 0, totalRental = 0;
+  let totalRev = 0, totalBbm = 0, totalFix = 0, totalPnl = 0, totalPremi = 0, totalRental = 0, totalDed = 0;
   
   sorted.forEach(u => {
     let outputDisplay;
@@ -6847,6 +7005,7 @@ function updatePnlUnitTable(tableId, entries, site, wtLookup, breakdowns, unitCl
     totalFix += u.fixedCost;
     totalPremi += (u.premi || 0);
     totalRental += (u.rental || 0);
+    totalDed += u.ded.total;
     totalPnl += u.pnl;
 
     const margin = u.revenue > 0 ? (u.pnl / u.revenue) * 100 : 0;
@@ -6865,6 +7024,7 @@ function updatePnlUnitTable(tableId, entries, site, wtLookup, breakdowns, unitCl
       <td>${cell(u.bbmCost)}</td>
       <td>${cell(u.rental)}</td>
       <td>${(u.fixedCost/1_000_000).toFixed(2)}M</td>
+      <td>${cell(u.ded.total)}</td>
       <td class="${pnlClass}">${sign}${(Math.abs(u.pnl)/1_000_000).toFixed(2)}M</td>
       <td class="${marginClass}">${u.revenue > 0 ? margin.toFixed(1) + '%' : '— BD'}</td>
     </tr>`);
@@ -6885,6 +7045,7 @@ function updatePnlUnitTable(tableId, entries, site, wtLookup, breakdowns, unitCl
     <td>${tCell(totalBbm)}</td>
     <td>${tCell(totalRental)}</td>
     <td>${(totalFix/1_000_000).toFixed(1)}M</td>
+    <td>${tCell(totalDed)}</td>
     <td class="${tClass}">${tSign}${(Math.abs(totalPnl)/1_000_000).toFixed(1)}M</td>
     <td>${totalRev > 0 ? totalMargin.toFixed(1) + '%' : '—'}</td>
   </tr>`);
@@ -6947,10 +7108,11 @@ function updatePnlUnitTable(tableId, entries, site, wtLookup, breakdowns, unitCl
         rentalLine = `No rental charged for this period — <strong>Rp 0</strong>`;
       }
 
-      // Fixed cost formula
-      const dailyRate = dailyFixedFor(site, _pnlSettings);
+      // Fixed cost formula. The rate is effective-dated, so a month that
+      // straddles a rate change shows the average actually charged.
       const fixedDays = (u.isBd && u.daysWorked.size === 0) ? Math.min(u.bdDays || 0, new Date().getDate()) : u.daysWorked.size;
       const fixedLabel = (u.isBd && u.daysWorked.size === 0) ? 'BD days' : 'days worked';
+      const dailyRate = fixedDays > 0 ? u.fixedCost / fixedDays : dailyFixedFor(site, _pnlSettings);
       const fixedLine = `${fixedDays} ${fixedLabel} × Rp${fmt(dailyRate)}/day = <strong>Rp ${fmt(u.fixedCost)}</strong>`;
 
       // Per-hectare extras (helper maintenance + dozer-earned subsidi)
@@ -6966,6 +7128,13 @@ function updatePnlUnitTable(tableId, entries, site, wtLookup, breakdowns, unitCl
         }
         extraLine = `<br><strong style="color:var(--c-text)">Helper / subsidi</strong><br>${parts.join(' + ')} = <strong>Rp ${fmt(u.extra)}</strong><br>`;
       }
+
+      // Survey adjustment + tax — % of revenue, set per site in Settings
+      const sPct = surveyPctFor(site, _pnlSettings), tPct = taxPctFor(site, _pnlSettings);
+      const dedLines = (u.ded.total > 0)
+        ? `<strong style="color:var(--c-text)">Survey adjustment</strong>: ${sPct}% × Rp ${fmt(u.revenue)} = <strong>− Rp ${fmt(u.ded.survey)}</strong><br>`
+          + `<strong style="color:var(--c-text)">Tax</strong>: ${tPct}% × Rp ${fmt(u.revenue - u.ded.survey)} = <strong>− Rp ${fmt(u.ded.tax)}</strong><br>`
+        : '';
 
       // Margin %
       const margin = u.revenue > 0 ? (u.pnl / u.revenue) * 100 : 0;
@@ -6995,7 +7164,8 @@ function updatePnlUnitTable(tableId, entries, site, wtLookup, breakdowns, unitCl
             ${fixedLine}<br>${extraLine}<br>
 
             <strong style="color:var(--c-text)">Total cost</strong>: <strong>Rp ${fmt(u.cost)}</strong><br>
-            <strong style="color:var(--c-text)">Net P&L</strong> = Rp ${fmt(u.revenue)} − Rp ${fmt(u.cost)} = <strong class="${pnlCls}">${sign}Rp ${fmt(Math.abs(u.pnl))}</strong>
+            ${dedLines}
+            <strong style="color:var(--c-text)">Net P&L</strong> = Rp ${fmt(u.revenue)} − Rp ${fmt(u.cost)}${u.ded.total > 0 ? ' − Rp ' + fmt(u.ded.total) : ''} = <strong class="${pnlCls}">${sign}Rp ${fmt(Math.abs(u.pnl))}</strong>
           </div>
         </div>
       `);
@@ -7013,8 +7183,9 @@ function updatePnlUnitTable(tableId, entries, site, wtLookup, breakdowns, unitCl
 // to each work type by revenue weight within that unit-day: if a unit did
 // Terasan + Chipping on one day, the day's single fixed charge is split between
 // them in proportion to the revenue each generated. This makes the work-type
-// table totals reconcile exactly with the per-unit P&L table.
-function updatePnlWorkType(tableId, entries, site, wtLookup, unitClassLookup, rentalLookup, bbmRateMaredan, bbmRatePrabumuli, bbmThresholdPrabumuli, dailyRate) {
+// table totals reconcile exactly with the per-unit P&L table. The survey
+// adjustment and tax are % of each row's revenue, so they reconcile too.
+function updatePnlWorkType(tableId, entries, site, wtLookup, unitClassLookup, rentalLookup, bbmRateMaredan, bbmRatePrabumuli, bbmThresholdPrabumuli) {
   const tbody = document.getElementById(tableId);
   if (!tbody) return;
 
@@ -7069,17 +7240,17 @@ function updatePnlWorkType(tableId, entries, site, wtLookup, unitClassLookup, re
       g.rental += hm * rate;
     }
 
-    // Daily fixed cost allocation. The unit-day's single (dailyRate) charge is
-    // split across its work types by revenue weight; if that day had zero
-    // revenue, split equally by entry count.
+    // Daily fixed cost allocation. The unit-day's single charge (at that
+    // date's rate) is split across its work types by revenue weight; if that
+    // day had zero revenue, split equally by entry count.
     const ud = unitDay[`${e.unit_code}|${e.date}`];
     const weight = ud.totalRev > 0 ? (effRev / ud.totalRev) : (1 / ud.count);
-    g.fixed += (dailyRate || 0) * weight;
+    g.fixed += dailyFixedFor(site, _pnlSettings, e.date) * weight;
   });
 
   const groups = Object.values(agg);
   if (groups.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--c-text-tertiary);padding:24px">No entries this month</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--c-text-tertiary);padding:24px">No entries this month</td></tr>';
     return;
   }
 
@@ -7092,11 +7263,12 @@ function updatePnlWorkType(tableId, entries, site, wtLookup, unitClassLookup, re
   });
 
   const cell = v => (v && v > 0) ? (v / 1_000_000).toFixed(2) + 'M' : '—';
-  let tRev = 0, tPremi = 0, tBbm = 0, tRental = 0, tFixed = 0, tNet = 0;
+  let tRev = 0, tPremi = 0, tBbm = 0, tRental = 0, tFixed = 0, tDed = 0, tNet = 0;
   const rows = groups.map(g => {
-    const net = g.revenue - g.premi - g.bbm - g.rental - g.fixed - (g.extra || 0);
+    g.ded = deductionsFor(site, g.revenue, _pnlSettings).total;
+    const net = g.revenue - g.premi - g.bbm - g.rental - g.fixed - (g.extra || 0) - g.ded;
     const margin = g.revenue > 0 ? (net / g.revenue) * 100 : 0;
-    tRev += g.revenue; tPremi += g.premi; tBbm += g.bbm; tRental += g.rental; tFixed += g.fixed; tNet += net;
+    tRev += g.revenue; tPremi += g.premi; tBbm += g.bbm; tRental += g.rental; tFixed += g.fixed; tDed += g.ded; tNet += net;
     const label = g.isMulti
       ? `${escapeHtml(g.workType)} — ${classLabel(g.cls)}`
       : escapeHtml(g.workType);
@@ -7111,6 +7283,7 @@ function updatePnlWorkType(tableId, entries, site, wtLookup, unitClassLookup, re
       <td>${cell(g.bbm)}</td>
       <td>${cell(g.rental)}</td>
       <td>${cell(g.fixed)}</td>
+      <td>${cell(g.ded)}</td>
       <td class="${netCls}">${sign}${(Math.abs(net)/1_000_000).toFixed(2)}M</td>
       <td class="${marginCls}">${g.revenue > 0 ? margin.toFixed(1) + '%' : '—'}</td>
     </tr>`;
@@ -7127,6 +7300,7 @@ function updatePnlWorkType(tableId, entries, site, wtLookup, unitClassLookup, re
     <td>${cell(tBbm)}</td>
     <td>${cell(tRental)}</td>
     <td>${cell(tFixed)}</td>
+    <td>${cell(tDed)}</td>
     <td class="${tCls}">${tSign}${(Math.abs(tNet)/1_000_000).toFixed(1)}M</td>
     <td>${tRev > 0 ? tMargin.toFixed(1) + '%' : '—'}</td>
   </tr>`);
@@ -7317,7 +7491,7 @@ async function refreshOpsProgress() {
   const sb = ensureSupabase();
   if (!sb) return;
   try {
-    await Promise.all([ensureBbmRates(sb), ensureRateMults(sb), ensurePremiOverrides(sb), ensureExtraCosts(sb), ensureWtRates(sb)]);  // date-aware fuel rates + work-rate multipliers
+    await Promise.all([ensureBbmRates(sb), ensureRateMults(sb), ensurePremiOverrides(sb), ensureExtraCosts(sb), ensureWtRates(sb), ensureDailyCostHist(sb)]);  // date-aware fuel rates + work-rate multipliers
     const [tsRes, wtRes, unitsRes, rentalRes, settingsRes, tgtRes, obRes] = await Promise.all([
       sbFetchAll(() => sb.from('time_sheet').select('*').order('id')),
       sb.from('work_types').select('*'),
@@ -7542,6 +7716,7 @@ function opsFinancials(entries, site) {
   let revenue = 0, premi = 0, bbm = 0, rental = 0, liters = 0;
   const unitDays = new Set();
   const byWork = {};
+  const revBySite = {};   // survey/tax rates differ by site; "both" view mixes sites
   entries.forEach(e => {
     const wt = wtLookup[e.site + '|' + e.work_type];
     if (!wt) return;
@@ -7549,7 +7724,9 @@ function opsFinancials(entries, site) {
     const out = parseFloat(e.output) || 0;
     const hm = allocHm(e);
     const lit = allocBbm(e);
-    revenue += out * wtRateFor(e.site, e.work_type, e.date, wt.rate) * rateMultiplierFor(e.site, e.date) * split;
+    const rev = out * wtRateFor(e.site, e.work_type, e.date, wt.rate) * rateMultiplierFor(e.site, e.date) * split;
+    revenue += rev;
+    revBySite[e.site] = (revBySite[e.site] || 0) + rev;
     premi   += out * premiRateFor(e.site, e.work_type, e.unit_code, wt.premi) * split;
     liters  += lit;
     bbm += lit * bbmPerLiterFor(e, bbmM, settings['prabumuli_bbm_per_liter'], settings['prabumuli_bbm_threshold']);
@@ -7563,15 +7740,13 @@ function opsFinancials(entries, site) {
     byWork[k].output += out;
     byWork[k].revenue += out * wtRateFor(e.site, e.work_type, e.date, wt.rate) * rateMultiplierFor(e.site, e.date) * split;
   });
-  // Fixed cost: count unit-days × daily rate (mixed sites → rate per entry's site)
+  // Fixed cost: one charge per unit-day, at that date's rate for the entry's site
   let fixed = 0;
-  // Per-site daily cost (<site>_daily_cost) — SAM2 used to fall through to the Prabumuli rate.
-  const dayRateFor = s => settings[s + '_daily_cost'] || dailyFixedFor(s, null);
   const seen = {};
   entries.forEach(e => {
     const k = (e.unit_code || '?') + '|' + e.date;
     if (seen[k]) return; seen[k] = true;
-    fixed += dayRateFor(e.site);
+    fixed += dailyFixedFor(e.site, settings, e.date);
   });
   let extra = 0;
   entries.forEach(e => {
@@ -7579,7 +7754,10 @@ function opsFinancials(entries, site) {
     extra += extraCostFor(e, wt ? wt.unit : null, unitClassLookup[e.unit_code]);
   });
   const cost = premi + bbm + rental + fixed + extra;
-  return { revenue, premi, bbm, rental, fixed, extra, liters, cost, net: revenue - cost, byWork };
+  // Survey adjustment + tax, per site
+  let survey = 0, tax = 0;
+  Object.entries(revBySite).forEach(([s, r]) => { const d = deductionsFor(s, r, settings); survey += d.survey; tax += d.tax; });
+  return { revenue, premi, bbm, rental, fixed, extra, liters, cost, survey, tax, net: revenue - cost - survey - tax, byWork };
 }
 
 function renderOpsHistoric() {
@@ -7619,7 +7797,11 @@ function renderOpsHistoric() {
           <tr><td>BBM</td><td>${fmtM(fin.bbm)}</td></tr>
           <tr><td>Rental</td><td>${fmtM(fin.rental)}</td></tr>
           <tr><td>Daily fixed</td><td>${fmtM(fin.fixed)}</td></tr>
+          <tr><td>Helper / subsidi</td><td>${fmtM(fin.extra)}</td></tr>
           <tr class="total-row"><td>Total cost</td><td>${fmtM(fin.cost)}</td></tr>
+          <tr><td>Survey adjustment</td><td>− ${fmtM(fin.survey)}</td></tr>
+          <tr><td>Tax</td><td>− ${fmtM(fin.tax)}</td></tr>
+          <tr class="total-row"><td>Net P&amp;L</td><td class="${netCls}">${fin.net >= 0 ? '+' : '−'}${fmtM(Math.abs(fin.net))}</td></tr>
         </tbody>
       </table>
       <div class="section-title"><span>Output by work type</span></div>
@@ -7886,14 +8068,17 @@ function computeRangePnl(timeSheet, L, start, end, site) {
     }
   });
   let fixed = 0; const seen = {};
-  ents.forEach(e => { const k = (e.unit_code || '?') + '|' + e.date; if (seen[k]) return; seen[k] = true; fixed += L.settings[e.site + '_daily_cost'] || dailyFixedFor(e.site, null); });
+  ents.forEach(e => { const k = (e.unit_code || '?') + '|' + e.date; if (seen[k]) return; seen[k] = true; fixed += dailyFixedFor(e.site, L.settings, e.date); });
   let extra = 0;
   ents.forEach(e => {
     const wt = L.wtLookup[e.site + '|' + e.work_type];
     extra += extraCostFor(e, wt ? wt.unit : null, L.unitClassLookup[e.unit_code]);
   });
   const cost = premi + bbm + rental + fixed + extra;
-  return { revenue, cost, net: revenue - cost };
+  // The accounting net this is compared against is after tax, and its revenue
+  // follows the client's survey — so deduct both here as well.
+  const ded = deductionsFor(site, revenue, L.settings);
+  return { revenue, cost, survey: ded.survey, tax: ded.tax, net: revenue - cost - ded.total };
 }
 
 // Month-by-month invoice coverage for the P&L actual → Variance tab.
@@ -8021,7 +8206,7 @@ async function refreshActualPnl() {
   const recEl = document.getElementById('actual-records');
   const varEl = document.getElementById('actual-variance');
   try {
-    await Promise.all([ensureBbmRates(sb), ensureRateMults(sb), ensurePremiOverrides(sb), ensureExtraCosts(sb), ensureWtRates(sb)]);  // date-aware fuel rates + work-rate multipliers
+    await Promise.all([ensureBbmRates(sb), ensureRateMults(sb), ensurePremiOverrides(sb), ensureExtraCosts(sb), ensureWtRates(sb), ensureDailyCostHist(sb)]);  // date-aware fuel rates + work-rate multipliers
     const [acRes, tsRes, wtRes, unitsRes, rentalRes, setRes] = await Promise.all([
       sb.from('actual_pnl').select('*').order('period_start', { ascending: false }),
       sbFetchAll(() => sb.from('time_sheet').select('*').order('id')),
@@ -8826,7 +9011,7 @@ async function refreshSettings() {
   
   try {
     // Load all data in parallel
-    const [profilesRes, ratesRes, unitsRes, opsRes, settingsRes, rentalRes, bbmHistRes, multHistRes, premiOvRes] = await Promise.all([
+    const [profilesRes, ratesRes, unitsRes, opsRes, settingsRes, rentalRes, bbmHistRes, multHistRes, premiOvRes, dailyHistRes] = await Promise.all([
       sb.from('profiles').select('*'),
       sb.from('work_types').select('*').order('site, work_name'),
       sb.from('units').select('*').order('site, unit_code'),
@@ -8836,8 +9021,9 @@ async function refreshSettings() {
       sb.from('bbm_rate_history').select('*').order('site').order('effective_from', { ascending: false }),
       sb.from('rate_multiplier_history').select('*').order('site').order('effective_from', { ascending: false }),
       sb.from('work_type_premi').select('*').order('work_name'),
+      sb.from('daily_cost_history').select('*').order('site').order('effective_from', { ascending: false }),
     ]);
-    
+
     // ─── USERS ───
     const usersTable = document.getElementById('settings-users-table');
     if (usersTable) {
@@ -9008,6 +9194,25 @@ async function refreshSettings() {
       }
     }
 
+    // ─── DATED DAILY OVERHEAD (daily_cost_history) ───
+    const dailyHistTable = document.getElementById('settings-daily-history');
+    if (dailyHistTable) {
+      const canEdit = currentUser?.role === 'manager';
+      const rows = dailyHistRes.data || [];
+      if (dailyHistRes.error) {
+        dailyHistTable.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--c-text-tertiary);padding:24px">Table <code>daily_cost_history</code> not found yet — run the setup SQL to enable dated overhead rates.</td></tr>';
+      } else if (rows.length === 0) {
+        dailyHistTable.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--c-text-tertiary);padding:24px">No dated rates — every month uses the flat rate above.</td></tr>';
+      } else {
+        dailyHistTable.innerHTML = rows.map(r => `<tr>
+          <td><strong>${escapeHtml(SITE_LABELS[r.site] || r.site)}</strong></td>
+          <td style="font-family:var(--font-mono)">Rp ${Number(r.rate_per_unit_day).toLocaleString()}</td>
+          <td style="font-family:var(--font-mono);font-size:11px">${escapeHtml(String(r.effective_from))}</td>
+          <td style="text-align:right">${canEdit ? `<button class="btn-link" style="color:var(--c-danger,#e5484d)" onclick="deleteDailyCostRow(${r.id})">Delete</button>` : ''}</td>
+        </tr>`).join('');
+      }
+    }
+
     // ─── FUEL PRICE HISTORY (effective-dated) ───
     const bbmHistTable = document.getElementById('settings-bbm-history');
     if (bbmHistTable) {
@@ -9085,6 +9290,13 @@ async function refreshSettings() {
       prabumuli_bbm_threshold: 15000,
       prabumuli_daily_cost: 138000,
       maredan_daily_cost: 184000,
+      sam2_daily_cost: 184000,
+      prabumuli_survey_pct: 10,
+      prabumuli_tax_pct: 5.9,
+      maredan_survey_pct: 0,
+      maredan_tax_pct: 0,
+      sam2_survey_pct: 0,
+      sam2_tax_pct: 0,
       bd_critical_days: 7,
       bd_overhaul_days: 14,
       bbm_critical_days: 2,
@@ -9097,7 +9309,7 @@ async function refreshSettings() {
     document.querySelectorAll('.settings-input[data-key]').forEach(input => {
       const key = input.dataset.key;
       const val = settingsLookup[key];
-      input.value = val !== undefined && val !== null ? val : (defaults[key] || '');
+      input.value = val !== undefined && val !== null ? val : (defaults[key] ?? '');
     });
     
   } catch (e) {
@@ -9361,14 +9573,14 @@ async function loadBapData(site) {
     timeSheet.forEach(e => {
       if (!e.operator) return;
       if (!opAgg[e.operator]) {
-        opAgg[e.operator] = { output: 0, revenue: 0, premi: 0, hasBap: false };
+        opAgg[e.operator] = { output: 0, revenue: 0, hasBap: false };
       }
       const wt = workTypes.find(w => w.work_name === e.work_type);
       if (wt) {
         const out = parseFloat(e.output) || 0;
         opAgg[e.operator].output += out;
         opAgg[e.operator].revenue += out * (parseFloat(wt.rate) || 0);
-        opAgg[e.operator].premi += out * premiRateFor(e.site, e.work_type, e.unit_code, wt.premi);
+        // No per-operator premi: Prabumuli's premi is staff premi, not operator pay.
       }
     });
     
@@ -9418,7 +9630,6 @@ async function loadBapData(site) {
             <td>${data.output.toFixed(2)}</td>
             <td>${sharePct.toFixed(1)}%</td>
             <td>${data.output.toFixed(2)}</td>
-            <td>${(data.premi / 1_000_000).toFixed(2)}M</td>
             <td>${trustHTML}</td>
           </tr>`;
         }).join('');
@@ -10069,6 +10280,7 @@ async function refreshBdAlerts() {
     
     // Cost MTD: sum of (days × daily fixed cost) for each BD — rates from settings
     const { data: bdSet } = await sb.from('app_settings').select('*');
+    await ensureDailyCostHist(sb);   // today's dated overhead rate, not the flat one
     const dailyCost = { prabumuli: dailyFixedFor('prabumuli', bdSet), maredan: dailyFixedFor('maredan', bdSet), sam2: dailyFixedFor('sam2', bdSet) };
     const totalCost = bdsWithAging.reduce((sum, b) => 
       sum + (b.aging_days * (dailyCost[b.site] || 0)), 0);

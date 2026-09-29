@@ -112,14 +112,15 @@ interface Model {
   wtRates: Record<string, { from: string; rate: number }[]>;       // site|work → DESC
   premiOv: Record<string, number>;               // site|work|class → premi
   rental: Record<string, { rate: number; from: string | null }>;   // site|class
+  dailyCost: Record<string, { from: string; rate: number }[]>;     // site → DESC by from (daily_cost_history)
   extra: Record<string, { helper: { rate: number; from: string | null } | null; subsidiPerHa: { rate: number; from: string | null } | null }>;
 }
 
 function buildModel(raw: {
   settings: any[]; workTypes: any[]; units: any[]; bbmHist: any[]; multHist: any[];
-  wtHist: any[]; premiOv: any[]; rental: any[]; extraCosts: any[];
+  wtHist: any[]; premiOv: any[]; rental: any[]; extraCosts: any[]; dailyHist: any[];
 }): Model {
-  const m: Model = { settings: {}, wt: {}, unitClass: {}, classCount: {}, bbmRates: {}, rateMults: {}, wtRates: {}, premiOv: {}, rental: {}, extra: {} };
+  const m: Model = { settings: {}, wt: {}, unitClass: {}, classCount: {}, bbmRates: {}, rateMults: {}, wtRates: {}, premiOv: {}, rental: {}, extra: {}, dailyCost: {} };
   raw.settings.forEach((s) => { const v = parseFloat(s.value); if (!isNaN(v)) m.settings[s.key] = v; });
   raw.workTypes.forEach((w) => { m.wt[w.site + "|" + w.work_name] = w; });
   raw.units.forEach((u) => {
@@ -136,6 +137,8 @@ function buildModel(raw: {
   Object.values(m.wtRates).forEach((l) => l.sort(desc));
   raw.premiOv.forEach((r) => { m.premiOv[r.site + "|" + r.work_name + "|" + r.unit_class] = parseFloat(r.premi) || 0; });
   raw.rental.forEach((r) => { m.rental[r.site + "|" + r.unit_class] = { rate: parseFloat(r.rate_per_hm) || 0, from: r.effective_from || null }; });
+  raw.dailyHist.forEach((r) => { (m.dailyCost[r.site] = m.dailyCost[r.site] || []).push({ from: r.effective_from, rate: parseFloat(r.rate_per_unit_day) || 0 }); });
+  Object.values(m.dailyCost).forEach((l) => l.sort(desc));
   raw.extraCosts.forEach((r) => {
     const site = (m.extra[r.site] = m.extra[r.site] || { helper: null, subsidiPerHa: null });
     const rate = parseFloat(r.rate_per_ha) || 0;
@@ -195,10 +198,25 @@ function extraCostFor(m: Model, e: any, wtUnit: string | null, cls: string | und
   if (cls === "dozer" && c.subsidiPerHa && (!c.subsidiPerHa.from || e.date >= c.subsidiPerHa.from)) t += out * c.subsidiPerHa.rate;
   return t;
 }
-function dailyFixedFor(m: Model, site: string): number {
+// Site overhead per unit-day: the dated row in force on that date, else the
+// flat <site>_daily_cost setting (mirrors index.html dailyFixedFor).
+function dailyFixedFor(m: Model, site: string, date: string): number {
+  const list = m.dailyCost[site];
+  if (list) for (const r of list) if (r.from <= date) return r.rate;
   const v = m.settings[site + "_daily_cost"];
   if (!isNaN(v) && v !== undefined) return v;
   return site === "prabumuli" ? 138000 : 184000;
+}
+// Revenue deductions, % of revenue per site (mirrors surveyPctFor / taxPctFor):
+// the client's drone survey usually measures ~10% less than the timesheet, and
+// PPh 23/21/25 is taken on the surveyed revenue. Defaults are Prabumuli's.
+function surveyPct(m: Model, site: string): number {
+  const v = m.settings[site + "_survey_pct"];
+  return v !== undefined && !isNaN(v) ? v : (site === "prabumuli" ? 10 : 0);
+}
+function taxPct(m: Model, site: string): number {
+  const v = m.settings[site + "_tax_pct"];
+  return v !== undefined && !isNaN(v) ? v : (site === "prabumuli" ? 5.9 : 0);
 }
 // Allocation readers — allocated wins when PRESENT (a legitimate 0 included).
 const allocBbm = (e: any) => { const a = parseFloat(e.bbm_allocated); return isNaN(a) ? (parseFloat(e.bbm_liters) || 0) : a; };
@@ -207,7 +225,7 @@ const isStandby = (e: any) => /standby/i.test(e.work_type || "");
 
 interface Fin {
   entries: number; unitDays: number; hm: number; liters: number;
-  revenue: number; premi: number; bbm: number; rental: number; fixed: number; extra: number; cost: number; net: number; margin: number;
+  revenue: number; premi: number; bbm: number; rental: number; fixed: number; extra: number; cost: number; survey: number; tax: number; net: number; margin: number;
   outputByUnit: Record<string, number>;
   byWork: Record<string, { output: number; unit: string; revenue: number }>;
   perUnit: Record<string, { hm: number; liters: number; output: number; revenue: number; work: Set<string> }>;
@@ -215,13 +233,14 @@ interface Fin {
   days: Set<string>;
 }
 function financials(m: Model, entries: any[]): Fin {
-  const f: Fin = { entries: 0, unitDays: 0, hm: 0, liters: 0, revenue: 0, premi: 0, bbm: 0, rental: 0, fixed: 0, extra: 0, cost: 0, net: 0, margin: 0, outputByUnit: {}, byWork: {}, perUnit: {}, orphanWork: new Set(), days: new Set() };
+  const f: Fin = { entries: 0, unitDays: 0, hm: 0, liters: 0, revenue: 0, premi: 0, bbm: 0, rental: 0, fixed: 0, extra: 0, cost: 0, survey: 0, tax: 0, net: 0, margin: 0, outputByUnit: {}, byWork: {}, perUnit: {}, orphanWork: new Set(), days: new Set() };
   const seenUnitDay = new Set<string>();
+  const revBySite: Record<string, number> = {};   // survey/tax rates differ by site
   for (const e of entries) {
     f.entries++;
     f.days.add(e.date);
     const udKey = (e.unit_code || "?") + "|" + e.date;
-    if (!seenUnitDay.has(udKey)) { seenUnitDay.add(udKey); f.fixed += dailyFixedFor(m, e.site); }
+    if (!seenUnitDay.has(udKey)) { seenUnitDay.add(udKey); f.fixed += dailyFixedFor(m, e.site, e.date); }
     const wt = m.wt[e.site + "|" + e.work_type];
     const hm = allocHm(e), lit = allocBbm(e), out = parseFloat(e.output) || 0;
     const pu = (f.perUnit[e.unit_code || "?"] = f.perUnit[e.unit_code || "?"] || { hm: 0, liters: 0, output: 0, revenue: 0, work: new Set() });
@@ -232,6 +251,7 @@ function financials(m: Model, entries: any[]): Fin {
     const cls = m.unitClass[e.site + "|" + e.unit_code];
     const rev = out * wtRateFor(m, e.site, e.work_type, e.date, wt.rate) * rateMultiplierFor(m, e.site, e.date) * split;
     f.revenue += rev;
+    revBySite[e.site] = (revBySite[e.site] || 0) + rev;
     f.premi += out * premiRateFor(m, e.site, e.work_type, e.unit_code, wt.premi) * split;
     f.bbm += lit * bbmPerLiterFor(m, e.site, e.date);
     f.rental += hm * rentalRateOn(m, e.site, cls, e.date);
@@ -246,7 +266,12 @@ function financials(m: Model, entries: any[]): Fin {
   }
   f.unitDays = seenUnitDay.size;
   f.cost = f.premi + f.bbm + f.rental + f.fixed + f.extra;
-  f.net = f.revenue - f.cost;
+  for (const [s, r] of Object.entries(revBySite)) {
+    const sv = r * surveyPct(m, s) / 100;
+    f.survey += sv;
+    f.tax += (r - sv) * taxPct(m, s) / 100;
+  }
+  f.net = f.revenue - f.cost - f.survey - f.tax;
   f.margin = f.revenue > 0 ? (f.net / f.revenue) * 100 : 0;
   return f;
 }
@@ -266,7 +291,7 @@ async function buildDigest(sb: SupabaseClient, today: string) {
   const periodStart = bookPeriodStart(today);
   const fetchFrom = addDays(today, -21) < periodStart ? addDays(today, -21) : periodStart;
 
-  const [timeSheet, settings, workTypes, units, bbmHist, multHist, wtHist, premiOv, rental, extraCosts, breakdowns, lapBbm, uploads, profiles] = await Promise.all([
+  const [timeSheet, settings, workTypes, units, bbmHist, multHist, wtHist, premiOv, rental, extraCosts, dailyHist, breakdowns, lapBbm, uploads, profiles] = await Promise.all([
     fetchAll(sb, "time_sheet", (q) => q.gte("date", fetchFrom).lte("date", yesterday)),
     fetchAll(sb, "app_settings", undefined, "key"),
     fetchAll(sb, "work_types"),
@@ -277,13 +302,14 @@ async function buildDigest(sb: SupabaseClient, today: string) {
     fetchAll(sb, "work_type_premi").catch(() => []),
     fetchAll(sb, "equipment_rental").catch(() => []),
     fetchAll(sb, "site_extra_costs").catch(() => []),
+    fetchAll(sb, "daily_cost_history").catch(() => []),
     fetchAll(sb, "breakdowns", (q) => q.is("end_date", null)),
     fetchAll(sb, "lap_bbm", (q) => q.gte("date", addDays(today, -14))),
     fetchAll(sb, "uploads", (q) => q.gte("created_at", addDays(today, -30))),
     fetchAll(sb, "profiles").catch(() => []),
   ]);
 
-  const m = buildModel({ settings, workTypes, units, bbmHist, multHist, wtHist, premiOv, rental, extraCosts });
+  const m = buildModel({ settings, workTypes, units, bbmHist, multHist, wtHist, premiOv, rental, extraCosts, dailyHist });
   const S = m.settings;
   const bdOverhaul = S["bd_overhaul_days"] || 14, bdCritical = S["bd_critical_days"] || 7;
   const bbmCriticalDays = S["bbm_critical_days"] || 2, bbmWatchDays = S["bbm_watch_days"] || 5;
@@ -402,8 +428,8 @@ async function buildDigest(sb: SupabaseClient, today: string) {
     today, period_start: periodStart,
     sites: Object.fromEntries(reports.map((r) => [r.site, {
       report_day: r.reportDay, lag_days: r.lagDays, stale: r.stale,
-      day: r.day ? { entries: r.day.entries, unit_days: r.day.unitDays, hm: +r.day.hm.toFixed(1), liters: Math.round(r.day.liters), revenue: Math.round(r.day.revenue), premi: Math.round(r.day.premi), bbm: Math.round(r.day.bbm), rental: Math.round(r.day.rental), fixed: Math.round(r.day.fixed), extra: Math.round(r.day.extra), cost: Math.round(r.day.cost), net: Math.round(r.day.net), margin: +r.day.margin.toFixed(1) } : null,
-      ptd: r.ptd ? { days: r.ptd.days.size, revenue: Math.round(r.ptd.revenue), cost: Math.round(r.ptd.cost), net: Math.round(r.ptd.net), margin: +r.ptd.margin.toFixed(1) } : null,
+      day: r.day ? { entries: r.day.entries, unit_days: r.day.unitDays, hm: +r.day.hm.toFixed(1), liters: Math.round(r.day.liters), revenue: Math.round(r.day.revenue), premi: Math.round(r.day.premi), bbm: Math.round(r.day.bbm), rental: Math.round(r.day.rental), fixed: Math.round(r.day.fixed), extra: Math.round(r.day.extra), cost: Math.round(r.day.cost), survey: Math.round(r.day.survey), tax: Math.round(r.day.tax), net: Math.round(r.day.net), margin: +r.day.margin.toFixed(1) } : null,
+      ptd: r.ptd ? { days: r.ptd.days.size, revenue: Math.round(r.ptd.revenue), cost: Math.round(r.ptd.cost), survey: Math.round(r.ptd.survey), tax: Math.round(r.ptd.tax), net: Math.round(r.ptd.net), margin: +r.ptd.margin.toFixed(1) } : null,
     }])),
     alerts: alerts.map((a) => ({ level: a.level, title: a.title })),
     fuel: Object.fromEntries(Object.entries(fuel).map(([s, f]) => [s, { as_of: f.latest.date, saldo: Math.round(parseFloat(f.latest.saldo) || 0), avg_burn: Math.round(f.avgBurn), runway_days: +f.runway.toFixed(1) }])),
@@ -475,6 +501,8 @@ function siteCard(r: SiteReport, today: string, periodStart: string, fuel: any, 
       <tr>${td("Revenue", false, "font-weight:600")}${td(fmtRp(d.revenue), true, "font-weight:600")}${td(fmtRp(w.revenue / wkDays), true)}</tr>
       ${costRow("BBM", d.bbm)}${costRow("Equipment rental", d.rental)}${costRow("Premi", d.premi)}${costRow("Daily fixed", d.fixed)}${costRow("Helper / subsidi", d.extra)}
       <tr>${td("Total cost", false, `border-top:1px solid ${C.line};font-weight:600`)}${td(fmtRp(d.cost), true, `border-top:1px solid ${C.line};font-weight:600`)}${td(fmtRp(w.cost / wkDays), true, `border-top:1px solid ${C.line}`)}</tr>
+      ${d.survey > 0 ? `<tr>${td("Survey adjustment", false, `color:${C.mute}`)}${td("− " + fmtRp(d.survey), true, `color:${C.mute}`)}</tr>` : ""}
+      ${d.tax > 0 ? `<tr>${td("Tax (PPh)", false, `color:${C.mute}`)}${td("− " + fmtRp(d.tax), true, `color:${C.mute}`)}</tr>` : ""}
       <tr>${td("Net", false, "font-weight:700")}${td(fmtSign(d.net), true, `font-weight:700;color:${pnlColor(d.net)}`)}${td(fmtSign(w.net / wkDays), true, `color:${pnlColor(w.net)}`)}</tr>
     </table>
 
@@ -502,8 +530,8 @@ function renderHtml(x: { today: string; periodStart: string; reports: SiteReport
   const preheader = shown.map((r) => r.day ? `${r.label} ${fmtSign(r.day.net)}` : `${r.label} no data`).join(" · ") + ` · ${alerts.filter((a) => a.level !== "info").length} alerts`;
   const openBd = bds.slice(0, 10).map((b: any) => `<tr>${td(`<strong>${esc(b.unit_code)}</strong>`)}${td(cap(b.site))}${td(esc(b.description || "BD"))}${td(`${b.days}d`, true, `font-weight:600;color:${b.days >= 14 ? C.red : b.days >= 7 ? C.amber : C.ink}`)}</tr>`).join("");
   const modelNote = [
-    `Maredan: fuel ${fmtRp(bbmPerLiterFor(m, "maredan", today))}/L · rental per HM by class · premi · fixed ${fmtRp(dailyFixedFor(m, "maredan"))}/unit-day · rate ×${rateMultiplierFor(m, "maredan", today).toFixed(4)}`,
-    `Prabumuli: fuel excess ${fmtRp(bbmPerLiterFor(m, "prabumuli", today))}/L over threshold · rental from ${m.rental["prabumuli|dozer"]?.from || "—"} · premi by class · fixed ${fmtRp(dailyFixedFor(m, "prabumuli"))}/unit-day · helper/subsidi per HA`,
+    `Maredan: fuel ${fmtRp(bbmPerLiterFor(m, "maredan", today))}/L · rental per HM by class · premi · fixed ${fmtRp(dailyFixedFor(m, "maredan", today))}/unit-day · rate ×${rateMultiplierFor(m, "maredan", today).toFixed(4)} · survey −${surveyPct(m, "maredan")}% · tax ${taxPct(m, "maredan")}%`,
+    `Prabumuli: fuel excess ${fmtRp(bbmPerLiterFor(m, "prabumuli", today))}/L over threshold · rental from ${m.rental["prabumuli|dozer"]?.from || "—"} · premi by class · fixed ${fmtRp(dailyFixedFor(m, "prabumuli", today))}/unit-day · helper/subsidi per HA · survey −${surveyPct(m, "prabumuli")}% · tax ${taxPct(m, "prabumuli")}%`,
   ].join("<br>");
 
   return `<!DOCTYPE html>
